@@ -645,10 +645,16 @@ textarea.preview-input {
     opacity: 0 !important;
 }
 
-.canvas-dropzone .sortable-ghost,
-.canvas-element .sortable-ghost {
-    /* Let the placeholder expand to full width in the canvas! */
+/* When sorting existing components within the canvas */
+.canvas-dropzone .canvas-element.sortable-ghost {
     width: 100% !important;
+    /* Do not force height, let it match the actual component's height */
+}
+
+/* When dragging NEW components from the sidebar into the canvas */
+.canvas-dropzone .component-item.sortable-ghost {
+    width: 100% !important;
+    height: 86px !important; /* Simulate the average height of a rendered input field */
 }
 
 #components-basic .sortable-ghost,
