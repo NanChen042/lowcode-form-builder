@@ -580,6 +580,8 @@ export function initDropzone(containerEl) {
         dragClass: 'sortable-drag',
         chosenClass: 'drag-chosen',
         fallbackClass: 'drag-fallback',
+        forceFallback: true,
+        fallbackOnBody: true,
         fallbackTolerance: 4,
         swapThreshold: 0.65,
         emptyInsertThreshold: 28,
@@ -606,17 +608,12 @@ export function initDropzone(containerEl) {
             tempDiv.appendChild(template.content.cloneNode(true));
             const rootDiv = tempDiv.querySelector('.canvas-element');
 
-            itemEl.style.transition = 'none';
             itemEl.innerHTML = rootDiv.innerHTML;
             itemEl.className = rootDiv.className;
             itemEl.removeAttribute('role');
             itemEl.removeAttribute('tabindex');
             itemEl.id = `cmp_${getUniqueId()}`;
             
-            // 强制重绘以防止 CSS 过渡闪烁
-            void itemEl.offsetHeight;
-            itemEl.style.transition = '';
-
             setupElementData(itemEl, type);
 
             safeCreateIcons();

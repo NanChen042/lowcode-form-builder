@@ -293,6 +293,12 @@ button{
     color: rgba(0, 0, 0, 0.45);
 }
 
+.empty-state {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
 .prop-empty.hidden {
     display: none !important;
 }
@@ -623,12 +629,13 @@ textarea.preview-input {
 
 .sortable-ghost,
 .drop-placeholder {
-    min-height: 54px !important;
+    min-height: 60px !important;
+    margin-bottom: 10px !important;
     opacity: 1;
-    border: 1px dashed #1677ff !important;
-    border-radius: 10px !important;
+    border: 2px dashed #1677ff !important;
+    border-radius: 12px !important;
     background:
-        repeating-linear-gradient(135deg, rgba(22, 119, 255, 0.08) 0 8px, rgba(22, 119, 255, 0.03) 8px 16px),
+        repeating-linear-gradient(135deg, rgba(22, 119, 255, 0.06) 0 8px, rgba(22, 119, 255, 0.02) 8px 16px),
         #f0f7ff !important;
     box-shadow: inset 0 0 0 1px rgba(22, 119, 255, 0.08);
     overflow: hidden;
@@ -638,11 +645,10 @@ textarea.preview-input {
     opacity: 0 !important;
 }
 
-#canvas-dropzone .sortable-ghost,
+.canvas-dropzone .sortable-ghost,
 .canvas-element .sortable-ghost {
     /* Let the placeholder expand to full width in the canvas! */
     width: 100% !important;
-    height: 60px !important; /* Make it look like a dropzone placeholder */
 }
 
 #components-basic .sortable-ghost,
