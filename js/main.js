@@ -1,0 +1,154 @@
+import { safeCreateIcons } from './utils/helpers.js';
+import { bindPropEvents } from './ui/properties.js';
+import { bindCanvasEvents, initPages, checkEmptyState } from './ui/canvas.js';
+import { bindPreviewEvents } from './ui/preview.js';
+import { addComponentToCanvas } from './components/builder.js';
+import { state } from './core/state.js';
+import { loadSchema } from './core/schema.js';
+import { kycClientTemplate, kycIndividualTemplate, kycEntityTemplate } from './templates/recommend.js';
+
+// 全局错误捕获，用于在页面中显示脚本运行时错误
+window.addEventListener('error', function(event) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'runtime-error';
+    errorDiv.innerHTML = `
+        <div>
+            <strong>脚本错误:</strong>
+            <span>${event.message} (${event.filename?.split('/').pop()}:${event.lineno})</span>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-white">关闭</button>
+    `;
+    document.body.appendChild(errorDiv);
+});
+
+// 应用启动初始化函数
+function bootstrap() {
+    // 渲染页面上的所有 Lucide 图标
+    safeCreateIcons();
+
+    // 配置左侧组件列表的拖放源选项
+    const dragSourceOptions = {
+        group: {
+            name: 'shared',
+            pull: 'clone', // 允许克隆组件到画布
+            put: false     // 不允许将画布组件拖回组件列表
+        },
+        sort: false,       // 组件列表内部不允许排序
+        animation: 150,
+        easing: 'cubic-bezier(0.2, 0, 0, 1)',
+        chosenClass: 'drag-chosen',
+        fallbackClass: 'drag-fallback',
+        ghostClass: 'sortable-ghost',
+        forceFallback: true,
+        fallbackOnBody: true,
+        fallbackTolerance: 4,
+        draggable: '.component-item',
+        onStart: function() {
+            // 开始拖拽时，为 body 和画布添加状态类，隐藏空状态提示
+            document.body.classList.add('is-dragging-component');
+            state.pages.forEach(p => {
+                const dz = document.getElementById(p.id);
+                if (dz) {
+                    dz.classList.add('is-dragging');
+                    const empty = dz.querySelector('.canvas-empty-state');
+                    if (empty) empty.style.display = 'none';
+                }
+            });
+        },
+        onEnd: function() {
+            // 结束拖拽时，恢复状态，并重新检查空状态提示
+            document.body.classList.remove('is-dragging-component');
+            state.pages.forEach(p => {
+                const dz = document.getElementById(p.id);
+                if (dz) dz.classList.remove('is-dragging');
+            });
+            checkEmptyState();
+        }
+    };
+
+    // 初始化基础组件、业务组件、布局组件三个分类的拖拽实例
+    if (typeof Sortable !== 'undefined') {
+        new Sortable(document.getElementById('components-basic'), dragSourceOptions);
+        new Sortable(document.getElementById('components-business'), dragSourceOptions);
+        new Sortable(document.getElementById('components-layout'), dragSourceOptions);
+    }
+
+    // 防止快速连续点击造成重复添加
+    let lastItemClickTime = 0;
+
+    // 处理左侧组件面板中组件项的点击事件，点击也可将组件添加到画布
+    function handleComponentClick(e) {
+        const item = e.target.closest('.component-item');
+        if (!item) return;
+        
+        const now = Date.now();
+        if (now - lastItemClickTime < 300) return;
+        lastItemClickTime = now;
+        
+        // 如果当前正在拖拽则不响应点击
+        if (document.body.classList.contains('is-dragging-component')) return;
+        const type = item.getAttribute('data-type');
+        if (type) {
+            addComponentToCanvas(type);
+        }
+    }
+
+    // 为三个组件分类区域绑定点击事件
+    document.getElementById('components-basic').addEventListener('click', handleComponentClick);
+    document.getElementById('components-business').addEventListener('click', handleComponentClick);
+    document.getElementById('components-layout').addEventListener('click', handleComponentClick);
+
+    // 绑定推荐模板点击事件
+    function bindTemplateBtn(id, templateObj) {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.addEventListener('click', () => {
+                if (confirm('加载模板将清空当前所有内容，是否继续？')) {
+                    loadSchema(templateObj);
+                    
+                    // 清除所有模板卡片的高亮状态
+                    document.querySelectorAll('.template-card').forEach(el => {
+                        el.classList.remove('ring-2', 'ring-[#1677ff]', 'ring-offset-1', 'border-transparent', 'bg-blue-50/50');
+                        el.classList.add('border-[#e8edf7]', 'bg-white');
+                    });
+                    
+                    // 为当前点击的模板卡片添加高亮状态
+                    btn.classList.add('ring-2', 'ring-[#1677ff]', 'ring-offset-1', 'border-transparent', 'bg-blue-50/50');
+                    btn.classList.remove('border-[#e8edf7]', 'bg-white');
+                }
+            });
+        }
+    }
+    
+    bindTemplateBtn('btn-tpl-kyc-client', kycClientTemplate);
+    bindTemplateBtn('btn-tpl-kyc-individual', kycIndividualTemplate);
+    bindTemplateBtn('btn-tpl-kyc-entity', kycEntityTemplate);
+
+    // 实现组件搜索过滤功能
+    document.getElementById('component-search').addEventListener('input', e => {
+        const keyword = e.target.value.trim().toLowerCase();
+        document.querySelectorAll('.component-item').forEach(item => {
+            const text = item.textContent.trim().toLowerCase();
+            item.style.display = text.includes(keyword) ? '' : 'none';
+        });
+    });
+
+    // 绑定各类全局事件
+    bindPropEvents();
+    bindCanvasEvents();
+    bindPreviewEvents();
+
+    // 初始化画布页面和空状态
+    initPages();
+    checkEmptyState();
+    
+    // 延迟调整画布视角至居中
+    setTimeout(() => {
+        import('./ui/canvas.js').then(({ resetCanvasView }) => {
+            resetCanvasView();
+        });
+    }, 100);
+}
+
+// 启动应用
+bootstrap();
