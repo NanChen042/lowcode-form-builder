@@ -4,8 +4,11 @@ import { bindCanvasEvents, initPages, checkEmptyState } from './ui/canvas.js';
 import { bindPreviewEvents } from './ui/preview.js';
 import { addComponentToCanvas } from './components/builder.js';
 import { state } from './core/state.js';
-import { loadSchema } from './core/schema.js';
+import { loadSchema, saveToServer, markDirty, isDirty } from './core/schema.js';
 import { blankTemplate, kycClientTemplate, kycIndividualTemplate, kycEntityTemplate } from './templates/recommend.js';
+import { canvasWorld } from './ui/dom.js';
+
+window.saveToServer = saveToServer;
 
 // 全局错误捕获，用于在页面中显示脚本运行时错误
 window.addEventListener('error', function(event) {
@@ -99,12 +102,23 @@ function bootstrap() {
     document.getElementById('components-layout').addEventListener('click', handleComponentClick);
 
     // 绑定模板点击事件
-    function bindTemplateBtn(id, templateObj) {
+    function bindTemplateBtn(id, templateObj, tplKey) {
         const btn = document.getElementById(id);
         if (btn) {
             btn.addEventListener('click', () => {
                 if (confirm('加载模板将清空当前所有内容，是否继续？')) {
                     loadSchema(templateObj);
+                    
+                    // 修改 URL 加上 tpl 参数
+                    if (tplKey) {
+                        const url = new URL(window.location);
+                        url.searchParams.set('tpl', tplKey);
+                        window.history.pushState({}, '', url);
+                    } else {
+                        const url = new URL(window.location);
+                        url.searchParams.delete('tpl');
+                        window.history.pushState({}, '', url);
+                    }
                     
                     // 关闭模板画廊 Modal
                     const modal = document.getElementById('template-modal');
@@ -118,10 +132,10 @@ function bootstrap() {
         }
     }
     
-    bindTemplateBtn('btn-tpl-blank', blankTemplate);
-    bindTemplateBtn('btn-tpl-kyc-client', kycClientTemplate);
-    bindTemplateBtn('btn-tpl-kyc-individual', kycIndividualTemplate);
-    bindTemplateBtn('btn-tpl-kyc-entity', kycEntityTemplate);
+    bindTemplateBtn('btn-clear-canvas-sidebar', blankTemplate, null);
+    bindTemplateBtn('btn-tpl-kyc-client-modal', kycClientTemplate, 'kyc-client');
+    bindTemplateBtn('btn-tpl-kyc-individual-modal', kycIndividualTemplate, 'kyc-individual');
+    bindTemplateBtn('btn-tpl-kyc-entity-modal', kycEntityTemplate, 'kyc-entity');
 
     // 实现组件搜索过滤功能
     document.getElementById('component-search').addEventListener('input', e => {
@@ -137,9 +151,50 @@ function bootstrap() {
     bindCanvasEvents();
     bindPreviewEvents();
 
-    // 初始化画布页面和空状态
-    initPages();
-    checkEmptyState();
+    // 通过 URL 参数加载指定的模板数据（模拟后端数据加载逻辑）
+    const urlParams = new URLSearchParams(window.location.search);
+    const tplParam = urlParams.get('tpl');
+    
+    if (tplParam === 'kyc-client') {
+        loadSchema(kycClientTemplate);
+    } else if (tplParam === 'kyc-individual') {
+        loadSchema(kycIndividualTemplate);
+    } else if (tplParam === 'kyc-entity') {
+        loadSchema(kycEntityTemplate);
+    } else {
+        // 没有指定模板或无效参数时，初始化空白页
+        initPages();
+        checkEmptyState();
+    }
+    
+    // 监听 DOM 树变化，标记为未保存
+    const observer = new MutationObserver(() => markDirty());
+    observer.observe(canvasWorld, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        characterData: true
+    });
+    
+    // 监听属性面板表单更改，标记为未保存
+    document.addEventListener('input', (e) => {
+        if (e.target.closest('#prop-panel') || e.target.closest('.canvas-element') || e.target.closest('.page-title-input')) {
+            markDirty();
+        }
+    });
+    document.addEventListener('change', (e) => {
+        if (e.target.closest('#prop-panel') || e.target.closest('.canvas-element') || e.target.closest('.page-title-input')) {
+            markDirty();
+        }
+    });
+
+    // 如果未保存，刷新或离开页面时进行拦截提示
+    window.addEventListener('beforeunload', (e) => {
+        if (isDirty) {
+            e.preventDefault();
+            e.returnValue = '您有未保存的更改，确定要离开吗？';
+        }
+    });
     
     // 延迟调整画布视角至居中
     setTimeout(() => {

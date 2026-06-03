@@ -5,6 +5,30 @@ import { renderDefaultValue, renderOptions } from '../components/builder.js';
 import { setLabelText, renderHelpText } from '../components/builder.js';
 import * as DOM from './dom.js';
 
+// 同步和验证最大选择数量，并更新 UI 和组件数据
+export function syncMaxSelectionsUI(val) {
+    if (!state.selectedElement || !DOM.inputMaxSelections) return;
+    
+    // 如果没有传入值或是无效数字，强制默认回落到 3
+    let num = parseInt(val, 10);
+    if (isNaN(num)) {
+        num = 3; 
+    }
+    
+    // 强制限制在 1 到 5 之间
+    const clampedNum = Math.max(1, Math.min(5, num));
+    
+    // 更新数据和输入框
+    state.selectedElement.dataset.maxSelections = clampedNum;
+    DOM.inputMaxSelections.value = clampedNum;
+    
+    // 同步按钮状态：最小值1时禁用减号，最大值5时禁用加号
+    if (DOM.btnMaxMinus && DOM.btnMaxPlus) {
+        DOM.btnMaxMinus.disabled = clampedNum <= 1;
+        DOM.btnMaxPlus.disabled = clampedNum >= 5;
+    }
+}
+
 // 根据选中的组件数据更新右侧面板中的默认值设置界面
 export function updateDefaultValueUI(el) {
     if (!el) return;
@@ -136,13 +160,14 @@ export function renderOptionsEditor() {
             focusedTarget = null;
         });
 
-        // 选项值输入框
+        // 选项值输入框 (开发者专用的底层标识符，禁止用户编辑以防冲突)
         const valueInput = document.createElement('input');
         valueInput.type = 'text';
         valueInput.value = option.value || '';
-        valueInput.placeholder = 'Value';
-        valueInput.className = 'ant-input text-xs';
-        // 签名组件不需要独立的 value 输入框，因为其 value 在内部自动生成或隐藏
+        valueInput.readOnly = true;
+        valueInput.title = '系统自动生成的底层标识符 (Value)';
+        valueInput.className = 'ant-input text-[11px] font-mono !bg-black/[0.02] !text-black/45 !cursor-default !border-transparent !shadow-none px-2';
+        // 签名组件不需要独立的 value 输入框
         if (isSignature) {
             valueInput.style.display = 'none';
         }
@@ -161,15 +186,6 @@ export function renderOptionsEditor() {
         labelInput.addEventListener('input', e => {
             const latestOptions = readOptions(state.selectedElement);
             latestOptions[index] = { ...latestOptions[index], label: e.target.value };
-            writeOptions(state.selectedElement, latestOptions);
-            renderOptions(state.selectedElement);
-            updateDefaultValueUI(state.selectedElement);
-        });
-
-        // 监听选项值变化并更新组件数据
-        valueInput.addEventListener('input', e => {
-            const latestOptions = readOptions(state.selectedElement);
-            latestOptions[index] = { ...latestOptions[index], value: e.target.value };
             writeOptions(state.selectedElement, latestOptions);
             renderOptions(state.selectedElement);
             updateDefaultValueUI(state.selectedElement);
@@ -236,10 +252,7 @@ export function bindPropEvents() {
         setLabelText(state.selectedElement, e.target.value);
     });
 
-    // 绑定字段标识（Key）输入事件
-    DOM.inputKey.addEventListener('input', e => {
-        if (state.selectedElement) state.selectedElement.dataset.key = e.target.value;
-    });
+    // 字段标识（Key）现在是只读的，所以不需要监听 input 事件
 
     // 绑定占位符输入事件
     DOM.inputPlaceholder.addEventListener('input', e => {
@@ -297,11 +310,27 @@ export function bindPropEvents() {
         renderOptions(state.selectedElement);
     });
 
-    // 绑定最大选择数量的输入事件
+    // 绑定最大选择数量的输入事件 (Stepper Logic)
     if (DOM.inputMaxSelections) {
-        DOM.inputMaxSelections.addEventListener('input', e => {
-            if (state.selectedElement) state.selectedElement.dataset.maxSelections = e.target.value;
+        DOM.inputMaxSelections.addEventListener('change', e => {
+            let val = parseInt(e.target.value, 10);
+            if (!isNaN(val) && val > 5) val = 5;
+            syncMaxSelectionsUI(val);
         });
+
+        if (DOM.btnMaxMinus) {
+            DOM.btnMaxMinus.addEventListener('click', () => {
+                const current = parseInt(DOM.inputMaxSelections.value, 10) || 3;
+                syncMaxSelectionsUI(current - 1);
+            });
+        }
+
+        if (DOM.btnMaxPlus) {
+            DOM.btnMaxPlus.addEventListener('click', () => {
+                const current = parseInt(DOM.inputMaxSelections.value, 10) || 3;
+                syncMaxSelectionsUI(current + 1);
+            });
+        }
     }
 
     // 绑定日期具体类型（如日期、年月）的切换事件
@@ -318,10 +347,29 @@ export function bindPropEvents() {
     DOM.addOptionBtn.addEventListener('click', () => {
         if (!state.selectedElement) return;
         const options = readOptions(state.selectedElement);
-        const nextIndex = options.length + 1;
+        
         const isSignature = state.selectedElement.dataset.type === 'signature';
         const prefix = isSignature ? 'dec_' : 'option_';
         const labelPrefix = isSignature ? '声明' : '选项';
+        
+        // 查找当前最大的后缀序号（实现自增ID效果）
+        let maxIndex = 0;
+        options.forEach(o => {
+            if (o.value && o.value.startsWith(prefix)) {
+                const num = parseInt(o.value.slice(prefix.length), 10);
+                if (!isNaN(num) && num > maxIndex) {
+                    maxIndex = num;
+                }
+            }
+        });
+        
+        // 生成下一个序号，并确保绝对不重复
+        let nextIndex = Math.max(maxIndex + 1, options.length + 1);
+        const existingValues = new Set(options.map(o => o.value));
+        while(existingValues.has(`${prefix}${nextIndex}`)) {
+            nextIndex++;
+        }
+
         options.push({ label: `${labelPrefix}${nextIndex}`, value: `${prefix}${nextIndex}` });
         writeOptions(state.selectedElement, options);
         renderOptions(state.selectedElement);

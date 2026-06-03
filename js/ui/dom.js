@@ -31,6 +31,8 @@ export const propLayoutGroup = document.getElementById('prop-layout-group');
 export const propLayoutSelect = document.getElementById('prop-layout-select');
 export const propMaxSelectionsGroup = document.getElementById('prop-max-selections-group');
 export const inputMaxSelections = document.getElementById('prop-max-selections-input');
+export const btnMaxMinus = document.getElementById('prop-max-minus');
+export const btnMaxPlus = document.getElementById('prop-max-plus');
 
 // 页面选项卡相关 DOM 节点
 export const canvasPagesContainer = document.getElementById('canvas-pages-container');
@@ -39,6 +41,7 @@ export const addPageBtn = document.getElementById('add-page-btn');
 
 // 预览弹窗相关 DOM 节点
 export const previewModal = document.getElementById('preview-modal');
+export const previewModalContent = document.getElementById('preview-modal-content');
 export const previewModalTitle = document.getElementById('preview-modal-title');
 export const previewModalSubtitle = document.getElementById('preview-modal-subtitle');
 export const previewFormTitle = document.getElementById('preview-form-title');

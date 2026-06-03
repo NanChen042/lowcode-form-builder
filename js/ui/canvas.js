@@ -2,7 +2,7 @@ import { state, setSelectedElement } from '../core/state.js';
 import { safeCreateIcons, writeOptions, readOptions } from '../utils/helpers.js';
 import { optionTypes, valueTypes } from '../components/registry.js';
 import * as DOM from './dom.js';
-import { updateDefaultValueUI, renderOptionsEditor } from './properties.js';
+import { updateDefaultValueUI, renderOptionsEditor, syncMaxSelectionsUI } from './properties.js';
 
 const PAGE_WIDTH = 390;
 const PAGE_GAP = 160;
@@ -492,17 +492,18 @@ export function selectElement(el) {
     }
     DOM.propHelpGroup.style.display = type === 'grid' ? 'none' : 'block';
     DOM.propDefaultGroup.style.display = hasDefaultValue ? 'block' : 'none';
-    DOM.propOptionsGroup.classList.toggle('hidden', !hasOptions);
+    const isFixedOptions = type === 'country' || type === 'nationality';
+    DOM.propOptionsGroup.classList.toggle('hidden', !hasOptions || isFixedOptions);
     DOM.propLayoutGroup.style.display = canStackChoices ? 'block' : 'none';
     DOM.propLayoutSelect.value = el.dataset.layout || 'inline';
     DOM.toggleRequired.checked = el.dataset.required === 'true';
     
     const canHaveMaxSelections = type === 'country' || type === 'nationality' || type === 'checkbox';
     if (DOM.propMaxSelectionsGroup) {
-        DOM.propMaxSelectionsGroup.style.display = canHaveMaxSelections ? 'flex' : 'none';
+        DOM.propMaxSelectionsGroup.style.display = canHaveMaxSelections ? 'block' : 'none';
     }
     if (DOM.inputMaxSelections) {
-        DOM.inputMaxSelections.value = el.dataset.maxSelections || '';
+        syncMaxSelectionsUI(el.dataset.maxSelections || '');
     }
     
     renderOptionsEditor();

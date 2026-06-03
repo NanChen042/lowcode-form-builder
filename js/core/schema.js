@@ -1,6 +1,6 @@
 import { state, getUniqueId } from './state.js';
 import { readOptions, writeOptions, safeCreateIcons } from '../utils/helpers.js';
-import { updateElementFromData, setLabelText } from '../components/builder.js';
+import { updateElementFromData, setLabelText, componentDefaults } from '../components/builder.js';
 import { initDropzone, addPage, checkEmptyState, refreshNestedEmptyStates, focusOnPage, initPages, clearSelection } from '../ui/canvas.js';
 import { canvasWorld } from '../ui/dom.js';
 
@@ -97,6 +97,79 @@ export function buildSchema() {
         pages: pagesSchema      // 页面及字段数据
     };
 }
+export let isSystemUpdating = false;
+export let isDirty = false;
+export let lastSavedSchemaString = '';
+
+let markDirtyTimeout = null;
+
+// 标记内容已被修改
+export function markDirty() {
+    if (isSystemUpdating) return;
+    
+    // 防抖处理，避免频繁触发
+    if (markDirtyTimeout) clearTimeout(markDirtyTimeout);
+    markDirtyTimeout = setTimeout(() => {
+        // 拖拽过程中忽略
+        if (document.body.classList.contains('is-dragging-component')) {
+            markDirty();
+            return;
+        }
+        
+        // 深度比对当前结构与最后保存的结构
+        const currentSchemaString = JSON.stringify(buildSchema());
+        const hasChanged = currentSchemaString !== lastSavedSchemaString;
+        
+        const statusEl = document.getElementById('save-status');
+        
+        if (hasChanged && !isDirty) {
+            isDirty = true;
+            if (statusEl) {
+                statusEl.innerHTML = `<i data-lucide="circle-alert" class="h-3.5 w-3.5"></i>未保存`;
+                statusEl.classList.remove('opacity-0', 'text-orange-500');
+                statusEl.classList.add('text-slate-500'); // 按照要求使用灰色
+                if (window.lucide) window.lucide.createIcons({ root: statusEl });
+            }
+        } else if (!hasChanged && isDirty) {
+            // 如果用户撤销了修改（改回了原本的样子），自动清除未保存状态
+            isDirty = false;
+            if (statusEl) {
+                statusEl.classList.add('opacity-0');
+            }
+        }
+    }, 500);
+}
+// 模拟向后端接口保存数据的行为
+export function saveToServer() {
+    const statusEl = document.getElementById('save-status');
+    if (!statusEl) return;
+    
+    // 切换到保存中状态
+    statusEl.innerHTML = `<i data-lucide="loader-2" class="h-3.5 w-3.5 animate-spin"></i>保存中...`;
+    statusEl.classList.remove('opacity-0');
+    if (window.lucide) window.lucide.createIcons({ root: statusEl });
+    
+    // 模拟网络请求延迟
+    setTimeout(() => {
+        const schema = buildSchema();
+        console.log('【模拟发送给后端】', schema);
+        
+        lastSavedSchemaString = JSON.stringify(schema);
+        
+        statusEl.classList.remove('text-orange-500');
+        statusEl.classList.add('text-slate-500');
+        statusEl.innerHTML = `<i data-lucide="check" class="h-3.5 w-3.5"></i>已保存`;
+        if (window.lucide) window.lucide.createIcons({ root: statusEl });
+        
+        // 清除未保存标志
+        isDirty = false;
+        
+        // 3秒后隐藏提示
+        setTimeout(() => {
+            statusEl.classList.add('opacity-0');
+        }, 3000);
+    }, 600);
+}
 
 // 根据 Schema 数据创建单个画布元素（递归处理嵌套）
 export function createElementFromSchema(fieldData) {
@@ -127,9 +200,11 @@ export function createElementFromSchema(fieldData) {
     if (fieldData.layout !== undefined) itemEl.dataset.layout = fieldData.layout;
     if (fieldData.maxSelections !== undefined) itemEl.dataset.maxSelections = fieldData.maxSelections;
 
-    // 恢复选项列表
+    // 恢复选项列表（如果 Schema 中没有，且该类型存在默认配置，则使用默认配置兜底）
     if (fieldData.options) {
         writeOptions(itemEl, fieldData.options);
+    } else if (componentDefaults[type] && componentDefaults[type].options) {
+        writeOptions(itemEl, componentDefaults[type].options);
     }
 
     // 处理栅格布局内的子元素
@@ -153,6 +228,8 @@ export function createElementFromSchema(fieldData) {
 
 // 加载完整的 Schema 模板数据，并渲染到整个工作区
 export function loadSchema(schema) {
+    isSystemUpdating = true;
+    
     // 1. 清空当前状态和画布
     canvasWorld.innerHTML = '<svg id="canvas-connections" class="absolute inset-0 pointer-events-none" style="overflow: visible; z-index: 0;"></svg>';
     state.pages = [];
@@ -206,4 +283,18 @@ export function loadSchema(schema) {
     
     // 清除选中的属性面板数据并刷新UI
     clearSelection();
+    
+    // 取消系统更新状态
+    setTimeout(() => {
+        isSystemUpdating = false;
+        // 记录初始 Schema 结构，用作基准比对
+        lastSavedSchemaString = JSON.stringify(buildSchema());
+        
+        // 重置时把状态显示清空
+        isDirty = false;
+        const statusEl = document.getElementById('save-status');
+        if (statusEl) {
+            statusEl.classList.add('opacity-0');
+        }
+    }, 100);
 }

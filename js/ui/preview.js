@@ -10,6 +10,28 @@ export function createPreviewField(field) {
     const wrapper = document.createElement('div');
     wrapper.className = field.type === 'grid' ? 'preview-grid' : 'preview-field';
 
+    if (field.type === 'grid') {
+        field.columns.forEach(column => {
+            const columnNode = document.createElement('div');
+            columnNode.className = 'preview-grid-column';
+            const elements = column.elements || [];
+            elements.forEach(childField => columnNode.appendChild(createPreviewField(childField)));
+            wrapper.appendChild(columnNode);
+        });
+        return wrapper;
+    }
+
+    const label = document.createElement('label');
+    label.className = 'mb-2 block text-sm font-medium text-black/85';
+    label.textContent = field.label || '未命名字段';
+    if (field.required) {
+        const star = document.createElement('span');
+        star.className = 'text-[#ff4d4f]';
+        star.textContent = ' *';
+        label.appendChild(star);
+    }
+    wrapper.appendChild(label);
+
     if (field.type === 'signature') {
         const sigDiv = document.createElement('div');
         sigDiv.className = 'mt-2 bg-white border border-[#e5e7eb] rounded-lg p-4 shadow-sm';
@@ -33,28 +55,6 @@ export function createPreviewField(field) {
         `;
         wrapper.appendChild(sigDiv);
     }
-
-    if (field.type === 'grid') {
-        field.columns.forEach(column => {
-            const columnNode = document.createElement('div');
-            columnNode.className = 'preview-grid-column';
-            const elements = column.elements || [];
-            elements.forEach(childField => columnNode.appendChild(createPreviewField(childField)));
-            wrapper.appendChild(columnNode);
-        });
-        return wrapper;
-    }
-
-    const label = document.createElement('label');
-    label.className = 'mb-2 block text-sm font-medium text-black/85';
-    label.textContent = field.label || '未命名字段';
-    if (field.required) {
-        const star = document.createElement('span');
-        star.className = 'text-[#ff4d4f]';
-        star.textContent = ' *';
-        label.appendChild(star);
-    }
-    wrapper.appendChild(label);
 
     if (field.type === 'input' || field.type === 'date') {
         const input = document.createElement('input');
@@ -262,8 +262,8 @@ export function renderPreviewStep() {
         // 使用水平滚动防止步骤挤压
         header.className = 'mb-6 flex items-center text-sm font-medium overflow-x-auto pb-2';
         const stepsHtml = previewSchema.pages.map((p, i) => `
-            <div class="preview-step-item cursor-pointer flex shrink-0 items-center gap-2 transition hover:opacity-80 ${i === currentPreviewStep ? 'text-[#1677ff]' : (i < currentPreviewStep ? 'text-green-600' : 'text-black/45')}">
-                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${i <= currentPreviewStep ? 'border-current' : 'border-gray-300'}">${i + 1}</span>
+            <div class="preview-step-item cursor-pointer flex shrink-0 items-center gap-2 transition hover:opacity-80 ${i === currentPreviewStep ? 'text-[#1677ff]' : 'text-black/45'}">
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${i === currentPreviewStep ? 'border-current' : 'border-gray-300'}">${i + 1}</span>
                 <span class="whitespace-nowrap">${p.title}</span>
             </div>
             ${i < previewSchema.pages.length - 1 ? '<div class="h-[1px] w-8 shrink-0 bg-gray-200 mx-3"></div>' : ''}
@@ -332,7 +332,7 @@ export function renderPreviewStep() {
 export function renderPreview(mode) {
     previewSchema = buildSchema();
     currentPreviewStep = 0;
-    DOM.previewModalTitle.textContent = mode === 'deploy' ? '部署结构' : '表单预览';
+    DOM.previewModalTitle.textContent = mode === 'deploy' ? '发布结构' : '表单预览';
     DOM.previewModalSubtitle.textContent = mode === 'deploy' ? '当前表单已生成可保存的结构数据' : '检查最终填写体验和结构';
     DOM.previewFormTitle.textContent = previewSchema.title;
     DOM.previewFormDesc.textContent = previewSchema.description || '暂无描述';
@@ -343,13 +343,18 @@ export function renderPreview(mode) {
     DOM.schemaFieldCount.textContent = `共 ${previewSchema.pages.length} 页，包含 ${totalFields} 个字段`;
     
     renderPreviewStep();
-    DOM.previewModal.classList.remove('hidden');
+    // 等待 DOM 更新后应用弹窗动画
+    requestAnimationFrame(() => {
+        DOM.previewModal.classList.remove('opacity-0', 'pointer-events-none');
+        DOM.previewModalContent.classList.remove('scale-95', 'opacity-0');
+    });
     safeCreateIcons();
 }
 
 // 关闭预览弹窗
 export function closePreviewModal() {
-    DOM.previewModal.classList.add('hidden');
+    DOM.previewModal.classList.add('opacity-0', 'pointer-events-none');
+    DOM.previewModalContent.classList.add('scale-95', 'opacity-0');
 }
 
 // 触发普通预览模式

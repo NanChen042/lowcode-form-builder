@@ -33,7 +33,7 @@ export const componentDefaults = {
         placeholder: '请选择国家',
         help: '',
         defaultValue: '',
-        maxSelections: '',
+        maxSelections: 3,
         options: defaultCountryOptions
     },
     nationality: {
@@ -41,7 +41,7 @@ export const componentDefaults = {
         placeholder: '请选择国籍',
         help: '',
         defaultValue: '',
-        maxSelections: '',
+        maxSelections: 3,
         options: defaultNationalityOptions
     },
     signature: {
@@ -67,6 +67,7 @@ export const componentDefaults = {
         help: '',
         defaultValue: 'option_1',
         layout: 'inline',
+        maxSelections: 3,
         options: [
             { label: '选项一', value: 'option_1' },
             { label: '选项二', value: 'option_2' }
@@ -104,7 +105,7 @@ export function setLabelText(el, value) {
         textSpan.contentEditable = "plaintext-only";
         textSpan.spellcheck = false;
         
-        // Minimalist premium focus: just a crisp bottom line and theme color
+        // 极简焦点效果：仅保留底部强调线和主题色
         const focusClasses = [
             'shadow-[0_2px_0_0_#1677ff]', 
             'text-[#1677ff]'
@@ -312,7 +313,7 @@ export function renderOptions(el) {
         span.spellcheck = false;
         span.textContent = option.label || optionValue;
 
-        // Minimalist premium focus: just a crisp bottom line and theme color
+        // 极简焦点效果：仅保留底部强调线和主题色
         const focusClasses = [
             'shadow-[0_2px_0_0_#1677ff]', 
             'text-[#1677ff]'
@@ -323,7 +324,7 @@ export function renderOptions(el) {
             if (!span.textContent.trim()) {
                 span.textContent = option.label || optionValue;
             }
-            // Update data logic
+            // 失去焦点时同步数据到右侧属性面板
             const optData = readOptions(el);
             if (optData[index]) {
                 optData[index].label = span.textContent;
@@ -408,6 +409,10 @@ export function setupElementData(el, type) {
     el.dataset.defaultValue = defaults.defaultValue || '';
     el.dataset.required = 'false';
     el.dataset.layout = defaults.layout || 'inline';
+
+    if ('maxSelections' in defaults) {
+        el.dataset.maxSelections = defaults.maxSelections;
+    }
 
     if (defaults.options) {
         writeOptions(el, defaults.options);
