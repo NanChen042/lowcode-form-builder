@@ -100,10 +100,24 @@ export function setLabelText(el, value) {
     let textSpan = labelNode.querySelector('.label-text');
     if (!textSpan) {
         textSpan = document.createElement('span');
-        textSpan.className = 'label-text';
+        textSpan.className = 'label-text outline-none transition-all duration-200 hover:text-[#1677ff] cursor-text';
         textSpan.contentEditable = "plaintext-only";
         textSpan.spellcheck = false;
         
+        // Minimalist premium focus: just a crisp bottom line and theme color
+        const focusClasses = [
+            'shadow-[0_2px_0_0_#1677ff]', 
+            'text-[#1677ff]'
+        ];
+        textSpan.addEventListener('focus', () => textSpan.classList.add(...focusClasses));
+        textSpan.addEventListener('blur', () => {
+            textSpan.classList.remove(...focusClasses);
+            if (!textSpan.textContent.trim()) {
+                textSpan.textContent = '未命名字段';
+                el.dataset.label = '未命名字段';
+            }
+        });
+
         // 当在画布上直接修改文字时，同步更新数据和右侧属性面板
         textSpan.addEventListener('input', e => {
             el.dataset.label = e.target.textContent;
@@ -208,13 +222,55 @@ export function renderOptions(el) {
         if (optionsContainer) {
             optionsContainer.innerHTML = '';
             // 将每一个签名选项渲染为一个复选框
-            options.forEach(opt => {
+            options.forEach((opt, index) => {
                 const label = document.createElement('label');
-                label.className = 'flex items-start gap-2.5';
-                label.innerHTML = `
-                    <input type="checkbox" class="mt-1 flex-shrink-0 rounded text-[#1677ff]" value="${opt.value || ''}">
-                    <span class="text-sm text-black/85 leading-5 signature-declaration-text">${opt.label || opt.value || ''}</span>
-                `;
+                label.className = 'flex items-start gap-2.5 cursor-pointer';
+
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.className = 'mt-1 flex-shrink-0 rounded text-[#1677ff] focus:ring-[#1677ff]';
+                input.value = opt.value || '';
+                input.tabIndex = -1;
+
+                const span = document.createElement('span');
+                span.className = 'signature-declaration-text text-sm text-black/85 leading-5 outline-none transition-all duration-200 hover:text-[#1677ff] cursor-text';
+                span.dataset.index = index;
+                span.contentEditable = "plaintext-only";
+                span.spellcheck = false;
+                span.textContent = opt.label || opt.value || '';
+
+                const focusClasses = [
+                    'shadow-[0_2px_0_0_#1677ff]', 
+                    'text-[#1677ff]'
+                ];
+                span.addEventListener('focus', () => span.classList.add(...focusClasses));
+                span.addEventListener('blur', () => {
+                    span.classList.remove(...focusClasses);
+                    if (!span.textContent.trim()) {
+                        span.textContent = opt.label || opt.value || '';
+                    }
+                    const optData = readOptions(el);
+                    if (optData[index]) {
+                        optData[index].label = span.textContent;
+                        writeOptions(el, optData);
+                    }
+                });
+                
+                span.addEventListener('mousedown', e => e.stopPropagation());
+                span.addEventListener('click', e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+                
+                span.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        span.blur();
+                    }
+                });
+
+                label.appendChild(input);
+                label.appendChild(span);
                 optionsContainer.appendChild(label);
             });
         }
@@ -243,16 +299,54 @@ export function renderOptions(el) {
         // 根据默认值数据决定该选项是否被选中
         if (type === 'radio') {
             input.name = `${el.id}_preview`;
-            input.checked = (el.dataset.defaultValue || options[0]?.value || '') === optionValue;
+            input.checked = (el.dataset.defaultValue || '') === optionValue;
         } else {
             const selectedValues = (el.dataset.defaultValue || '').split(',').map(item => item.trim()).filter(Boolean);
             input.checked = selectedValues.includes(optionValue);
         }
 
         const span = document.createElement('span');
-        span.className = 'option-text';
+        span.className = 'option-text outline-none transition-all duration-200 hover:text-[#1677ff] cursor-text';
         span.dataset.index = index;
+        span.contentEditable = "plaintext-only";
+        span.spellcheck = false;
         span.textContent = option.label || optionValue;
+
+        // Minimalist premium focus: just a crisp bottom line and theme color
+        const focusClasses = [
+            'shadow-[0_2px_0_0_#1677ff]', 
+            'text-[#1677ff]'
+        ];
+        span.addEventListener('focus', () => span.classList.add(...focusClasses));
+        span.addEventListener('blur', () => {
+            span.classList.remove(...focusClasses);
+            if (!span.textContent.trim()) {
+                span.textContent = option.label || optionValue;
+            }
+            // Update data logic
+            const optData = readOptions(el);
+            if (optData[index]) {
+                optData[index].label = span.textContent;
+                writeOptions(el, optData);
+            }
+        });
+        
+        // 阻止点击事件触发父级 label 的默认行为（会导致焦点被强制转移给 radio/checkbox，引发光标瞬间闪退）
+        span.addEventListener('mousedown', e => {
+            // 如果不阻止冒泡，部分浏览器可能会在 mousedown 阶段就开始转移焦点
+            e.stopPropagation();
+        });
+        span.addEventListener('click', e => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        
+        span.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                span.blur();
+            }
+        });
 
         label.appendChild(input);
         label.appendChild(span);

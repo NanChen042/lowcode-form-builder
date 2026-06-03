@@ -450,11 +450,7 @@ export function selectElement(el) {
         propDesc.value = descInput.value;
         
         const toggleFocus = (element, isFocused) => {
-            if (isFocused) {
-                element.classList.add('virtual-focus');
-            } else {
-                element.classList.remove('virtual-focus');
-            }
+            element.classList.toggle('canvas-control-focus', isFocused);
         };
 
         // Remove old event listeners
@@ -670,25 +666,6 @@ export function bindCanvasEvents() {
             e.preventDefault();
             return;
         }
-
-        const textNode = e.target.closest('.label-text, .option-text');
-        if (!textNode) return;
-
-        const canvasElement = textNode.closest('.canvas-element');
-        if (!canvasElement) return;
-
-        e.preventDefault();
-
-        textNode.setAttribute('contenteditable', 'true');
-        textNode.focus();
-        
-        setTimeout(() => {
-            const selection = window.getSelection();
-            const range = document.createRange();
-            range.selectNodeContents(textNode);
-            selection.removeAllRanges();
-            selection.addRange(range);
-        }, 10);
     });
 
     DOM.canvasWorld.addEventListener('drop', e => {
@@ -725,29 +702,11 @@ export function bindCanvasEvents() {
     });
 
     DOM.canvasWorld.addEventListener('keydown', e => {
-        const textNode = e.target.closest('[contenteditable="true"]');
-        if (textNode && e.key === 'Enter') {
-            e.preventDefault();
-            textNode.blur();
-        }
+        // inline editing state is managed locally in builder.js now
     });
 
     DOM.canvasWorld.addEventListener('focusout', e => {
-        const textNode = e.target.closest('[contenteditable="true"]');
-        if (textNode) {
-            textNode.removeAttribute('contenteditable');
-            window.getSelection().removeAllRanges();
-            
-            if (!textNode.textContent.trim()) {
-                if (textNode.classList.contains('label-text')) {
-                    textNode.textContent = '未命名字段';
-                    textNode.closest('.canvas-element').dataset.label = '未命名字段';
-                    if (state.selectedElement === textNode.closest('.canvas-element')) {
-                        DOM.inputLabel.value = '未命名字段';
-                    }
-                }
-            }
-        }
+        // inline editing state is managed locally in builder.js now
     });
 
     DOM.canvasWorld.addEventListener('input', e => {
@@ -815,6 +774,9 @@ export function bindCanvasEvents() {
                             !e.target.closest('input, textarea, select, button, .canvas-element, .element-actions');
 
         if (isSpaceDrag || isMiddleDrag || isBackgroundDrag) {
+            if (document.activeElement && document.activeElement.hasAttribute('contenteditable')) {
+                document.activeElement.blur();
+            }
             e.preventDefault();
             state.isPanning = true;
             state.panStartX = e.clientX;
@@ -831,6 +793,9 @@ export function bindCanvasEvents() {
                 });
             }
         } else if (isFrameDrag) {
+            if (document.activeElement && document.activeElement.hasAttribute('contenteditable')) {
+                document.activeElement.blur();
+            }
             e.preventDefault();
             const frame = e.target.closest('.mobile-frame');
             state.isDraggingFrame = true;

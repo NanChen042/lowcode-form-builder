@@ -5,7 +5,7 @@ import { bindPreviewEvents } from './ui/preview.js';
 import { addComponentToCanvas } from './components/builder.js';
 import { state } from './core/state.js';
 import { loadSchema } from './core/schema.js';
-import { kycClientTemplate, kycIndividualTemplate, kycEntityTemplate } from './templates/recommend.js';
+import { blankTemplate, kycClientTemplate, kycIndividualTemplate, kycEntityTemplate } from './templates/recommend.js';
 
 // 全局错误捕获，用于在页面中显示脚本运行时错误
 window.addEventListener('error', function(event) {
@@ -98,7 +98,7 @@ function bootstrap() {
     document.getElementById('components-business').addEventListener('click', handleComponentClick);
     document.getElementById('components-layout').addEventListener('click', handleComponentClick);
 
-    // 绑定推荐模板点击事件
+    // 绑定模板点击事件
     function bindTemplateBtn(id, templateObj) {
         const btn = document.getElementById(id);
         if (btn) {
@@ -106,20 +106,19 @@ function bootstrap() {
                 if (confirm('加载模板将清空当前所有内容，是否继续？')) {
                     loadSchema(templateObj);
                     
-                    // 清除所有模板卡片的高亮状态
-                    document.querySelectorAll('.template-card').forEach(el => {
-                        el.classList.remove('ring-2', 'ring-[#1677ff]', 'ring-offset-1', 'border-transparent', 'bg-blue-50/50');
-                        el.classList.add('border-[#e8edf7]', 'bg-white');
-                    });
-                    
-                    // 为当前点击的模板卡片添加高亮状态
-                    btn.classList.add('ring-2', 'ring-[#1677ff]', 'ring-offset-1', 'border-transparent', 'bg-blue-50/50');
-                    btn.classList.remove('border-[#e8edf7]', 'bg-white');
+                    // 关闭模板画廊 Modal
+                    const modal = document.getElementById('template-modal');
+                    const content = document.getElementById('template-modal-content');
+                    if (modal && content) {
+                        modal.classList.add('opacity-0', 'pointer-events-none');
+                        content.classList.add('scale-95', 'opacity-0');
+                    }
                 }
             });
         }
     }
     
+    bindTemplateBtn('btn-tpl-blank', blankTemplate);
     bindTemplateBtn('btn-tpl-kyc-client', kycClientTemplate);
     bindTemplateBtn('btn-tpl-kyc-individual', kycIndividualTemplate);
     bindTemplateBtn('btn-tpl-kyc-entity', kycEntityTemplate);

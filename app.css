@@ -109,56 +109,7 @@ body.is-panning * {
     line-height: 20px;
 }
 
-.component-item {
-    position: relative;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    height: 42px;
-    width: 100%;
-    cursor: pointer;
-    gap: 8px;
-    border-radius: 10px;
-    border: 1px solid #e8edf7;
-    background: linear-gradient(135deg, #ffffff 0%, #f7fbff 100%);
-    padding: 0 10px;
-    text-align: left;
-    color: rgba(0, 0, 0, 0.88);
-    box-shadow: 0 2px 8px rgba(22, 119, 255, 0.04);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
 
-.component-item:hover {
-    border-color: #bae0ff;
-    background: linear-gradient(135deg, #ffffff 0%, #eef6ff 100%);
-    color: #1677ff;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(22, 119, 255, 0.1), 0 0 0 1px rgba(22, 119, 255, 0.05);
-}
-
-.component-item:active {
-    cursor: grab;
-    transform: translateY(0);
-}
-
-.component-icon {
-    display: inline-flex;
-    width: 24px;
-    height: 24px;
-    flex: 0 0 auto;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    background: transparent;
-    color: #64748b;
-    transition: all 0.25s;
-}
-
-.component-item:hover .component-icon {
-    background: #eff6ff;
-    color: #1677ff;
-}
 
 .component-copy {
     display: flex;
@@ -323,22 +274,24 @@ button{
     position: relative;
     margin-bottom: 10px;
     cursor: pointer;
-    border-radius: 12px;
-    border: 1px solid #f0f0f0;
+    border-radius: 8px; /* 统一为现代小圆角 */
+    border: 1px solid transparent; /* 物理边框透明，防止选择时出现抖动 */
     background: #fff;
     padding: 14px;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
-    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    /* 默认状态：极其微弱的卡片阴影，模拟白纸上的组件 */
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(15, 23, 42, 0.06);
+    transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .canvas-element:hover {
-    border-color: #4096ff;
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    /* 悬浮状态：外层叠加极淡的蓝色光圈，不改变原有边框，像编辑器外挂的 Bounding Box */
+    box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(59, 130, 246, 0.3);
 }
 
 .canvas-element.is-selected {
-    border-color: #1677ff;
-    box-shadow: 0 0 0 2px rgba(5, 145, 255, 0.12), 0 10px 28px rgba(22, 119, 255, 0.10);
+    /* 选中状态：清脆利落的 2px 纯蓝编辑器焦点环 (Focus Ring)，这是 Figma/Webflow 等顶级工具的标准做法 */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 0 0 2px #3b82f6;
+    z-index: 10; /* 保证选中状态的光圈不被相邻元素遮挡 */
 }
 
 .canvas-element input,
@@ -350,6 +303,40 @@ button{
 .canvas-element .choice-group,
 .canvas-element .choice-group * {
     pointer-events: none;
+}
+
+/* 允许标题和选项文本响应鼠标单击/双击以进入编辑模式，并展示悬停暗示 */
+.canvas-element .label-text,
+.canvas-element .option-text,
+.canvas-element .signature-declaration-text {
+    pointer-events: auto !important;
+    cursor: text !important;
+    transition: color 0.2s;
+}
+
+.canvas-element .label-text:hover,
+.canvas-element .option-text:hover,
+.canvas-element .signature-declaration-text:hover {
+    color: #1677ff;
+}
+
+.canvas-text-focus {
+    display: inline-block;
+    color: #1677ff;
+    box-shadow: 0 2px 0 0 #1677ff;
+    transition: color 0.2s, box-shadow 0.2s;
+}
+
+.canvas-text-editing {
+    min-width: 20px;
+    cursor: text;
+    outline: none;
+}
+
+.canvas-control-focus {
+    border-color: #1677ff !important;
+    background: #fff !important;
+    box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.15) !important;
 }
 
 .layout-element {
@@ -629,32 +616,90 @@ textarea.preview-input {
 
 .sortable-ghost,
 .drop-placeholder {
-    min-height: 60px !important;
+    min-height: 54px !important;
     margin-bottom: 10px !important;
-    opacity: 1;
-    border: 2px dashed #1677ff !important;
-    border-radius: 12px !important;
-    background:
-        repeating-linear-gradient(135deg, rgba(22, 119, 255, 0.06) 0 8px, rgba(22, 119, 255, 0.02) 8px 16px),
-        #f0f7ff !important;
-    box-shadow: inset 0 0 0 1px rgba(22, 119, 255, 0.08);
+    opacity: 1 !important;
+    border: none !important; /* 彻底移除边框，最高级的留白 */
+    border-radius: 8px !important; 
+    
+    /* 极致高级感：物理凹槽 (Debossed Well) */
+    background: #f8fafc !important; /* 极简的白偏灰 slate-50 */
+    box-shadow: 
+      inset 0 4px 6px -1px rgba(15, 23, 42, 0.05), /* 顶部深内部阴影，营造物理凹陷 */
+      inset 0 2px 4px -2px rgba(15, 23, 42, 0.05),
+      inset 0 0 0 1px rgba(15, 23, 42, 0.03) !important; /* 极微弱的内边缘线 */
+    
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
     overflow: hidden;
+    position: relative;
 }
 
-.sortable-ghost > * {
-    opacity: 0 !important;
+/* 隐藏原本的拖拽元素残影，确保居中完美 (仅针对左侧侧边栏组件) */
+.component-item.sortable-ghost > * {
+    display: none !important;
 }
 
-/* When sorting existing components within the canvas */
+/* 极其克制的高级动效图标，使用优雅的 slate-400 */
+.sortable-ghost::before,
+.drop-placeholder::before {
+    content: '';
+    display: block;
+    width: 14px;
+    height: 14px;
+    /* 纤细、极简的向下箭头 SVG */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4v16M19 13l-7 7-7-7'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    /* 缓慢的呼吸动效 */
+    animation: dropSmooth 2.5s infinite ease-in-out;
+}
+
+@keyframes dropSmooth {
+    0%, 100% { transform: translateY(-3px); opacity: 0.4; }
+    50% { transform: translateY(3px); opacity: 1; }
+}
+
+.sortable-ghost::after,
+.drop-placeholder::after {
+    content: "放置组件";
+    font-size: 13px;
+    letter-spacing: 2px; /* 增加字间距，提升排版呼吸感 */
+    color: #94a3b8; /* slate-400 莫兰迪色系 */
+    font-weight: 500;
+}
+
+/* 当在画布内对已有组件进行重排时 (Reordering within canvas) */
 .canvas-dropzone .canvas-element.sortable-ghost {
+    display: block !important; /* 核心修复：阻止继承 display:flex，恢复正常块级布局以撑开真实高度 */
     width: 100% !important;
-    /* Do not force height, let it match the actual component's height */
+    height: auto !important; /* 保持组件原始高度，防止拖拽时画布跳动变形 */
+    /* 仅保留纯净的物理凹槽背景 */
+    background: #f8fafc !important;
+    box-shadow: inset 0 2px 4px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* 重排时不需要显示“放置组件”文字和图标 */
+.canvas-dropzone .canvas-element.sortable-ghost::before,
+.canvas-dropzone .canvas-element.sortable-ghost::after {
+    display: none !important;
+}
+
+/* 核心修复：重排时不能更改 display 属性，否则会导致 Sortable 测量高度错误，从而使拖拽块变形。
+   仅用 opacity:0 和 visibility:hidden 来视觉隐藏内容，完全保留 DOM 原有布局尺寸 */
+.canvas-dropzone .canvas-element.sortable-ghost > * {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
 }
 
 /* When dragging NEW components from the sidebar into the canvas */
 .canvas-dropzone .component-item.sortable-ghost {
     width: 100% !important;
-    height: 86px !important; /* Simulate the average height of a rendered input field */
+    height: 72px !important; /* Simulate the average height of a rendered input field */
 }
 
 #components-basic .sortable-ghost,
@@ -662,44 +707,43 @@ textarea.preview-input {
 #components-layout .sortable-ghost {
     height: 42px !important;
     min-height: 42px !important;
+    margin-bottom: 0 !important;
+    border: 1px dashed rgba(148, 163, 184, 0.4) !important; /* 侧边栏保持若有若无的网格感 */
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+#components-basic .sortable-ghost::before,
+#components-business .sortable-ghost::before,
+#components-layout .sortable-ghost::before {
+    display: none;
 }
 
 .sortable-drag {
     transition: none !important;
     cursor: grabbing !important;
-    border-color: #1677ff !important;
-    box-shadow: 0 16px 40px rgba(22, 119, 255, 0.22), 0 6px 16px rgba(15, 23, 42, 0.12) !important;
+    /* 保持选中时的蓝色焦点环，并增加超大阴影模拟物理抓取 */
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 2px #3b82f6 !important;
 }
 
-[contenteditable="true"] {
-    outline: 2px solid #1677ff;
-    outline-offset: 2px;
-    border-radius: 2px;
-    background-color: #f0f7ff;
-    cursor: text;
-    min-width: 20px;
-    display: inline-block;
-}
+/* Text editing state is mapped through .canvas-text-focus / .canvas-text-editing. */
 
 .drag-fallback {
     transition: none !important;
     pointer-events: none !important;
-    border-radius: 8px !important;
-    border: 1px solid #1677ff !important;
-    background: #ffffff !important;
-    box-shadow: 0 10px 20px rgba(22, 119, 255, 0.2), 0 4px 8px rgba(15, 23, 42, 0.1) !important;
+    /* 去除强制的背景色，保留原有背景；完全继承原本的蓝色选中框 */
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 2px #3b82f6 !important;
     z-index: 9999 !important;
-    opacity: 0.95 !important;
+    opacity: 1 !important; /* 保持 100% 不透明，防止看起来发虚 */
 }
 
 .component-item.drag-fallback {
-    width: 125px !important;
     height: 42px !important;
     min-height: 42px !important;
 }
 
 .drag-chosen {
-    opacity: 0.85;
+    opacity: 0.8;
 }
 
 .runtime-error {
@@ -719,18 +763,4 @@ textarea.preview-input {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08), 0 9px 28px rgba(0, 0, 0, 0.12);
 }
 
-/* 虚拟焦点映射高亮效果 (紫罗兰 Indigo 风格，区分蓝色主选中框) */
-.virtual-focus {
-    background-color: #eef2ff !important;
-    color: #4f46e5 !important;
-    border-radius: 4px;
-    box-shadow: 0 0 0 4px #eef2ff;
-    transition: all 0.2s ease;
-}
-
-input.virtual-focus, textarea.virtual-focus, select.virtual-focus {
-    background-color: #fff !important;
-    color: inherit !important;
-    border-color: #6366f1 !important;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15) !important;
-}
+/* Property-panel focus mapping is shared through .canvas-text-focus / .canvas-control-focus. */

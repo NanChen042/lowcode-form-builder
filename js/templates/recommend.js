@@ -1,3 +1,18 @@
+// 空白画布模板
+export const blankTemplate = {
+    schemaVersion: '1.0.0',
+    meta: {
+        title: '未命名的表单',
+        description: '请在这里输入表单的描述信息'
+    },
+    pages: [
+        {
+            title: '第 1 页',
+            fields: []
+        }
+    ]
+};
+
 // 个人案例 - KYC 表单
 export const kycIndividualTemplate = {
     schemaVersion: '1.0.0',

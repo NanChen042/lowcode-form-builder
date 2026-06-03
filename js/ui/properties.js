@@ -122,6 +122,19 @@ export function renderOptionsEditor() {
             labelInput.placeholder = 'Label';
         }
         labelInput.value = option.label || '';
+        
+        // 虚拟焦点映射：当选中右侧输入框时，高亮左边对应的选项文本
+        let focusedTarget = null;
+        labelInput.addEventListener('focus', () => {
+            if (!state.selectedElement) return;
+            const targets = state.selectedElement.querySelectorAll('.option-text, .signature-declaration-text');
+            focusedTarget = targets[index];
+            if (focusedTarget) focusedTarget.classList.add('canvas-text-focus');
+        });
+        labelInput.addEventListener('blur', () => {
+            if (focusedTarget) focusedTarget.classList.remove('canvas-text-focus');
+            focusedTarget = null;
+        });
 
         // 选项值输入框
         const valueInput = document.createElement('input');
@@ -189,17 +202,25 @@ export function bindPropEvents() {
     });
 
     // 虚拟焦点映射辅助函数：当右侧输入框聚焦时，高亮左侧画布中对应的元素
+    const textFocusClass = 'canvas-text-focus';
+    const inputFocusClass = 'canvas-control-focus';
+    const isControlTarget = target => ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+    const setMappedFocus = (target, isFocused) => {
+        if (!target) return;
+        target.classList.toggle(isControlTarget(target) ? inputFocusClass : textFocusClass, isFocused);
+    };
+
     const bindVirtualFocus = (propInput, selector) => {
+        let focusedTarget = null;
+
         propInput.addEventListener('focus', () => {
             if (!state.selectedElement) return;
-            const target = state.selectedElement.querySelector(selector);
-            if (target) target.classList.add('virtual-focus');
+            focusedTarget = state.selectedElement.querySelector(selector);
+            setMappedFocus(focusedTarget, true);
         });
         propInput.addEventListener('blur', () => {
-            if (!state.selectedElement) return;
-            // 因为失焦时可能元素已经切换，这里安全起见直接移除全局所有虚拟焦点，或者准确找到当前元素的 target
-            const target = state.selectedElement.querySelector(selector);
-            if (target) target.classList.remove('virtual-focus');
+            setMappedFocus(focusedTarget, false);
+            focusedTarget = null;
         });
     };
 
