@@ -47,10 +47,13 @@ export const previewModalSubtitle = document.getElementById('preview-modal-subti
 export const previewFormTitle = document.getElementById('preview-form-title');
 export const previewFormDesc = document.getElementById('preview-form-desc');
 export const previewFormBody = document.getElementById('preview-form-body');
+export const previewStepperContainer = document.getElementById('preview-stepper-container');
+export const previewMobileProgress = document.getElementById('preview-mobile-progress');
 
 // 导出 Schema 及画布相关 DOM 节点
 export const schemaOutput = document.getElementById('schema-output');
 export const schemaFieldCount = document.getElementById('schema-field-count');
+export const copySchemaBtn = document.getElementById('copy-schema-btn');
 export const canvasScrollArea = document.getElementById('canvas-scroll-area');
 export const canvasWorld = document.getElementById('canvas-world');
 export const mobileFrame = document.getElementById('mobile-frame');

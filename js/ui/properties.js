@@ -121,24 +121,24 @@ export function renderOptionsEditor() {
     const options = readOptions(state.selectedElement);
     DOM.optionsEditor.innerHTML = '';
 
-    const isSignature = state.selectedElement.dataset.type === 'signature';
+    const useTextarea = state.selectedElement.dataset.type === 'signature' || state.selectedElement.dataset.type === 'alert';
 
     options.forEach((option, index) => {
         const row = document.createElement('div');
         row.className = 'option-row';
-        if (isSignature) {
+        if (useTextarea) {
             row.style.gridTemplateColumns = 'minmax(0, 1fr) 32px';
             row.style.alignItems = 'flex-start';
         }
 
         let labelInput;
-        // 签名组件使用文本域作为选项名称输入，以容纳较长的声明内容
-        if (isSignature) {
+        // 签名与提示组件使用文本域作为选项名称输入，以容纳较长的内容
+        if (useTextarea) {
             labelInput = document.createElement('textarea');
             labelInput.rows = 2;
             labelInput.className = 'ant-input text-xs resize-y';
             labelInput.style.minHeight = '48px';
-            labelInput.placeholder = '请输入声明条款内容...';
+            labelInput.placeholder = '请输入内容...';
         } else {
             labelInput = document.createElement('input');
             labelInput.type = 'text';
@@ -167,8 +167,8 @@ export function renderOptionsEditor() {
         valueInput.readOnly = true;
         valueInput.title = '系统自动生成的底层标识符 (Value)';
         valueInput.className = 'ant-input text-[11px] font-mono !bg-black/[0.02] !text-black/45 !cursor-default !border-transparent !shadow-none px-2';
-        // 签名组件不需要独立的 value 输入框
-        if (isSignature) {
+        // 签名与提示组件不需要独立的 value 输入框
+        if (useTextarea) {
             valueInput.style.display = 'none';
         }
 
@@ -176,7 +176,7 @@ export function renderOptionsEditor() {
         const removeButton = document.createElement('button');
         removeButton.type = 'button';
         removeButton.className = 'icon-btn';
-        if (isSignature) {
+        if (useTextarea) {
             removeButton.style.marginTop = '6px';
         }
         removeButton.innerHTML = '<i data-lucide="x" class="h-3.5 w-3.5"></i>';
@@ -348,9 +348,10 @@ export function bindPropEvents() {
         if (!state.selectedElement) return;
         const options = readOptions(state.selectedElement);
         
+        const isAlert = state.selectedElement.dataset.type === 'alert';
         const isSignature = state.selectedElement.dataset.type === 'signature';
-        const prefix = isSignature ? 'dec_' : 'option_';
-        const labelPrefix = isSignature ? '声明' : '选项';
+        const prefix = isAlert ? 'tip_' : (isSignature ? 'dec_' : 'option_');
+        const labelPrefix = isAlert ? '提示' : (isSignature ? '声明' : '选项');
         
         // 查找当前最大的后缀序号（实现自增ID效果）
         let maxIndex = 0;

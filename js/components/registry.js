@@ -1,5 +1,5 @@
 // 定义包含预设选项的组件类型，如单选、多选、下拉等
-export const optionTypes = ['select', 'country', 'nationality', 'radio', 'checkbox', 'signature'];
+export const optionTypes = ['select', 'country', 'nationality', 'radio', 'checkbox', 'signature', 'alert'];
 // 定义可以输入或选择具体值的组件类型
 export const valueTypes = ['input', 'textarea', 'date'];
 

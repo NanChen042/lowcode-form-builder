@@ -257,12 +257,13 @@
                                 高级布局
                             </h3>
                             <div id="components-layout" class="grid grid-cols-2 gap-2.5">
-                                <div class="component-item select-none group flex cursor-pointer items-center gap-2.5 rounded-md border border-slate-200 shadow-sm bg-white px-3 py-2 transition-all hover:border-blue-400 hover:bg-blue-50/30 hover:shadow-md active:bg-blue-50/60 active:border-blue-500"
-                                    data-type="grid">
-                                    <i data-lucide="columns-2"
-                                        class="h-4 w-4 text-slate-400 transition-colors group-hover:text-blue-500"></i>
-                                    <span
-                                        class="text-[12px] font-medium text-slate-600 transition-colors group-hover:text-blue-700">双列栅格</span>
+                                <div class="component-item select-none group flex cursor-pointer items-center gap-2.5 rounded-md border border-slate-200 shadow-sm bg-white px-3 py-2 transition-all hover:border-blue-400 hover:bg-blue-50/30 hover:shadow-md active:bg-blue-50/60 active:border-blue-500" data-type="grid">
+                                    <i data-lucide="layout-grid" class="h-4 w-4 text-slate-400 transition-colors group-hover:text-blue-500"></i>
+                                    <span class="text-[12px] font-medium text-slate-600 transition-colors group-hover:text-blue-700">双列栅格</span>
+                                </div>
+                                <div class="component-item select-none group flex cursor-pointer items-center gap-2.5 rounded-md border border-slate-200 shadow-sm bg-white px-3 py-2 transition-all hover:border-blue-400 hover:bg-blue-50/30 hover:shadow-md active:bg-blue-50/60 active:border-blue-500" data-type="alert">
+                                    <i data-lucide="info" class="h-4 w-4 text-slate-400 transition-colors group-hover:text-blue-500"></i>
+                                    <span class="text-[12px] font-medium text-slate-600 transition-colors group-hover:text-blue-700">提示区块</span>
                                 </div>
                             </div>
                         </section>
@@ -471,32 +472,51 @@
                         检查最终填写体验和字段结构
                     </p>
                 </div>
-                <button class="icon-btn" type="button" onclick="closePreviewModal()" aria-label="关闭">
-                    <i data-lucide="x" class="h-4 w-4"></i>
-                </button>
+                <div class="flex items-center gap-4">
+                    <button class="ant-btn ant-btn-default h-8 px-3 text-xs flex items-center gap-1.5" onclick="toggleSchemaSidebar()">
+                        <i data-lucide="code" class="h-3.5 w-3.5"></i>
+                        <span>Schema JSON</span>
+                    </button>
+                    <button class="icon-btn" type="button" onclick="closePreviewModal()" aria-label="关闭">
+                        <i data-lucide="x" class="h-4 w-4"></i>
+                    </button>
+                </div>
             </header>
-            <div class="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_380px]">
-                <section class="flex min-w-0 items-center justify-center overflow-auto bg-[#f5f5f5] py-8">
+            <div id="preview-layout-container" class="relative min-h-0 flex-1 overflow-hidden">
+                <section id="preview-ui-section" class="absolute inset-0 flex items-center justify-center gap-12 overflow-auto bg-[#f5f5f5] py-8 transition-all duration-300 opacity-100">
+                    <!-- 左侧独立大纲进度条 -->
+                    <div id="preview-stepper-container" class="hidden w-[240px] shrink-0 flex-col"></div>
+                    
                     <div class="relative flex h-[812px] max-h-full w-[375px] shrink-0 flex-col overflow-hidden rounded-[40px] border-[10px] border-[#222] bg-white shadow-2xl">
                         <!-- 手机刘海屏区域 -->
                         <div class="absolute left-1/2 top-0 z-10 h-6 w-32 -translate-x-1/2 rounded-b-2xl bg-[#222]"></div>
                         <!-- 手机主视图 -->
                         <div class="custom-scrollbar flex-1 overflow-auto p-5 pt-10 pb-10">
+                            <div id="preview-mobile-progress" class="mb-4 text-[13px] font-medium text-[#1677ff] hidden tracking-wider"></div>
                             <h3 id="preview-form-title" class="m-0 text-[20px] font-semibold leading-7"></h3>
                             <p id="preview-form-desc" class="mb-5 mt-1.5 text-xs text-black/65"></p>
                             <form id="preview-form-body" class="flex flex-col gap-4"></form>
                         </div>
                     </div>
                 </section>
-                <aside class="flex min-h-0 min-w-0 flex-col border-l border-[#f0f0f0]">
-                    <div class="flex h-12 items-center justify-between border-b border-[#f0f0f0] px-4 font-semibold">
-                        <span>Schema JSON</span>
+                <aside id="schema-sidebar" class="absolute inset-0 flex flex-col bg-white transition-all duration-300 opacity-0 pointer-events-none">
+                    <div class="flex h-12 shrink-0 items-center justify-between border-b border-[#f0f0f0] px-4 font-semibold">
+                        <div class="flex items-center gap-2">
+                            <span>Schema JSON</span>
+                            <button id="copy-schema-btn" class="flex h-6 w-6 items-center justify-center rounded text-black/45 transition hover:bg-[#f0f0f0] hover:text-[#1677ff]" title="复制 JSON">
+                                <i data-lucide="copy" class="h-3.5 w-3.5"></i>
+                            </button>
+                        </div>
                         <span id="schema-field-count" class="code-badge">0 fields</span>
                     </div>
                     <pre id="schema-output"
-                        class="custom-scrollbar m-0 flex-1 overflow-auto bg-[#141414] p-4 font-mono text-xs leading-5 text-[#f5f5f5]"></pre>
+                        class="custom-scrollbar m-0 flex-1 overflow-auto bg-[#282c34] p-5 font-mono text-[13px] leading-6 text-[#abb2bf] selection:bg-[#3e4451]"></pre>
                 </aside>
             </div>
+            <footer class="flex h-14 shrink-0 items-center justify-end border-t border-[#f0f0f0] bg-[#fafafa] px-5 z-10">
+                <button class="ant-btn ant-btn-default mr-3 h-8 px-4 text-xs font-medium" onclick="closePreviewModal()">取消</button>
+                <button class="ant-btn ant-btn-primary h-8 px-5 text-xs font-medium" onclick="publishForm()">发布表单</button>
+            </footer>
         </div>
     </div>
 
@@ -660,6 +680,43 @@
             </div>
             <label class="component-label">日期选择 <span class="req-star hidden">*</span></label>
             <input type="date" class="component-placeholder" />
+        </div>
+    </template>
+
+    <template id="tpl-alert">
+        <div class="canvas-element" data-type="alert">
+            <div class="element-actions">
+                <button class="icon-btn" type="button"
+                    onclick="duplicateElement(event, this.closest('.canvas-element'))" title="复制">
+                    <i data-lucide="copy"></i>
+                </button>
+                <button class="icon-btn danger" type="button"
+                    onclick="deleteElement(event, this.closest('.canvas-element'))" title="删除">
+                    <i data-lucide="trash-2"></i>
+                </button>
+            </div>
+            
+            <section class="overflow-hidden rounded-xl bg-blue-50/40 shadow-sm ring-1 ring-blue-100/80 pointer-events-none">
+                <div class="h-1 w-full bg-blue-500"></div>
+                <div class="p-4 sm:p-5">
+                    <div class="mb-3 flex items-center gap-2">
+                        <svg class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <h3 class="component-label text-[14px] font-bold text-blue-900 m-0"><span class="label-text">提示</span></h3>
+                    </div>
+                    <div class="alert-content-wrapper space-y-2 pl-6 text-[13px] leading-relaxed text-blue-800">
+                        <p class="relative">
+                            <span class="absolute -left-[14px] top-[7px] flex h-1.5 w-1.5 rounded-sm bg-blue-400"></span>
+                            您将作为以下公司的授权代表，完成KYC问卷填写。
+                        </p>
+                        <p class="relative">
+                            <span class="absolute -left-[14px] top-[7px] flex h-1.5 w-1.5 rounded-sm bg-blue-400"></span>
+                            请确认以下信息是否准确，如需修改，请联系服务商修改后再进行下一步。
+                        </p>
+                    </div>
+                </div>
+            </section>
         </div>
     </template>
 

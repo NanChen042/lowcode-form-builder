@@ -490,12 +490,18 @@ export function selectElement(el) {
     if (type === 'date') {
         DOM.propDateTypeSelect.value = el.dataset.dateType || 'date';
     }
-    DOM.propHelpGroup.style.display = type === 'grid' ? 'none' : 'block';
+    DOM.propHelpGroup.style.display = (type === 'grid' || type === 'alert') ? 'none' : 'block';
     DOM.propDefaultGroup.style.display = hasDefaultValue ? 'block' : 'none';
     const isFixedOptions = type === 'country' || type === 'nationality';
     DOM.propOptionsGroup.classList.toggle('hidden', !hasOptions || isFixedOptions);
     DOM.propLayoutGroup.style.display = canStackChoices ? 'block' : 'none';
     DOM.propLayoutSelect.value = el.dataset.layout || 'inline';
+    
+    // Hide required toggle for structural components like grid and alert
+    const requiredGroup = DOM.toggleRequired.closest('.prop-section');
+    if (requiredGroup) {
+        requiredGroup.style.display = (type === 'grid' || type === 'alert') ? 'none' : 'flex';
+    }
     DOM.toggleRequired.checked = el.dataset.required === 'true';
     
     const canHaveMaxSelections = type === 'country' || type === 'nationality' || type === 'checkbox';

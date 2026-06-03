@@ -765,3 +765,20 @@ textarea.preview-input {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08), 0 9px 28px rgba(0, 0, 0, 0.12);
 }
 
+
+/* 提示区块的特殊无边框透明卡片样式 */
+.canvas-element[data-type="alert"] {
+    background: transparent;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    border-radius: 12px; /* 匹配 rounded-xl */
+}
+
+.canvas-element[data-type="alert"]:hover {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+}
+
+.canvas-element[data-type="alert"].is-selected {
+    box-shadow: 0 0 0 2px #3b82f6;
+}

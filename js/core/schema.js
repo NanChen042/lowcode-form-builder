@@ -48,7 +48,7 @@ export function serializeElement(el) {
     }
 
     // 处理带有选项的类型
-    if (['select', 'radio', 'checkbox', 'country', 'nationality', 'signature'].includes(type)) {
+    if (['select', 'radio', 'checkbox', 'country', 'nationality', 'signature', 'alert'].includes(type)) {
         base.options = readOptions(el);
     }
     

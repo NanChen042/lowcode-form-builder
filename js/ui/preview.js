@@ -5,6 +5,24 @@ import { safeCreateIcons } from '../utils/helpers.js';
 let currentPreviewStep = 0;
 let previewSchema = null;
 
+// JSON 语法高亮实现，仿 One Dark 风格
+function highlightJSON(jsonStr) {
+    let str = jsonStr.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return str.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+        let cls = 'text-[#d19a66]'; // number/boolean (orange)
+        if (/^"/.test(match)) {
+            if (/:$/.test(match)) {
+                cls = 'text-[#e06c75]'; // key (red)
+            } else {
+                cls = 'text-[#98c379]'; // string (green)
+            }
+        } else if (/null/.test(match)) {
+            cls = 'text-[#5c6370] italic'; // null (grey italic)
+        }
+        return '<span class="' + cls + '">' + match + '</span>';
+    });
+}
+
 // 递归创建预览模式下的表单字段DOM节点
 export function createPreviewField(field) {
     const wrapper = document.createElement('div');
@@ -18,6 +36,32 @@ export function createPreviewField(field) {
             elements.forEach(childField => columnNode.appendChild(createPreviewField(childField)));
             wrapper.appendChild(columnNode);
         });
+        return wrapper;
+    }
+
+    if (field.type === 'alert') {
+        const options = field.options || [];
+        const itemsHtml = options.map(opt => `
+            <p class="relative">
+                <span class="absolute -left-[14px] top-[7px] flex h-1.5 w-1.5 rounded-sm bg-blue-400"></span>
+                ${opt.label || opt.value || ''}
+            </p>
+        `).join('');
+
+        wrapper.innerHTML = `
+            <section class="overflow-hidden rounded-xl bg-blue-50/40 shadow-sm ring-1 ring-blue-100/80">
+                <div class="h-1 w-full bg-blue-500"></div>
+                <div class="p-4 sm:p-5">
+                    <div class="mb-3 flex items-center gap-2">
+                        <i data-lucide="info" class="h-4 w-4 text-blue-600 stroke-[2.5px]"></i>
+                        <h3 class="text-[14px] font-bold text-blue-900 m-0">${field.label || '提示'}</h3>
+                    </div>
+                    <div class="space-y-2 pl-6 text-[13px] leading-relaxed text-blue-800">
+                        ${itemsHtml}
+                    </div>
+                </div>
+            </section>
+        `;
         return wrapper;
     }
 
@@ -258,20 +302,22 @@ export function renderPreviewStep() {
     const isLast = currentPreviewStep === previewSchema.pages.length - 1;
     
     if (previewSchema.pages.length > 1) {
-        const header = document.createElement('div');
-        // 使用水平滚动防止步骤挤压
-        header.className = 'mb-6 flex items-center text-sm font-medium overflow-x-auto pb-2';
+        DOM.previewStepperContainer.classList.remove('hidden');
+        DOM.previewStepperContainer.classList.add('flex');
+        
         const stepsHtml = previewSchema.pages.map((p, i) => `
-            <div class="preview-step-item cursor-pointer flex shrink-0 items-center gap-2 transition hover:opacity-80 ${i === currentPreviewStep ? 'text-[#1677ff]' : 'text-black/45'}">
-                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ${i === currentPreviewStep ? 'border-current' : 'border-gray-300'}">${i + 1}</span>
-                <span class="whitespace-nowrap">${p.title}</span>
+            <div class="preview-step-item cursor-pointer flex items-start gap-3 transition hover:opacity-80 ${i === currentPreviewStep ? 'text-[#1677ff]' : 'text-black/45'}">
+                <div class="flex flex-col items-center">
+                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${i === currentPreviewStep ? 'border-current font-medium bg-[#e6f4ff]' : 'border-gray-300'}">${i + 1}</span>
+                    ${i < previewSchema.pages.length - 1 ? '<div class="w-px h-8 bg-gray-200 my-1"></div>' : ''}
+                </div>
+                <span class="pt-1 text-sm font-medium leading-5">${p.title}</span>
             </div>
-            ${i < previewSchema.pages.length - 1 ? '<div class="h-[1px] w-8 shrink-0 bg-gray-200 mx-3"></div>' : ''}
         `).join('');
-        header.innerHTML = stepsHtml;
+        DOM.previewStepperContainer.innerHTML = stepsHtml;
         
         // 为每一个步骤绑定点击事件，实现随时切换预览
-        const stepElements = header.querySelectorAll('.preview-step-item');
+        const stepElements = DOM.previewStepperContainer.querySelectorAll('.preview-step-item');
         stepElements.forEach((el, index) => {
             el.addEventListener('click', () => {
                 if (currentPreviewStep !== index) {
@@ -280,8 +326,18 @@ export function renderPreviewStep() {
                 }
             });
         });
-        
-        DOM.previewFormBody.appendChild(header);
+
+        // 更新手机端内部的极简进度指示器
+        if (DOM.previewMobileProgress) {
+            DOM.previewMobileProgress.classList.remove('hidden');
+            DOM.previewMobileProgress.textContent = `第 ${currentPreviewStep + 1} 步 / 共 ${previewSchema.pages.length} 步`;
+        }
+    } else {
+        DOM.previewStepperContainer.classList.add('hidden');
+        DOM.previewStepperContainer.classList.remove('flex');
+        if (DOM.previewMobileProgress) {
+            DOM.previewMobileProgress.classList.add('hidden');
+        }
     }
     
     if (!page.fields || page.fields.length === 0) {
@@ -293,38 +349,38 @@ export function renderPreviewStep() {
         page.fields.forEach(field => DOM.previewFormBody.appendChild(createPreviewField(field)));
     }
     
-    const footer = document.createElement('div');
-    footer.className = 'mt-8 flex items-center justify-end gap-3 pt-6 border-t border-[#f0f0f0]';
+    const hasPrev = !isFirst;
+    const hasNext = !isLast;
     
-    if (!isFirst) {
-        const prevBtn = document.createElement('button');
-        prevBtn.className = 'rounded-md border border-[#d9d9d9] bg-white px-4 py-1.5 text-sm font-medium transition hover:border-[#1677ff] hover:text-[#1677ff]';
-        prevBtn.textContent = '上一步';
-        prevBtn.onclick = () => {
-            currentPreviewStep--;
-            renderPreviewStep();
-        };
-        footer.appendChild(prevBtn);
+    if (hasPrev || hasNext) {
+        const footer = document.createElement('div');
+        footer.className = 'mt-8 flex items-center justify-end gap-3 pt-6 border-t border-[#f0f0f0]';
+        
+        if (hasPrev) {
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'rounded-md border border-[#d9d9d9] bg-white px-4 py-1.5 text-sm font-medium transition hover:border-[#1677ff] hover:text-[#1677ff]';
+            prevBtn.textContent = '上一步';
+            prevBtn.onclick = () => {
+                currentPreviewStep--;
+                renderPreviewStep();
+            };
+            footer.appendChild(prevBtn);
+        }
+        
+        if (hasNext) {
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'rounded-md bg-[#1677ff] px-4 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#4096ff]';
+            nextBtn.textContent = '下一步';
+            nextBtn.onclick = () => {
+                currentPreviewStep++;
+                renderPreviewStep();
+            };
+            footer.appendChild(nextBtn);
+        }
+        
+        DOM.previewFormBody.appendChild(footer);
     }
     
-    if (!isLast) {
-        const nextBtn = document.createElement('button');
-        nextBtn.className = 'rounded-md bg-[#1677ff] px-4 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#4096ff]';
-        nextBtn.textContent = '下一步';
-        nextBtn.onclick = () => {
-            currentPreviewStep++;
-            renderPreviewStep();
-        };
-        footer.appendChild(nextBtn);
-    } else {
-        const submitBtn = document.createElement('button');
-        submitBtn.className = 'rounded-md bg-[#1677ff] px-4 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#4096ff]';
-        submitBtn.textContent = '提交表单';
-        submitBtn.onclick = () => alert('表单提交成功！');
-        footer.appendChild(submitBtn);
-    }
-    
-    DOM.previewFormBody.appendChild(footer);
     safeCreateIcons();
 }
 
@@ -337,7 +393,9 @@ export function renderPreview(mode) {
     DOM.previewFormTitle.textContent = previewSchema.title;
     DOM.previewFormDesc.textContent = previewSchema.description || '暂无描述';
     
-    DOM.schemaOutput.textContent = JSON.stringify(previewSchema, null, 2);
+    // 生成带语法高亮的 JSON
+    const jsonStr = JSON.stringify(previewSchema, null, 2);
+    DOM.schemaOutput.innerHTML = highlightJSON(jsonStr);
     
     const totalFields = previewSchema.pages.reduce((sum, page) => sum + page.fields.length, 0);
     DOM.schemaFieldCount.textContent = `共 ${previewSchema.pages.length} 页，包含 ${totalFields} 个字段`;
@@ -365,6 +423,58 @@ export function previewForm() {
 // 触发部署（保存）预览模式
 export function saveForm() {
     renderPreview('deploy');
+}
+
+window.toggleSchemaSidebar = function() {
+    const sidebar = document.getElementById('schema-sidebar');
+    const uiSection = document.getElementById('preview-ui-section');
+    
+    // Check if sidebar is currently hidden (opacity-0)
+    if (sidebar.classList.contains('opacity-0')) {
+        // Fade in schema, fade out UI
+        sidebar.classList.remove('opacity-0', 'pointer-events-none');
+        sidebar.classList.add('opacity-100');
+        
+        uiSection.classList.remove('opacity-100');
+        uiSection.classList.add('opacity-0', 'pointer-events-none');
+    } else {
+        // Fade out schema, fade in UI
+        sidebar.classList.remove('opacity-100');
+        sidebar.classList.add('opacity-0', 'pointer-events-none');
+        
+        uiSection.classList.remove('opacity-0', 'pointer-events-none');
+        uiSection.classList.add('opacity-100');
+    }
+};
+
+window.publishForm = function() {
+    // 模拟发布逻辑
+    alert('🎉 表单发布成功！已生成完整的 JSON 结构数据，准备提交至服务器。');
+    closePreviewModal();
+};
+
+// 绑定 Schema 复制功能
+if (DOM.copySchemaBtn) {
+    DOM.copySchemaBtn.addEventListener('click', async () => {
+        if (!previewSchema) return;
+        try {
+            await navigator.clipboard.writeText(JSON.stringify(previewSchema, null, 2));
+            const originalHTML = DOM.copySchemaBtn.innerHTML;
+            DOM.copySchemaBtn.innerHTML = '<i data-lucide="check" class="h-3.5 w-3.5"></i><span class="text-[11px] font-medium whitespace-nowrap">复制成功</span>';
+            DOM.copySchemaBtn.classList.add('text-green-600', 'w-auto', 'px-2', 'gap-1');
+            DOM.copySchemaBtn.classList.remove('w-6', 'text-black/45');
+            if (window.lucide) window.lucide.createIcons({ root: DOM.copySchemaBtn });
+            
+            setTimeout(() => {
+                DOM.copySchemaBtn.innerHTML = originalHTML;
+                DOM.copySchemaBtn.classList.remove('text-green-600', 'w-auto', 'px-2', 'gap-1');
+                DOM.copySchemaBtn.classList.add('w-6', 'text-black/45');
+                if (window.lucide) window.lucide.createIcons({ root: DOM.copySchemaBtn });
+            }, 2000);
+        } catch (err) {
+            console.error('Failed to copy: ', err);
+        }
+    });
 }
 
 // 将预览相关函数绑定到全局 window 对象供 HTML 中直接调用

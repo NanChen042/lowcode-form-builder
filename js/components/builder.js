@@ -81,6 +81,13 @@ export const componentDefaults = {
     grid: {
         label: '双列布局容器',
         layout: 'grid'
+    },
+    alert: {
+        label: '提示',
+        options: [
+            { label: '您将作为以下公司的授权代表，完成KYC问卷填写。', value: 'opt_1' },
+            { label: '请确认以下信息是否准确，如需修改，请联系服务商修改后再进行下一步。', value: 'opt_2' }
+        ]
     }
 };
 
@@ -234,7 +241,7 @@ export function renderOptions(el) {
                 input.tabIndex = -1;
 
                 const span = document.createElement('span');
-                span.className = 'signature-declaration-text text-sm text-black/85 leading-5 outline-none transition-all duration-200 hover:text-[#1677ff] cursor-text';
+                span.className = 'option-text signature-declaration-text text-sm text-black/85 leading-5 outline-none transition-all duration-200 hover:text-[#1677ff] cursor-text';
                 span.dataset.index = index;
                 span.contentEditable = "plaintext-only";
                 span.spellcheck = false;
@@ -249,11 +256,7 @@ export function renderOptions(el) {
                     span.classList.remove(...focusClasses);
                     if (!span.textContent.trim()) {
                         span.textContent = opt.label || opt.value || '';
-                    }
-                    const optData = readOptions(el);
-                    if (optData[index]) {
-                        optData[index].label = span.textContent;
-                        writeOptions(el, optData);
+                        span.dispatchEvent(new Event('input', { bubbles: true }));
                     }
                 });
                 
@@ -273,6 +276,46 @@ export function renderOptions(el) {
                 label.appendChild(input);
                 label.appendChild(span);
                 optionsContainer.appendChild(label);
+            });
+        }
+        return;
+    }
+    // 处理提示区块组件
+    if (type === 'alert') {
+        const wrapper = el.querySelector('.alert-content-wrapper');
+        if (wrapper) {
+            wrapper.innerHTML = '';
+            options.forEach((opt, index) => {
+                const p = document.createElement('p');
+                p.className = 'relative';
+                
+                const dot = document.createElement('span');
+                dot.className = 'absolute -left-[14px] top-[7px] flex h-1.5 w-1.5 rounded-sm bg-blue-400';
+                
+                const span = document.createElement('span');
+                span.className = 'option-text outline-none transition-all duration-200 hover:bg-blue-100 cursor-text';
+                span.dataset.index = index;
+                span.contentEditable = "plaintext-only";
+                span.spellcheck = false;
+                span.textContent = opt.label || opt.value || '';
+                
+                span.addEventListener('blur', () => {
+                    if (!span.textContent.trim()) {
+                        span.textContent = opt.label || opt.value || '';
+                        // 触发 input 事件以同步默认文本回面板
+                        span.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                });
+                
+                span.addEventListener('mousedown', e => e.stopPropagation());
+                span.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); });
+                span.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') { e.preventDefault(); span.blur(); }
+                });
+
+                p.appendChild(dot);
+                p.appendChild(span);
+                wrapper.appendChild(p);
             });
         }
         return;
