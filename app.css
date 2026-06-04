@@ -677,7 +677,15 @@ textarea.preview-input {
 
 .canvas-dropzone .component-item.sortable-ghost {
     width: 100% !important;
-    height: 88px !important;     flex-direction: row !important;     gap: 8px !important;
+    height: 88px !important; 
+    flex-direction: row !important; 
+    gap: 8px !important;
+}
+
+/* Fix SortableJS offset bug when dragging from a scaled container */
+.canvas-element.sortable-drag {
+    scale: var(--canvas-scale, 1) !important;
+    transform-origin: 0 0 !important;
 }
 
 .canvas-dropzone .component-item[data-type="signature"].sortable-ghost {

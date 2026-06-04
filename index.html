@@ -5,12 +5,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Low-Code Form Builder</title>
-    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="./app.css?v=4" />
     <style>
-        /* 定制高级滚动条 */
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -29,17 +28,15 @@
 
         .custom-scrollbar:hover::-webkit-scrollbar-thumb {
             background-color: rgba(148, 163, 184, 0.3);
-            /* hover 时显示淡灰滚动条 */
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
             background-color: rgba(148, 163, 184, 0.5);
         }
 
-        /* Tailwind v4 主题扩展：注册流光动画，使得 group-hover: 等修饰符能正常工作 */
         @theme {
             --animate-shimmer: shimmer 2s infinite;
-
+ 
             --keyframes-shimmer: {
                 100% {
                     transform: translateX(100%);
@@ -54,11 +51,9 @@
 <body class="h-screen w-screen overflow-hidden bg-[#f5f5f5] text-black/85 antialiased">
 
     <div class="flex h-full flex-col">
-        <header class="flex h-14 shrink-0 items-center justify-between border-b border-[#f0f0f0] bg-white px-5">
+        <header class="flex h-16 shrink-0 items-center justify-between border-b border-[#f0f0f0] bg-white px-6">
             <div class="flex min-w-0 items-center">
-                <h1 class="m-0 text-lg font-bold tracking-tight text-slate-800">
-                    低代码设计器
-                </h1>
+                <img class="object-contain h-10" src="https://app.algocandy.com/algo/images/logo.png" alt="AlgoCandy">
             </div>
             <div class="flex items-center gap-2">
                 <div class="relative mr-2">
@@ -157,8 +152,8 @@
 
                                 <div>
                                     <span
-                                        class="block text-[13px] font-bold text-slate-800 transition-colors group-hover:text-blue-700">打开模板画廊</span>
-                                    <span class="block mt-0.5 text-[10px] font-medium text-slate-500">使用最佳实践加速搭建</span>
+                                        class="block text-[13px] font-bold text-slate-800 transition-colors group-hover:text-blue-700">场景模板</span>
+                                    <span class="block mt-0.5 text-[10px] font-medium text-slate-500">按业务场景快速创建</span>
                                 </div>
                             </div>
                         </button>
@@ -870,7 +865,6 @@
 
             const chevron = document.getElementById("right-sidebar-chevron");
             if (chevron) {
-                // Update icon without breaking the whole page if lucide isn't ready
                 const newIcon = cb.checked ? "chevron-right" : "chevron-left";
                 const parent = chevron.parentNode;
                 const newI = document.createElement("i");

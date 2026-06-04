@@ -383,6 +383,7 @@ export function renderCanvasTransform() {
     DOM.canvasScrollArea.style.setProperty('--canvas-x', `${Math.round(state.canvasState.x)}px`);
     DOM.canvasScrollArea.style.setProperty('--canvas-y', `${Math.round(state.canvasState.y)}px`);
     DOM.canvasScrollArea.style.setProperty('--canvas-scale', state.canvasState.scale.toFixed(3));
+    document.body.style.setProperty('--canvas-scale', state.canvasState.scale.toFixed(3));
     
     const zoomText = document.getElementById('zoom-percent-text');
     if (zoomText) {

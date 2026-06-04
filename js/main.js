@@ -1,3 +1,4 @@
+import { FormAPI } from './core/api.js';
 import { safeCreateIcons } from './utils/helpers.js';
 import { bindPropEvents } from './ui/properties.js';
 import { bindCanvasEvents, initPages, checkEmptyState } from './ui/canvas.js';
@@ -25,7 +26,7 @@ window.addEventListener('error', function(event) {
 });
 
 // 应用启动初始化函数
-function bootstrap() {
+async function bootstrap() {
     // 渲染页面上的所有 Lucide 图标
     safeCreateIcons();
 
@@ -162,9 +163,20 @@ function bootstrap() {
     } else if (tplParam === 'kyc-entity') {
         loadSchema(kycEntityTemplate);
     } else {
-        // 没有指定模板或无效参数时，初始化空白页
-        initPages();
-        checkEmptyState();
+        // 从后端接口加载最新保存的模板
+        try {
+            const response = await FormAPI.getTemplate('default');
+            if (response.success && response.data.schema && response.data.schema.fields && response.data.schema.fields.length > 0) {
+                loadSchema(response.data.schema);
+            } else {
+                initPages();
+                checkEmptyState();
+            }
+        } catch (e) {
+            console.error('加载模板失败', e);
+            initPages();
+            checkEmptyState();
+        }
     }
     
     // 监听 DOM 树变化，标记为未保存

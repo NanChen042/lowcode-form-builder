@@ -1,3 +1,4 @@
+import { FormAPI } from './api.js';
 import { state, getUniqueId } from './state.js';
 import { readOptions, writeOptions, safeCreateIcons } from '../utils/helpers.js';
 import { updateElementFromData, setLabelText, componentDefaults } from '../components/builder.js';
@@ -140,7 +141,7 @@ export function markDirty() {
     }, 500);
 }
 // 模拟向后端接口保存数据的行为
-export function saveToServer() {
+export async function saveToServer() {
     const statusEl = document.getElementById('save-status');
     if (!statusEl) return;
     
@@ -149,26 +150,36 @@ export function saveToServer() {
     statusEl.classList.remove('opacity-0');
     if (window.lucide) window.lucide.createIcons({ root: statusEl });
     
-    // 模拟网络请求延迟
-    setTimeout(() => {
+    try {
         const schema = buildSchema();
-        console.log('【模拟发送给后端】', schema);
         
-        lastSavedSchemaString = JSON.stringify(schema);
+        // 调用我们刚刚写好的假 Ajax 接口
+        const response = await FormAPI.saveTemplate(schema);
         
-        statusEl.classList.remove('text-orange-500');
-        statusEl.classList.add('text-slate-500');
-        statusEl.innerHTML = `<i data-lucide="check" class="h-3.5 w-3.5"></i>已保存`;
+        if (response.success) {
+            lastSavedSchemaString = JSON.stringify(schema);
+            
+            statusEl.classList.remove('text-orange-500');
+            statusEl.classList.add('text-slate-500');
+            statusEl.innerHTML = `<i data-lucide="check" class="h-3.5 w-3.5"></i>已保存`;
+            if (window.lucide) window.lucide.createIcons({ root: statusEl });
+            
+            // 清除未保存标志
+            isDirty = false;
+        } else {
+            throw new Error(response.message || '保存失败');
+        }
+    } catch (error) {
+        console.error('保存报错:', error);
+        statusEl.innerHTML = `<i data-lucide="x-circle" class="h-3.5 w-3.5"></i>保存失败`;
+        statusEl.classList.add('text-orange-500');
         if (window.lucide) window.lucide.createIcons({ root: statusEl });
-        
-        // 清除未保存标志
-        isDirty = false;
-        
+    } finally {
         // 3秒后隐藏提示
         setTimeout(() => {
             statusEl.classList.add('opacity-0');
         }, 3000);
-    }, 600);
+    }
 }
 
 // 根据 Schema 数据创建单个画布元素（递归处理嵌套）
@@ -234,6 +245,25 @@ export function loadSchema(schema) {
     canvasWorld.innerHTML = '<svg id="canvas-connections" class="absolute inset-0 pointer-events-none" style="overflow: visible; z-index: 0;"></svg>';
     state.pages = [];
     state.selectedElement = null;
+
+    // 重新计算并重置唯一ID计数器，防止跳号或冲突
+    let maxId = 0;
+    const scanFields = (fields) => {
+        if (!fields) return;
+        fields.forEach(field => {
+            if (field.id && field.id.startsWith('cmp_')) {
+                const num = parseInt(field.id.replace('cmp_', ''), 10);
+                if (!isNaN(num) && num > maxId) maxId = num;
+            }
+            if (field.columns) {
+                field.columns.forEach(col => scanFields(col.elements));
+            }
+        });
+    };
+    if (schema.pages) {
+        schema.pages.forEach(page => scanFields(page.fields));
+    }
+    state.uniqueIdCounter = maxId + 1;
 
     // 2. 根据模板构建页面结构
     if (schema.pages && schema.pages.length > 0) {

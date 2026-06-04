@@ -1,4 +1,5 @@
 import { buildSchema } from '../core/schema.js';
+import { FormAPI } from '../core/api.js';
 import * as DOM from './dom.js';
 import { safeCreateIcons } from '../utils/helpers.js';
 
@@ -447,10 +448,33 @@ window.toggleSchemaSidebar = function() {
     }
 };
 
-window.publishForm = function() {
-    // 模拟发布逻辑
-    alert('🎉 表单发布成功！已生成完整的 JSON 结构数据，准备提交至服务器。');
-    closePreviewModal();
+window.publishForm = async function() {
+    const btn = event ? event.currentTarget : null;
+    const originalHtml = btn ? btn.innerHTML : '';
+    
+    if (btn) {
+        btn.innerHTML = `<i data-lucide="loader-2" class="h-4 w-4 animate-spin"></i>发布中...`;
+        btn.classList.add('opacity-80', 'pointer-events-none');
+        if (window.lucide) window.lucide.createIcons({ root: btn });
+    }
+    
+    try {
+        const response = await FormAPI.publishForm(previewSchema);
+        if (response.success) {
+            alert('🎉 表单发布成功！\n线上访问地址: ' + response.data.url);
+            closePreviewModal();
+        } else {
+            throw new Error('发布失败');
+        }
+    } catch (error) {
+        alert('发布报错: ' + error.message);
+    } finally {
+        if (btn) {
+            btn.innerHTML = originalHtml;
+            btn.classList.remove('opacity-80', 'pointer-events-none');
+            if (window.lucide) window.lucide.createIcons({ root: btn });
+        }
+    }
 };
 
 // 绑定 Schema 复制功能
