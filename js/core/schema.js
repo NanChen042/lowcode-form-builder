@@ -2,7 +2,7 @@ import { FormAPI } from './api.js';
 import { state, getUniqueId } from './state.js';
 import { readOptions, writeOptions, safeCreateIcons } from '../utils/helpers.js';
 import { updateElementFromData, setLabelText, componentDefaults } from '../components/builder.js';
-import { initDropzone, addPage, checkEmptyState, refreshNestedEmptyStates, resetCanvasView, initPages, clearSelection } from '../ui/canvas.js';
+import { initDropzone, addPage, checkEmptyState, refreshNestedEmptyStates, resetCanvasViewAfterLayout, initPages, clearSelection } from '../ui/canvas.js';
 import { canvasWorld } from '../ui/dom.js';
 
 // 获取整个表单的元数据（标题和描述）
@@ -110,6 +110,15 @@ export function buildSchema() {
 export let isSystemUpdating = false;
 export let isDirty = false;
 export let lastSavedSchemaString = '';
+
+export function establishBaseline() {
+    lastSavedSchemaString = JSON.stringify(buildSchema());
+    isDirty = false;
+    const statusEl = document.getElementById('save-status');
+    if (statusEl) {
+        statusEl.classList.add('opacity-0');
+    }
+}
 
 let markDirtyTimeout = null;
 
@@ -331,7 +340,7 @@ export function loadSchema(schema) {
     refreshNestedEmptyStates();
     
     // 初始化或重置交互状态
-    resetCanvasView();
+    resetCanvasViewAfterLayout();
     
     // 清除选中的属性面板数据并刷新UI
     clearSelection();
@@ -348,14 +357,6 @@ export function loadSchema(schema) {
     // 取消系统更新状态
     setTimeout(() => {
         isSystemUpdating = false;
-        // 记录初始 Schema 结构，用作基准比对
-        lastSavedSchemaString = JSON.stringify(buildSchema());
-        
-        // 重置时把状态显示清空
-        isDirty = false;
-        const statusEl = document.getElementById('save-status');
-        if (statusEl) {
-            statusEl.classList.add('opacity-0');
-        }
+        establishBaseline();
     }, 100);
 }

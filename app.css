@@ -17,6 +17,13 @@ body.is-dragging-component * {
     cursor: grabbing !important;
 }
 
+/* 拖拽期间关闭所有的形变过渡动画，防止拖拉拽时元素宽高变化产生变形动画，仅保留 Sortable 自身可能需要的 transform 动画 */
+body.is-dragging-component .canvas-element,
+body.is-dragging-component .component-item,
+body.is-dragging-component .transition-all {
+    transition-property: transform, opacity !important;
+}
+
 body.is-panning,
 body.is-panning * {
     cursor: grabbing !important;
@@ -316,7 +323,7 @@ button{
     background: #fff;
     padding: 16px;
     box-shadow: 0 2px 4px rgba(15, 23, 42, 0.03), 0 0 0 1px rgba(15, 23, 42, 0.05);
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .canvas-element:hover {

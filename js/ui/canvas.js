@@ -332,7 +332,8 @@ export function initPages() {
     state.pages.length = 0; // Empty the array
     document.querySelectorAll('.mobile-frame').forEach(el => el.remove());
     state.isFirstFocus = true;
-    addPage();
+    addPage(null, { focus: false });
+    resetCanvasViewAfterLayout();
 }
 
 // 绘制画布上方和左侧的标尺刻度及数值
@@ -542,6 +543,10 @@ export function resetCanvasView() {
     window._zoomTransitionTimeout = setTimeout(() => {
         DOM.canvasWorld.classList.remove('is-zooming');
     }, 350);
+}
+
+export function resetCanvasViewAfterLayout() {
+    requestAnimationFrame(() => requestAnimationFrame(() => resetCanvasView()));
 }
 
 // 调整画布的缩放比例（放大或缩小），以当前画布中心为基准缩放

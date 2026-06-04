@@ -5,7 +5,7 @@ import { bindCanvasEvents, initPages, checkEmptyState } from './ui/canvas.js';
 import { bindPreviewEvents } from './ui/preview.js';
 import { addComponentToCanvas } from './components/builder.js';
 import { state } from './core/state.js';
-import { loadSchema, saveToServer, markDirty, isDirty } from './core/schema.js';
+import { loadSchema, saveToServer, markDirty, isDirty, establishBaseline } from './core/schema.js';
 import { blankTemplate, kycClientTemplate, kycIndividualTemplate, kycEntityTemplate } from './templates/recommend.js';
 import { canvasWorld } from './ui/dom.js';
 
@@ -159,11 +159,13 @@ async function bootstrap() {
             } else {
                 initPages();
                 checkEmptyState();
+                setTimeout(() => establishBaseline(), 100);
             }
         } catch (e) {
             console.error('加载模板失败', e);
             initPages();
             checkEmptyState();
+            setTimeout(() => establishBaseline(), 100);
         }
     }
     
