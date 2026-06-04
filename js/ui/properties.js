@@ -40,7 +40,13 @@ export function updateDefaultValueUI(el) {
         DOM.inputDefault.style.display = 'none'; // 隐藏普通的文本输入框
         
         const options = readOptions(el);
-        const values = (el.dataset.defaultValue || '').split(',').filter(v => v);
+        let values = [];
+        try {
+            values = JSON.parse(el.dataset.defaultValue || '[]');
+            if (!Array.isArray(values)) values = (el.dataset.defaultValue || '').split(',').filter(v => v);
+        } catch (e) {
+            values = (el.dataset.defaultValue || '').split(',').filter(v => v);
+        }
 
         // 判断是否是支持多选的类型
         const isMultiChoice = type === 'checkbox' || type === 'country' || type === 'nationality';
@@ -75,7 +81,7 @@ export function updateDefaultValueUI(el) {
                         }
 
                         const newVals = Array.from(DOM.checkboxDefaultGroup.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
-                        state.selectedElement.dataset.defaultValue = newVals.join(',');
+                        state.selectedElement.dataset.defaultValue = JSON.stringify(newVals);
                         renderDefaultValue(state.selectedElement);
                         renderOptions(state.selectedElement);
                     });
@@ -286,7 +292,7 @@ export function bindPropEvents() {
             if (!state.selectedElement) return;
             if (state.selectedElement.dataset.type === 'checkbox') {
                 const values = Array.from(e.target.selectedOptions).map(o => o.value).filter(v => v !== "");
-                state.selectedElement.dataset.defaultValue = values.join(',');
+                state.selectedElement.dataset.defaultValue = JSON.stringify(values);
             } else {
                 state.selectedElement.dataset.defaultValue = e.target.value;
             }

@@ -15,7 +15,7 @@ export const FormAPI = {
      * @returns {Promise<Object>}
      */
     async saveTemplate(schema) {
-        console.log('【Ajax 请求】POST /api/v1/forms/template', schema);
+
         await delay(600); // 模拟 600ms 的网络请求
         
         // 模拟后端成功落库，为了演示刷新不丢失，暂时存在 localStorage 里作为 Mock DB
@@ -39,7 +39,7 @@ export const FormAPI = {
      * @returns {Promise<Object>}
      */
     async getTemplate(id = 'default') {
-        console.log(`【Ajax 请求】GET /api/v1/forms/template/${id}`);
+
         await delay(300); // 模拟网络加载
         
         // 从 Mock DB 中读取数据
@@ -63,7 +63,7 @@ export const FormAPI = {
      * @returns {Promise<Object>}
      */
     async publishForm(schema) {
-        console.log('【Ajax 请求】POST /api/v1/forms/publish', schema);
+
         await delay(800); // 发布可能需要更久
         
         return {

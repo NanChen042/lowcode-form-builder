@@ -29,34 +29,101 @@ export function refreshNestedEmptyStates() {
     });
 }
 
+// 获取连接锚点的具体坐标
+function getEdgePoint(rect, edge) {
+    const { x, y, w, h } = rect;
+    switch(edge) {
+        case 'top': return { x: x + w/2, y: y };
+        case 'bottom': return { x: x + w/2, y: y + h };
+        case 'left': return { x: x, y: y + h/2 };
+        case 'right': return { x: x + w, y: y + h/2 };
+        default: return { x: x + w, y: y + h/2 };
+    }
+}
+
+// 获取贝塞尔曲线的控制点
+function getControlPoint(x, y, edge, offset) {
+    switch(edge) {
+        case 'top': return { x, y: y - offset };
+        case 'bottom': return { x, y: y + offset };
+        case 'left': return { x: x - offset, y };
+        case 'right': return { x: x + offset, y };
+        default: return { x: x + offset, y };
+    }
+}
+
+// 智能计算出入边
+function getSmartEdges(rectA, rectB) {
+    const centerA = { x: rectA.x + rectA.w / 2, y: rectA.y + rectA.h / 2 };
+    const centerB = { x: rectB.x + rectB.w / 2, y: rectB.y + rectB.h / 2 };
+    
+    const dx = centerB.x - centerA.x;
+    const dy = centerB.y - centerA.y;
+    
+    let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    if (angle < 0) angle += 360;
+    
+    let sourceEdge = 'right';
+    let targetEdge = 'left';
+    
+    if (angle >= 45 && angle < 135) {
+        sourceEdge = 'bottom';
+        targetEdge = 'top';
+    } else if (angle >= 135 && angle < 225) {
+        sourceEdge = 'left';
+        targetEdge = 'right';
+    } else if (angle >= 225 && angle < 315) {
+        sourceEdge = 'top';
+        targetEdge = 'bottom';
+    }
+    return { sourceEdge, targetEdge };
+}
+
 // 绘制多个页面面板之间的连接连线（贝塞尔曲线）
 export function drawConnections() {
     const canvasConnections = document.getElementById('canvas-connections');
     if (!canvasConnections) return;
-    canvasConnections.innerHTML = '';
     
-    for (let i = 0; i < state.pages.length - 1; i++) {
-        const p1 = state.pages[i];
-        const p2 = state.pages[i+1];
-        
-        const startX = p1.x + PAGE_WIDTH;
-        const startY = p1.y + 360; 
-        
-        const endX = p2.x;
-        const endY = p2.y + 360;
-        
-        const controlX1 = startX + PAGE_GAP / 2;
-        const controlX2 = endX - PAGE_GAP / 2;
-        
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', `M ${startX} ${startY} C ${controlX1} ${startY}, ${controlX2} ${endY}, ${endX} ${endY}`);
-        path.setAttribute('class', 'canvas-connection-path');
-        canvasConnections.appendChild(path);
+    // 清除旧的连线路径，但保留 <defs> 和 marker
+    const oldPaths = canvasConnections.querySelectorAll('.connection-path');
+    oldPaths.forEach(p => p.remove());
+    
+    // 基于页面的自然顺序进行自动连线 (Auto-Flow)
+    if (state.pages && state.pages.length > 1) {
+        for (let i = 0; i < state.pages.length - 1; i++) {
+            const pageA = state.pages[i];
+            const pageB = state.pages[i+1];
+            const sourceFrame = document.getElementById(`frame_${pageA.id}`);
+            const targetFrame = document.getElementById(`frame_${pageB.id}`);
+            if (!sourceFrame || !targetFrame) continue;
+            
+            const rectA = { x: pageA.x, y: pageA.y, w: sourceFrame.offsetWidth, h: sourceFrame.offsetHeight };
+            const rectB = { x: pageB.x, y: pageB.y, w: targetFrame.offsetWidth, h: targetFrame.offsetHeight };
+            
+            const { sourceEdge, targetEdge } = getSmartEdges(rectA, rectB);
+            
+            const p1 = getEdgePoint(rectA, sourceEdge);
+            const p2 = getEdgePoint(rectB, targetEdge);
+            
+            const dist = Math.max(Math.abs(p2.x - p1.x), Math.abs(p2.y - p1.y));
+            // 限制贝塞尔曲线的张力范围，防止极远距离时曲线过于膨胀
+            const controlOffset = Math.min(Math.max(dist / 2, 60), 150);
+            
+            const cp1 = getControlPoint(p1.x, p1.y, sourceEdge, controlOffset);
+            const cp2 = getControlPoint(p2.x, p2.y, targetEdge, controlOffset);
+            
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', `M ${p1.x} ${p1.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${p2.x} ${p2.y}`);
+            path.setAttribute('class', 'connection-path');
+            path.setAttribute('marker-end', 'url(#arrowhead)');
+            canvasConnections.appendChild(path);
+        }
     }
 }
+window.renderConnections = drawConnections;
 
 // 移动画布视角，聚焦并平滑过渡到指定的页面面板位置
-export function focusOnPage(pageId, autoFit = false) {
+export function focusOnPage(pageId, autoFit = false, immediate = false) {
     const page = state.pages.find(p => p.id === pageId);
     if (!page) return;
     
@@ -66,17 +133,41 @@ export function focusOnPage(pageId, autoFit = false) {
     const frameHeight = document.getElementById(`frame_${pageId}`)?.clientHeight || 720;
     
     let targetScale = state.canvasState.scale;
+    let isImmediate = immediate;
     if (autoFit) {
         const scaleX = (viewportWidth - 120) / PAGE_WIDTH;
         const scaleY = (viewportHeight - 120) / frameHeight;
         targetScale = Math.min(1.6, Math.max(0.1, Math.min(scaleX, scaleY)));
+        // 如果计算出来的自适应缩放比例非常接近 100%（比如 98%, 99%, 101%），则强制吸附到 100%，避免出现让用户感到困惑的零碎百分比
+        if (Math.abs(targetScale - 1) < 0.05) {
+            targetScale = 1;
+        }
     } else if (state.isFirstFocus) {
-        targetScale = 1;
+        targetScale = 0.9;
+        isImmediate = true;
+        state.isFirstFocus = false;
+    }
+    if (autoFit && state.isFirstFocus) {
         state.isFirstFocus = false;
     }
     
     const targetX = (viewportWidth / 2) - ((page.x + PAGE_WIDTH / 2) * targetScale);
     const targetY = (viewportHeight / 2) - ((page.y + frameHeight / 2) * targetScale);
+    
+    if (isImmediate) {
+        state.canvasState.x = targetX;
+        state.canvasState.y = targetY;
+        state.canvasState.scale = targetScale;
+        renderCanvasTransform();
+        
+        // 确保坐标系应用完成后再显示画布，实现平滑渐现
+        setTimeout(() => {
+            const world = document.getElementById('canvas-world');
+            if (world) world.classList.remove('opacity-0');
+        }, 50);
+        
+        return;
+    }
     
     const duration = 400;
     const startX = state.canvasState.x;
@@ -105,7 +196,7 @@ export function focusOnPage(pageId, autoFit = false) {
 }
 
 // 向画布中添加一个新的页面（Frame），并在指定页面之后进行定位
-export function addPage(afterPageId = null) {
+export function addPage(afterPageId = null, options = {}) {
     const isFirst = state.pages.length === 0;
     const newId = `page_${Date.now()}`;
     
@@ -153,7 +244,10 @@ export function addPage(afterPageId = null) {
     }
     
     const addNextBtn = frame.querySelector('.add-next-page-btn');
-    addNextBtn.addEventListener('click', () => addPage(newId));
+    addNextBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        addPage(newId);
+    });
     
     // 绑定点击画布背景选中画布事件
     frame.addEventListener('click', (e) => {
@@ -185,15 +279,18 @@ export function addPage(afterPageId = null) {
     
     initDropzone(dropzoneNode);
     safeCreateIcons();
-    drawConnections();
+    // 延迟渲染连线，确保 DOM 完成布局（获取正确的宽高等参数）
+    requestAnimationFrame(() => requestAnimationFrame(() => drawConnections()));
     updatePageSequenceBadges();
     
-    if (!isFirst) {
+    const shouldFocus = options.focus !== false;
+
+    if (shouldFocus && !isFirst) {
         focusOnPage(newId);
-    } else {
-        state.canvasState.x = (DOM.canvasScrollArea.clientWidth / 2) - (PAGE_WIDTH / 2);
-        state.canvasState.y = 100;
-        renderCanvasTransform();
+        selectElement(frame);
+    } else if (shouldFocus) {
+        focusOnPage(newId, true, true);
+        selectElement(frame);
     }
 }
 
@@ -393,14 +490,58 @@ export function renderCanvasTransform() {
     drawRulers();
 }
 
-// 重置画布的视角和缩放比例到默认状态
+// 重置画布的视角和缩放比例：计算所有画布的边界，实现“适应屏幕 (Zoom to Fit)”
 export function resetCanvasView() {
-    const rect = DOM.canvasScrollArea.getBoundingClientRect();
-    state.canvasState.scale = 1.0;
-    state.canvasState.x = Math.round((rect.width - 390) / 2);
-    state.canvasState.y = Math.round((rect.height - 720) / 2);
-    if (state.canvasState.y < 40) state.canvasState.y = 40;
+    if (!state.pages || state.pages.length === 0) return;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    
+    state.pages.forEach(page => {
+        const frame = document.getElementById(`frame_${page.id}`);
+        const w = frame ? frame.offsetWidth : 460;
+        const h = frame ? frame.offsetHeight : 720;
+        
+        if (page.x < minX) minX = page.x;
+        if (page.y < minY) minY = page.y;
+        if (page.x + w > maxX) maxX = page.x + w;
+        if (page.y + h > maxY) maxY = page.y + h;
+    });
+    
+    const totalWidth = maxX - minX;
+    const totalHeight = maxY - minY;
+    
+    const viewportWidth = DOM.canvasScrollArea.clientWidth;
+    const viewportHeight = DOM.canvasScrollArea.clientHeight;
+    
+    // 留出四周 80px 的安全边距
+    const padding = 160; 
+    const safeWidth = Math.max(10, viewportWidth - padding);
+    const safeHeight = Math.max(10, viewportHeight - padding);
+    const scaleX = safeWidth / totalWidth;
+    const scaleY = safeHeight / totalHeight;
+    
+    let targetScale = Math.min(1, Math.max(0.1, Math.min(scaleX, scaleY)));
+    // 接近 100% 时吸附
+    if (Math.abs(targetScale - 1) < 0.05) targetScale = 1;
+    
+    state.canvasState.scale = targetScale;
+    
+    // 由于 transform-origin 是 0 0，并且 CSS 是 translate(x,y) scale(s)
+    // 渲染后的屏幕坐标 = x + Px * s
+    // 我们希望 contentCenterX 映射到 viewportWidth / 2
+    const contentCenterX = minX + totalWidth / 2;
+    const contentCenterY = minY + totalHeight / 2;
+    
+    state.canvasState.x = (viewportWidth / 2) - (contentCenterX * targetScale);
+    state.canvasState.y = (viewportHeight / 2) - (contentCenterY * targetScale);
+    
+    DOM.canvasWorld.classList.add('is-zooming');
     renderCanvasTransform();
+    DOM.canvasWorld.classList.remove('opacity-0');
+    if (window._zoomTransitionTimeout) clearTimeout(window._zoomTransitionTimeout);
+    window._zoomTransitionTimeout = setTimeout(() => {
+        DOM.canvasWorld.classList.remove('is-zooming');
+    }, 350);
 }
 
 // 调整画布的缩放比例（放大或缩小），以当前画布中心为基准缩放
@@ -418,16 +559,38 @@ export function adjustZoom(delta) {
     state.canvasState.scale = nextScale;
     state.canvasState.x = centerX - worldX * nextScale;
     state.canvasState.y = centerY - worldY * nextScale;
+    
+    DOM.canvasWorld.classList.add('is-zooming');
     renderCanvasTransform();
+    if (window._zoomTransitionTimeout) clearTimeout(window._zoomTransitionTimeout);
+    window._zoomTransitionTimeout = setTimeout(() => {
+        DOM.canvasWorld.classList.remove('is-zooming');
+    }, 350);
 }
 
 // 选中画布中的某个组件，并在右侧属性面板中展示该组件的各项属性
 export function selectElement(el) {
-    if (state.selectedElement) {
+    if (!el || !el.dataset) return; // Prevent selection of invalid objects
+    
+    if (window.setSidebarState) {
+        window.setSidebarState('right', true);
+    }
+
+    if (state.selectedElement && state.selectedElement.classList) {
         state.selectedElement.classList.remove('is-selected');
+        if (state.selectedElement.classList.contains('mobile-frame')) {
+            state.selectedElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-1');
+            state.selectedElement.style.zIndex = '1';
+        }
     }
     setSelectedElement(el);
-    state.selectedElement.classList.add('is-selected');
+    if (state.selectedElement && state.selectedElement.classList) {
+        state.selectedElement.classList.add('is-selected');
+        if (state.selectedElement.classList.contains('mobile-frame')) {
+            state.selectedElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-1');
+            state.selectedElement.style.zIndex = '10';
+        }
+    }
 
     const type = el.dataset.type || 'field';
     const hasPlaceholder = Boolean(el.querySelector('.component-placeholder')) || type === 'select' || type === 'signature';
@@ -451,7 +614,7 @@ export function selectElement(el) {
         propDesc.value = descInput.value;
         
         const toggleFocus = (element, isFocused) => {
-            element.classList.toggle('canvas-control-focus', isFocused);
+            element.classList.toggle('canvas-text-focus', isFocused);
         };
 
         // Remove old event listeners
@@ -518,14 +681,24 @@ export function selectElement(el) {
 
 // 清除当前选中的组件状态，隐藏属性面板
 export function clearSelection() {
-    if (state.selectedElement) {
+    if (state.selectedElement && state.selectedElement.classList) {
         state.selectedElement.classList.remove('is-selected');
+        if (state.selectedElement.classList.contains('mobile-frame')) {
+            state.selectedElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-1');
+            state.selectedElement.style.zIndex = '1';
+        }
+    }
+    if (state.selectedElement) {
         setSelectedElement(null);
     }
     DOM.propEmpty.classList.remove('hidden');
     DOM.propEditor.classList.add('hidden');
     document.getElementById('page-prop-editor').classList.add('hidden');
     DOM.propIdText.textContent = 'None';
+    
+    if (window.setSidebarState) {
+        window.setSidebarState('right', false);
+    }
 }
 
 // 删除指定的画布组件
@@ -592,8 +765,53 @@ export function initDropzone(containerEl) {
         draggable: '.canvas-element, .component-item',
         filter: 'input, textarea, select, button',
         preventOnFilter: false,
-        onStart: function() {
+        onStart: function(evt) {
             document.body.classList.add('is-dragging-component');
+            
+            // 解决跨页面的图层穿透问题：临时将当前活动页面的层级提到最上面
+            const frame = evt.from.closest('.mobile-frame');
+            if (frame) {
+                frame.style.zIndex = '9999';
+            }
+            
+            setTimeout(() => {
+                const fallback = document.querySelector('body > .drag-fallback');
+                if (fallback && evt.item) {
+                    const rect = evt.item.getBoundingClientRect();
+                    const scale = state.canvasState.scale || 1;
+                    const visual = evt.item.cloneNode(true);
+                    visual.classList.remove('sortable-ghost', 'drag-chosen');
+                    visual.classList.add('drag-fallback', 'sortable-drag', 'drag-fallback-visual');
+                    visual.style.position = 'relative';
+                    visual.style.left = '0';
+                    visual.style.top = '0';
+                    visual.style.width = `${evt.item.offsetWidth}px`;
+                    visual.style.height = `${evt.item.offsetHeight}px`;
+                    visual.style.transform = `scale(${scale})`;
+                    visual.style.boxSizing = 'border-box';
+
+                    fallback.style.left = `${rect.left}px`;
+                    fallback.style.top = `${rect.top}px`;
+                    fallback.style.width = `${rect.width}px`;
+                    fallback.style.height = `${rect.height}px`;
+                    fallback.style.scale = '';
+                    fallback.style.transformOrigin = '';
+                    fallback.classList.add('drag-fallback-shell');
+                    fallback.innerHTML = '';
+                    fallback.appendChild(visual);
+                }
+            }, 0);
+        },
+        onEnd: function(evt) {
+            document.body.classList.remove('is-dragging-component');
+            
+            // 恢复层级
+            const frame = evt.from.closest('.mobile-frame');
+            if (frame) {
+                frame.style.zIndex = '';
+            }
+            checkEmptyState();
+            refreshNestedEmptyStates();
         },
         onAdd: function(evt) {
             const itemEl = evt.item;
@@ -638,11 +856,6 @@ export function initDropzone(containerEl) {
         },
         onSort: function() {
             refreshNestedEmptyStates();
-        },
-        onEnd: function() {
-            document.body.classList.remove('is-dragging-component');
-            checkEmptyState();
-            refreshNestedEmptyStates();
         }
     });
 }
@@ -660,10 +873,7 @@ export function bindCanvasEvents() {
         adjustZoom(0.1);
     });
     document.getElementById('zoom-reset-btn').addEventListener('click', () => {
-        state.canvasState.scale = 1;
-        state.canvasState.x = 320;
-        state.canvasState.y = 160;
-        renderCanvasTransform();
+        resetCanvasView();
     });
 
     DOM.canvasWorld.addEventListener('dblclick', e => {
@@ -796,9 +1006,6 @@ export function bindCanvasEvents() {
             // Only clear selection if it's a genuine background click without Space key
             if (e.button === 0 && !isSpaceDrag && !isMiddleDrag) {
                 clearSelection();
-                document.querySelectorAll('.mobile-frame').forEach(f => {
-                    f.classList.remove('ring-2', 'ring-[#1677ff]', 'ring-offset-4', 'ring-offset-[#f5f5f5]');
-                });
             }
         } else if (isFrameDrag) {
             if (document.activeElement && document.activeElement.hasAttribute('contenteditable')) {
@@ -808,13 +1015,6 @@ export function bindCanvasEvents() {
             const frame = e.target.closest('.mobile-frame');
             state.isDraggingFrame = true;
             state.draggedFrameId = frame.id.replace('frame_', '');
-            
-            document.querySelectorAll('.mobile-frame').forEach(f => {
-                f.classList.remove('ring-2', 'ring-[#1677ff]', 'ring-offset-4', 'ring-offset-[#f5f5f5]');
-                f.style.zIndex = '1';
-            });
-            frame.classList.add('ring-2', 'ring-[#1677ff]', 'ring-offset-4', 'ring-offset-[#f5f5f5]');
-            frame.style.zIndex = '10';
             
             const page = state.pages.find(p => p.id === state.draggedFrameId);
             state.frameStartX = page.x;
@@ -828,16 +1028,18 @@ export function bindCanvasEvents() {
             const element = e.target.closest('.canvas-element');
             if (element && DOM.canvasWorld.contains(element) && e.button === 0) {
                 selectElement(element);
-                const frame = element.closest('.mobile-frame');
-                if (frame) {
-                    document.querySelectorAll('.mobile-frame').forEach(f => f.classList.remove('ring-2', 'ring-[#1677ff]', 'ring-offset-4', 'ring-offset-[#f5f5f5]'));
-                }
             }
         }
     });
 
     document.addEventListener('mousemove', e => {
-        if (state.isPanning) {
+        if (state.isDrawingConnection) {
+            e.preventDefault();
+            const rect = DOM.canvasWorld.getBoundingClientRect();
+            state.connectionTempX = (e.clientX - rect.left) / state.canvasState.scale;
+            state.connectionTempY = (e.clientY - rect.top) / state.canvasState.scale;
+            drawConnections();
+        } else if (state.isPanning) {
             e.preventDefault();
             state.canvasState.x = state.panStartCanvasX + (e.clientX - state.panStartX);
             state.canvasState.y = state.panStartCanvasY + (e.clientY - state.panStartY);
@@ -860,7 +1062,7 @@ export function bindCanvasEvents() {
         }
     });
 
-    document.addEventListener('mouseup', () => {
+    document.addEventListener('mouseup', (e) => {
         if (state.isPanning) {
             state.isPanning = false;
             document.body.classList.remove('is-panning');

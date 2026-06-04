@@ -11,19 +11,7 @@ import { canvasWorld } from './ui/dom.js';
 
 window.saveToServer = saveToServer;
 
-// 全局错误捕获，用于在页面中显示脚本运行时错误
-window.addEventListener('error', function(event) {
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'runtime-error';
-    errorDiv.innerHTML = `
-        <div>
-            <strong>脚本错误:</strong>
-            <span>${event.message} (${event.filename?.split('/').pop()}:${event.lineno})</span>
-        </div>
-        <button onclick="this.parentElement.remove()" class="text-white">关闭</button>
-    `;
-    document.body.appendChild(errorDiv);
-});
+
 
 // 应用启动初始化函数
 async function bootstrap() {
@@ -166,7 +154,7 @@ async function bootstrap() {
         // 从后端接口加载最新保存的模板
         try {
             const response = await FormAPI.getTemplate('default');
-            if (response.success && response.data.schema && response.data.schema.fields && response.data.schema.fields.length > 0) {
+            if (response.success && response.data.schema && response.data.schema.pages && response.data.schema.pages.length > 0) {
                 loadSchema(response.data.schema);
             } else {
                 initPages();
@@ -208,12 +196,52 @@ async function bootstrap() {
         }
     });
     
-    // 延迟调整画布视角至居中
-    setTimeout(() => {
-        import('./ui/canvas.js').then(({ resetCanvasView }) => {
-            resetCanvasView();
-        });
-    }, 100);
+
+
+    // ================= 右键菜单逻辑 =================
+    const contextMenu = document.getElementById('canvas-context-menu');
+    const canvasArea = document.getElementById('canvas-scroll-area');
+    
+    // 监听画布背景的右键事件
+    canvasArea.addEventListener('contextmenu', (e) => {
+        // 如果点击的是组件或者页面框架，不干预（可选：也可全局屏蔽）
+        if (e.target.closest('.canvas-element') || e.target.closest('.mobile-frame')) {
+            return;
+        }
+        
+        e.preventDefault();
+        
+        // 显示菜单并定位
+        contextMenu.classList.remove('hidden');
+        
+        // 简单计算边界防止菜单超出屏幕
+        let x = e.clientX;
+        let y = e.clientY;
+        const menuRect = contextMenu.getBoundingClientRect();
+        if (x + menuRect.width > window.innerWidth) x -= menuRect.width;
+        if (y + menuRect.height > window.innerHeight) y -= menuRect.height;
+        
+        contextMenu.style.left = `${x}px`;
+        contextMenu.style.top = `${y}px`;
+    });
+
+    // 点击空白处隐藏菜单
+    document.addEventListener('click', (e) => {
+        if (!contextMenu.contains(e.target)) {
+            contextMenu.classList.add('hidden');
+        }
+    });
+
+    // 绑定右键菜单功能按钮
+    document.getElementById('menu-btn-new-page').addEventListener('click', () => {
+        import('./ui/canvas.js').then(({ addPage }) => addPage());
+        contextMenu.classList.add('hidden');
+    });
+
+    document.getElementById('menu-btn-reset-view').addEventListener('click', () => {
+        import('./ui/canvas.js').then(({ resetCanvasView }) => resetCanvasView());
+        contextMenu.classList.add('hidden');
+    });
 }
 
 // 启动应用

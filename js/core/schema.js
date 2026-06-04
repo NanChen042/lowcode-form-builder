@@ -2,7 +2,7 @@ import { FormAPI } from './api.js';
 import { state, getUniqueId } from './state.js';
 import { readOptions, writeOptions, safeCreateIcons } from '../utils/helpers.js';
 import { updateElementFromData, setLabelText, componentDefaults } from '../components/builder.js';
-import { initDropzone, addPage, checkEmptyState, refreshNestedEmptyStates, focusOnPage, initPages, clearSelection } from '../ui/canvas.js';
+import { initDropzone, addPage, checkEmptyState, refreshNestedEmptyStates, resetCanvasView, initPages, clearSelection } from '../ui/canvas.js';
 import { canvasWorld } from '../ui/dom.js';
 
 // 获取整个表单的元数据（标题和描述）
@@ -82,11 +82,19 @@ export function buildSchema() {
     const pagesSchema = state.pages.map(page => {
         const frame = document.getElementById(`frame_${page.id}`);
         const pageDropzone = frame ? frame.querySelector('.canvas-dropzone') : null;
+        const titleInput = frame ? frame.querySelector('.page-title-input') : null;
+        const descInput = frame ? frame.querySelector('.page-desc-input') : null;
+        
+        // 动态读取页面标题和描述
+        const actualTitle = titleInput ? (titleInput.value.trim() || `页面`) : page.title;
+        const actualDesc = descInput ? descInput.value.trim() : '';
+        
         // 获取页面中的直接子元素并进行序列化
         const fields = pageDropzone ? Array.from(pageDropzone.querySelectorAll(':scope > .canvas-element')).map(serializeElement) : [];
         return {
             id: page.id,
-            title: page.title,
+            title: actualTitle,
+            description: actualDesc,
             fields
         };
     });
@@ -95,7 +103,8 @@ export function buildSchema() {
     return {
         schemaVersion: '1.0.0', // Schema 版本号
         meta: getFormMeta(),    // 表单元数据
-        pages: pagesSchema      // 页面及字段数据
+        pages: pagesSchema,     // 页面及字段数据
+        pageConnections: state.pageConnections || [] // 画布连线数据
     };
 }
 export let isSystemUpdating = false;
@@ -241,9 +250,19 @@ export function createElementFromSchema(fieldData) {
 export function loadSchema(schema) {
     isSystemUpdating = true;
     
-    // 1. 清空当前状态和画布
-    canvasWorld.innerHTML = '<svg id="canvas-connections" class="absolute inset-0 pointer-events-none" style="overflow: visible; z-index: 0;"></svg>';
+    // 1. 清空当前状态和画布，注意保留 SVG 的 marker 定义
+    canvasWorld.innerHTML = `
+        <svg id="canvas-connections" class="absolute inset-0 pointer-events-none" style="overflow: visible; z-index: 0;">
+            <defs>
+                <marker id="arrowhead" viewBox="0 0 12 12" refX="9" refY="6"
+                    markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                    <path d="M 3 3 L 9 6 L 3 9" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="connection-arrowhead" />
+                </marker>
+            </defs>
+        </svg>
+    `;
     state.pages = [];
+    state.pageConnections = schema.pageConnections ? JSON.parse(JSON.stringify(schema.pageConnections)) : [];
     state.selectedElement = null;
 
     // 重新计算并重置唯一ID计数器，防止跳号或冲突
@@ -268,7 +287,7 @@ export function loadSchema(schema) {
     // 2. 根据模板构建页面结构
     if (schema.pages && schema.pages.length > 0) {
         schema.pages.forEach((pageSchema, index) => {
-            addPage(); // 内部会自动 push 到 state.pages 并生成 DOM
+            addPage(null, { focus: false }); // 批量加载完成后统一计算初始视角
             
             const page = state.pages[state.pages.length - 1];
             page.title = pageSchema.title || `页面 ${index + 1}`;
@@ -291,7 +310,7 @@ export function loadSchema(schema) {
         });
     } else {
         // 如果没有页面，至少兜底创建一个空页
-        addPage();
+        addPage(null, { focus: false });
     }
 
     // 4. 更新整个表单的元信息（标题和描述），默认应用到第一页
@@ -300,7 +319,10 @@ export function loadSchema(schema) {
         const titleInput = firstPageFrame.querySelector('.page-title-input');
         const descInput = firstPageFrame.querySelector('.page-desc-input');
         if (titleInput) titleInput.value = schema.meta.title || '';
-        if (descInput) descInput.value = schema.meta.description || '';
+        if (descInput) {
+            descInput.value = schema.meta.description || '';
+            descInput.dispatchEvent(new Event('input'));
+        }
     }
 
     // 5. 刷新整个画布界面和所有内部状态
@@ -309,10 +331,19 @@ export function loadSchema(schema) {
     refreshNestedEmptyStates();
     
     // 初始化或重置交互状态
-    focusOnPage(state.pages[0].id, true);
+    resetCanvasView();
     
     // 清除选中的属性面板数据并刷新UI
     clearSelection();
+    
+    // 延迟渲染连线，等待浏览器完成 DOM 布局计算（获取正确的 offsetHeight）
+    if (window.renderConnections) {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                window.renderConnections();
+            });
+        });
+    }
     
     // 取消系统更新状态
     setTimeout(() => {

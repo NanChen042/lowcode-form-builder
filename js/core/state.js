@@ -35,7 +35,18 @@ export const state = {
     // 记录画布平移起点的画布Y坐标
     panStartCanvasY: 0,
     // 标记空格键是否被按下（通常用于激活画布平移）
-    isSpacePressed: false
+    isSpacePressed: false,
+    
+    // ================= 连线逻辑状态 =================
+    // 页面连线关系数据：[{ id: 'conn_1', sourcePageId: 'page_1', targetPageId: 'page_2' }]
+    pageConnections: [],
+    // 标记当前是否正在绘制临时连线
+    isDrawingConnection: false,
+    // 连线起点的页面ID
+    connectionSourcePageId: null,
+    // 当前鼠标的临时坐标 (用于绘制临时连线)
+    connectionTempX: 0,
+    connectionTempY: 0
 };
 
 // 设置当前选中的画布元素

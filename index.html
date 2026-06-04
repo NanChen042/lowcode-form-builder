@@ -7,33 +7,27 @@
     <title>Low-Code Form Builder</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./js/lib/lucide.min.js"></script>
     <link rel="stylesheet" href="./app.css?v=4" />
     <style>
         .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-            background-color: transparent;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background-color: transparent;
+            width: 4px;
+            height: 4px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background-color: transparent;
-            border-radius: 9999px;
-            transition: background-color 0.3s ease;
-        }
-
-        .custom-scrollbar:hover::-webkit-scrollbar-thumb {
-            background-color: rgba(148, 163, 184, 0.3);
+            background: #d9d9d9;
+            border-radius: 4px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background-color: rgba(148, 163, 184, 0.5);
+            background: #bfbfbf;
         }
+    </style>
+    <!-- Tailwind JIT 动态类名保活 -->
+    <div class="hidden ring-2 ring-[#1677ff] ring-offset-4 ring-offset-[#f5f5f5]"></div>
 
+    <style>
         @theme {
             --animate-shimmer: shimmer 2s infinite;
  
@@ -51,11 +45,32 @@
 <body class="h-screen w-screen overflow-hidden bg-[#f5f5f5] text-black/85 antialiased">
 
     <div class="flex h-full flex-col">
-        <header class="flex h-16 shrink-0 items-center justify-between border-b border-[#f0f0f0] bg-white px-6">
+        <header class="flex h-16 shrink-0 items-center justify-between border-b border-[#f0f0f0] bg-white px-6 relative">
             <div class="flex min-w-0 items-center">
-                <img class="object-contain h-10" src="https://app.algocandy.com/algo/images/logo.png" alt="AlgoCandy">
+                <!-- <img class="object-contain h-10" src="https://app.algocandy.com/algo/images/logo.png" alt="AlgoCandy"> -->
+                 自定义拖拽代码平台
             </div>
+
+
+
             <div class="flex items-center gap-2">
+                <!-- 视图缩放控制条 -->
+                <div class="flex items-center rounded-lg border border-slate-200 bg-white p-1 shadow-sm mr-2 h-8">
+                    <button class="flex h-full w-7 items-center justify-center rounded-[4px] text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors" id="zoom-out-btn" title="缩小 (Cmd/Ctrl + 滚轮)">
+                        <i data-lucide="minus" class="h-3.5 w-3.5"></i>
+                    </button>
+                    <div class="flex h-full min-w-[54px] items-center justify-center px-1 cursor-default select-none">
+                        <span class="font-mono text-[11px] font-medium text-slate-600" id="zoom-percent-text">100%</span>
+                    </div>
+                    <button class="flex h-full w-7 items-center justify-center rounded-[4px] text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors" id="zoom-in-btn" title="放大 (Cmd/Ctrl + 滚轮)">
+                        <i data-lucide="plus" class="h-3.5 w-3.5"></i>
+                    </button>
+                    <div class="mx-1.5 h-4 w-[1px] bg-slate-200"></div>
+                    <button class="flex h-full w-7 items-center justify-center rounded-[4px] text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors" id="zoom-reset-btn" title="居中与重置视图">
+                        <i data-lucide="maximize" class="h-3.5 w-3.5"></i>
+                    </button>
+                </div>
+
                 <div class="relative mr-2">
                     <button
                         class="flex items-center justify-center rounded-md border border-transparent bg-transparent px-2 py-1.5 text-black/45 transition hover:bg-black/5"
@@ -271,27 +286,18 @@
                 <canvas id="ruler-top" class="ruler ruler-top"></canvas>
                 <canvas id="ruler-left" class="ruler ruler-left"></canvas>
 
-                <div
-                    class="absolute bottom-4 right-4 z-20 flex items-center gap-1.5 rounded-lg border border-[#f0f0f0] bg-white/95 p-1.5 shadow-[0_6px_16px_rgba(0,0,0,0.06)] backdrop-blur-md">
-                    <button class="icon-btn ant-btn-small hover:bg-[#f5f5f5]" id="zoom-out-btn"
-                        title="缩小 (Cmd/Ctrl + 滚轮)">
-                        <i data-lucide="minus" class="h-3.5 w-3.5"></i>
-                    </button>
-                    <span class="min-w-[48px] text-center font-mono text-xs font-medium text-black/65"
-                        id="zoom-percent-text">100%</span>
-                    <button class="icon-btn ant-btn-small hover:bg-[#f5f5f5]" id="zoom-in-btn"
-                        title="放大 (Cmd/Ctrl + 滚轮)">
-                        <i data-lucide="plus" class="h-3.5 w-3.5"></i>
-                    </button>
-                    <div class="h-4 w-[1px] bg-[#f0f0f0]"></div>
-                    <button class="icon-btn ant-btn-small hover:bg-[#f5f5f5]" id="zoom-reset-btn" title="居中与重置视图">
-                        <i data-lucide="maximize" class="h-3.5 w-3.5"></i>
-                    </button>
-                </div>
 
-                <div class="canvas-world" id="canvas-world">
+
+                <div class="canvas-world opacity-0 transition-opacity duration-500" id="canvas-world">
                     <svg id="canvas-connections" class="absolute inset-0 pointer-events-none"
-                        style="overflow: visible; z-index: 0"></svg>
+                        style="overflow: visible; z-index: 0">
+                        <defs>
+                            <marker id="arrowhead" viewBox="0 0 12 12" refX="9" refY="6"
+                                markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                                <path d="M 3 3 L 9 6 L 3 9" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="connection-arrowhead" />
+                            </marker>
+                        </defs>
+                    </svg>
                 </div>
                 <button id="right-sidebar-toggle-btn"
                     class="absolute right-0 top-1/2 z-30 flex h-16 w-4 -translate-y-1/2 cursor-pointer items-center justify-center rounded-l-md border border-r-0 border-[#d9d9d9] bg-white text-black/45 shadow-sm transition hover:bg-[#f5f5f5] hover:text-[#1677ff]"
@@ -739,25 +745,25 @@
         </div>
     </template>
 
-    <template id="tpl-page-frame">
-        <article
-            class="mobile-frame absolute min-h-[720px] w-[390px] rounded-[28px] border border-[#d9d9d9] bg-[#f7f8fa] p-3 shadow-[0_24px_70px_rgba(15,23,42,0.18)]"
-            style="transform-origin: 0 0">
+        <template id="tpl-page-frame">
+            <div
+            class="mobile-frame absolute min-h-[720px] w-[390px] bg-[#F7F8FA] rounded-2xl shadow-sm ring-1 ring-slate-200 flex flex-col transition-shadow hover:shadow-md"
+            style="transform-origin: 0 0;"
+            >
             <div
                 class="absolute -top-7 left-0 flex items-center gap-1.5 text-[12px] font-medium tracking-wider text-black/40">
                 <i data-lucide="smartphone" class="h-3.5 w-3.5"></i>
                 <span class="font-mono">STEP <span class="page-sequence-badge">1</span></span>
             </div>
-
-            <div class="mx-auto mb-3 h-1.5 w-20 rounded-full bg-black/15"></div>
-            <div class="min-h-[680px] overflow-hidden rounded-[20px] bg-white shadow-inner flex flex-col">
-                <div class="border-b border-[#f0f0f0] px-5 pt-5 pb-4 shrink-0 page-header-area">
+            <!-- 页面主容器 -->
+            <div class="flex-1 overflow-hidden flex flex-col w-full h-full rounded-2xl">
+                <div class="page-header-area px-5 pt-6 pb-4 shrink-0 bg-white rounded-t-2xl">
                     <input
-                        class="page-title-input w-full rounded-md border border-transparent bg-transparent px-1 py-1 text-xl font-semibold leading-7 text-black/85 outline-none transition focus:border-[#1677ff] focus:bg-white focus:shadow-[0_0_0_2px_rgba(5,145,255,0.10)]"
+                        class="page-title-input w-full bg-transparent text-[22px] font-semibold tracking-tight leading-7 text-slate-800 outline-none transition-all focus:text-blue-500 focus:shadow-[0_2px_0_0_#3b82f6] pb-1"
                         value="页面标题" aria-label="页面标题" />
                     <textarea
-                        class="page-desc-input mt-1.5 w-full resize-none rounded-md border border-transparent bg-transparent px-2 py-1 text-sm leading-6 text-black/65 outline-none transition focus:border-[#1677ff] focus:bg-white focus:shadow-[0_0_0_2px_rgba(5,145,255,0.10)]"
-                        rows="2" aria-label="页面描述">
+                        class="page-desc-input mt-1.5 w-full overflow-hidden resize-none bg-transparent text-[15px] leading-6 text-slate-500 outline-none transition-all focus:text-blue-500 focus:shadow-[0_2px_0_0_#3b82f6] pb-1"
+                        rows="1" aria-label="页面描述" oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';">
 在此输入页面的描述信息...</textarea>
                 </div>
                 <div class="canvas-pages-container relative flex-1 bg-white">
@@ -876,6 +882,18 @@
             }
         }
     </script>
+    <!-- 右键菜单 -->
+    <div id="canvas-context-menu" class="fixed z-[9999] hidden min-w-[160px] rounded-lg border border-slate-200 bg-white p-1 shadow-lg shadow-black/5">
+        <button id="menu-btn-new-page" class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200">
+            <i data-lucide="file-plus" class="h-4 w-4 text-slate-400"></i>
+            <span>新建画布页面</span>
+        </button>
+        <div class="my-1 h-[1px] bg-slate-100"></div>
+        <button id="menu-btn-reset-view" class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200">
+            <i data-lucide="expand" class="h-4 w-4 text-slate-400"></i>
+            <span>重置画布视角</span>
+        </button>
+    </div>
     <script type="module" src="./js/main.js"></script>
     <div id="template-modal"
         class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 opacity-0 pointer-events-none transition-opacity duration-200">

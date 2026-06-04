@@ -204,7 +204,13 @@ export function renderOptions(el) {
         // 针对国家或国籍类型，特殊处理其默认值和占位符显示逻辑
         if (type === 'country' || type === 'nationality') {
             const placeholderOption = document.createElement('option');
-            const values = (el.dataset.defaultValue || '').split(',').filter(Boolean);
+            let values = [];
+            try {
+                values = JSON.parse(el.dataset.defaultValue || '[]');
+                if (!Array.isArray(values)) values = (el.dataset.defaultValue || '').split(',').filter(Boolean);
+            } catch (e) {
+                values = (el.dataset.defaultValue || '').split(',').filter(Boolean);
+            }
             if (values.length === 0) {
                 placeholderOption.textContent = el.dataset.placeholder || '请选择';
             } else {
@@ -345,7 +351,13 @@ export function renderOptions(el) {
             input.name = `${el.id}_preview`;
             input.checked = (el.dataset.defaultValue || '') === optionValue;
         } else {
-            const selectedValues = (el.dataset.defaultValue || '').split(',').map(item => item.trim()).filter(Boolean);
+            let selectedValues = [];
+            try {
+                selectedValues = JSON.parse(el.dataset.defaultValue || '[]');
+                if (!Array.isArray(selectedValues)) selectedValues = (el.dataset.defaultValue || '').split(',').map(item => item.trim()).filter(Boolean);
+            } catch (e) {
+                selectedValues = (el.dataset.defaultValue || '').split(',').map(item => item.trim()).filter(Boolean);
+            }
             input.checked = selectedValues.includes(optionValue);
         }
 
@@ -490,7 +502,7 @@ export function addComponentToCanvas(type) {
     let insertAfter = null;
 
     // 如果当前有选中的元素，则在其后方或其内部（如果是嵌套容器）插入新组件
-    if (state.selectedElement) {
+    if (state.selectedElement && state.selectedElement.classList) {
         if (state.selectedElement.classList.contains('mobile-frame')) {
             targetContainer = state.selectedElement.querySelector('.canvas-dropzone');
         } else if (state.selectedElement.classList.contains('nested-dropzone')) {

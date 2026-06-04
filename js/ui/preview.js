@@ -302,6 +302,10 @@ export function renderPreviewStep() {
     const isFirst = currentPreviewStep === 0;
     const isLast = currentPreviewStep === previewSchema.pages.length - 1;
     
+    // 动态切换预览表单顶部的标题和描述为当前页面的独立数据
+    DOM.previewFormTitle.textContent = page.title || previewSchema.meta.title;
+    DOM.previewFormDesc.textContent = page.description || previewSchema.meta.description || '暂无描述';
+    
     if (previewSchema.pages.length > 1) {
         DOM.previewStepperContainer.classList.remove('hidden');
         DOM.previewStepperContainer.classList.add('flex');
@@ -391,8 +395,6 @@ export function renderPreview(mode) {
     currentPreviewStep = 0;
     DOM.previewModalTitle.textContent = mode === 'deploy' ? '发布结构' : '表单预览';
     DOM.previewModalSubtitle.textContent = mode === 'deploy' ? '当前表单已生成可保存的结构数据' : '检查最终填写体验和结构';
-    DOM.previewFormTitle.textContent = previewSchema.title;
-    DOM.previewFormDesc.textContent = previewSchema.description || '暂无描述';
     
     // 生成带语法高亮的 JSON
     const jsonStr = JSON.stringify(previewSchema, null, 2);
