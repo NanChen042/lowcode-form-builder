@@ -1,13 +1,12 @@
 import { FormAPI } from './core/api.js';
 import { safeCreateIcons } from './utils/helpers.js';
 import { bindPropEvents } from './ui/properties.js';
-import { bindCanvasEvents, initPages, checkEmptyState } from './ui/canvas.js';
+import { addPage, bindCanvasEvents, initPages, checkEmptyState, resetCanvasView } from './ui/canvas.js';
 import { bindPreviewEvents } from './ui/preview.js';
 import { addComponentToCanvas } from './components/builder.js';
 import { state } from './core/state.js';
 import { loadSchema, saveToServer, markDirty, isDirty, establishBaseline } from './core/schema.js';
 import { blankTemplate, kycClientTemplate, kycIndividualTemplate, kycEntityTemplate } from './templates/recommend.js';
-import { canvasWorld } from './ui/dom.js';
 
 window.saveToServer = saveToServer;
 
@@ -169,26 +168,18 @@ async function bootstrap() {
         }
     }
     
-    // 监听 DOM 树变化，标记为未保存
-    const observer = new MutationObserver(() => markDirty());
-    observer.observe(canvasWorld, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        characterData: true
-    });
-    
     // 监听属性面板表单更改，标记为未保存
     document.addEventListener('input', (e) => {
-        if (e.target.closest('#prop-panel') || e.target.closest('.canvas-element') || e.target.closest('.page-title-input')) {
+        if (e.target.closest('#prop-editor, #page-prop-editor, .canvas-element, .page-title-input, .page-desc-input')) {
             markDirty();
         }
     });
     document.addEventListener('change', (e) => {
-        if (e.target.closest('#prop-panel') || e.target.closest('.canvas-element') || e.target.closest('.page-title-input')) {
+        if (e.target.closest('#prop-editor, #page-prop-editor, .canvas-element, .page-title-input, .page-desc-input')) {
             markDirty();
         }
     });
+    document.addEventListener('schemachange', () => markDirty());
 
     // 如果未保存，刷新或离开页面时进行拦截提示
     window.addEventListener('beforeunload', (e) => {
@@ -236,12 +227,12 @@ async function bootstrap() {
 
     // 绑定右键菜单功能按钮
     document.getElementById('menu-btn-new-page').addEventListener('click', () => {
-        import('./ui/canvas.js').then(({ addPage }) => addPage());
+        addPage();
         contextMenu.classList.add('hidden');
     });
 
     document.getElementById('menu-btn-reset-view').addEventListener('click', () => {
-        import('./ui/canvas.js').then(({ resetCanvasView }) => resetCanvasView());
+        resetCanvasView();
         contextMenu.classList.add('hidden');
     });
 }

@@ -1,6 +1,6 @@
 import { getUniqueId, state } from '../core/state.js';
 import { optionTypes, valueTypes, defaultCountryOptions, defaultNationalityOptions } from './registry.js';
-import { readOptions, writeOptions, safeCreateIcons } from '../utils/helpers.js';
+import { parseMultiValue, readOptions, writeOptions, safeCreateIcons } from '../utils/helpers.js';
 import { initDropzone, checkEmptyState, refreshNestedEmptyStates, selectElement } from '../ui/canvas.js';
 import { canvasWorld } from '../ui/dom.js';
 
@@ -204,13 +204,7 @@ export function renderOptions(el) {
         // 针对国家或国籍类型，特殊处理其默认值和占位符显示逻辑
         if (type === 'country' || type === 'nationality') {
             const placeholderOption = document.createElement('option');
-            let values = [];
-            try {
-                values = JSON.parse(el.dataset.defaultValue || '[]');
-                if (!Array.isArray(values)) values = (el.dataset.defaultValue || '').split(',').filter(Boolean);
-            } catch (e) {
-                values = (el.dataset.defaultValue || '').split(',').filter(Boolean);
-            }
+            const values = parseMultiValue(el.dataset.defaultValue);
             if (values.length === 0) {
                 placeholderOption.textContent = el.dataset.placeholder || '请选择';
             } else {
@@ -367,13 +361,7 @@ export function renderOptions(el) {
             input.name = `${el.id}_preview`;
             input.checked = (el.dataset.defaultValue || '') === optionValue;
         } else {
-            let selectedValues = [];
-            try {
-                selectedValues = JSON.parse(el.dataset.defaultValue || '[]');
-                if (!Array.isArray(selectedValues)) selectedValues = (el.dataset.defaultValue || '').split(',').map(item => item.trim()).filter(Boolean);
-            } catch (e) {
-                selectedValues = (el.dataset.defaultValue || '').split(',').map(item => item.trim()).filter(Boolean);
-            }
+            const selectedValues = parseMultiValue(el.dataset.defaultValue);
             input.checked = selectedValues.includes(optionValue);
         }
 

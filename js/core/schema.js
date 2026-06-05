@@ -68,8 +68,8 @@ export function serializeElement(el) {
         base.layout = el.dataset.layout || 'inline';
     }
 
-    // 处理复选框的最大选择数量
-    if (type === 'checkbox') {
+    // 处理多选类组件的最大选择数量
+    if (type === 'checkbox' || type === 'country' || type === 'nationality') {
         base.maxSelections = el.dataset.maxSelections ? parseInt(el.dataset.maxSelections, 10) : null;
     }
 
@@ -228,6 +228,9 @@ export function createElementFromSchema(fieldData) {
     if (fieldData.dateType !== undefined) itemEl.dataset.dateType = fieldData.dateType;
     if (fieldData.layout !== undefined) itemEl.dataset.layout = fieldData.layout;
     if (fieldData.maxSelections !== undefined) itemEl.dataset.maxSelections = fieldData.maxSelections;
+    if (fieldData.maxSelections === undefined && componentDefaults[type] && componentDefaults[type].maxSelections !== undefined) {
+        itemEl.dataset.maxSelections = componentDefaults[type].maxSelections;
+    }
 
     // 恢复选项列表（如果 Schema 中没有，且该类型存在默认配置，则使用默认配置兜底）
     if (fieldData.options) {

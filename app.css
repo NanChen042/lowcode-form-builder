@@ -23,13 +23,6 @@ body.is-dragging-component * {
     cursor: grabbing !important;
 }
 
-/* 拖拽期间关闭所有的形变过渡动画，防止拖拉拽时元素宽高变化产生变形动画，仅保留 Sortable 自身可能需要的 transform 动画 */
-body.is-dragging-component .canvas-element,
-body.is-dragging-component .component-item,
-body.is-dragging-component .transition-all {
-    transition-property: transform, opacity !important;
-}
-
 body.is-panning,
 body.is-panning * {
     cursor: grabbing !important;
@@ -367,10 +360,23 @@ button {
     transition: color 0.2s;
 }
 
+body.is-dragging-component .canvas-element .label-text,
+body.is-dragging-component .canvas-element .option-text,
+body.is-dragging-component .canvas-element .signature-declaration-text {
+    pointer-events: none !important;
+    cursor: grabbing !important;
+}
+
 .canvas-element .label-text:hover,
 .canvas-element .option-text:hover,
 .canvas-element .signature-declaration-text:hover {
     color: #1677ff;
+}
+
+body.is-dragging-component .canvas-element .label-text:hover,
+body.is-dragging-component .canvas-element .option-text:hover,
+body.is-dragging-component .canvas-element .signature-declaration-text:hover {
+    color: inherit;
 }
 
 .canvas-text-focus {
@@ -380,12 +386,6 @@ button {
     transition:
         color 0.2s,
         box-shadow 0.2s;
-}
-
-.canvas-text-editing {
-    min-width: 20px;
-    cursor: text;
-    outline: none;
 }
 
 .canvas-control-focus {
@@ -618,14 +618,22 @@ textarea.preview-input {
 .options-editor {
     display: flex;
     flex-direction: column;
+    max-height: 300px;
     gap: 8px;
+    overflow-y: auto;
+    padding-right: 2px;
 }
 
-.option-row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 85px 32px;
-    gap: 8px;
-    align-items: center;
+/* 极简选项面板使用 Tailwind 实用类，不再需要复杂的自定义 CSS */
+
+#prop-options-group > p {
+    border-radius: 6px;
+    border: 1px solid #f0f0f0;
+    background: #fafafa;
+    padding: 6px 8px;
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 11px;
+    line-height: 18px;
 }
 
 .ant-switch {

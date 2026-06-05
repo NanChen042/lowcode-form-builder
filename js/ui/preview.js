@@ -1,7 +1,7 @@
 import { buildSchema } from '../core/schema.js';
 import { FormAPI } from '../core/api.js';
 import * as DOM from './dom.js';
-import { safeCreateIcons } from '../utils/helpers.js';
+import { parseMultiValue, safeCreateIcons } from '../utils/helpers.js';
 
 let currentPreviewStep = 0;
 let previewSchema = null;
@@ -42,27 +42,44 @@ export function createPreviewField(field) {
 
     if (field.type === 'alert') {
         const options = field.options || [];
-        const itemsHtml = options.map(opt => `
-            <p class="relative">
-                <span class="absolute -left-[14px] top-[7px] flex h-1.5 w-1.5 rounded-sm bg-blue-400"></span>
-                ${opt.label || opt.value || ''}
-            </p>
-        `).join('');
 
-        wrapper.innerHTML = `
-            <section class="overflow-hidden rounded-xl bg-blue-50/40 shadow-sm ring-1 ring-blue-100/80">
-                <div class="h-1 w-full bg-blue-500"></div>
-                <div class="p-4 sm:p-5">
-                    <div class="mb-3 flex items-center gap-2">
-                        <i data-lucide="info" class="h-4 w-4 text-blue-600 stroke-[2.5px]"></i>
-                        <h3 class="text-[14px] font-bold text-blue-900 m-0">${field.label || '提示'}</h3>
-                    </div>
-                    <div class="space-y-2 pl-6 text-[13px] leading-relaxed text-blue-800">
-                        ${itemsHtml}
-                    </div>
-                </div>
-            </section>
-        `;
+        const section = document.createElement('section');
+        section.className = 'overflow-hidden rounded-xl bg-blue-50/40 shadow-sm ring-1 ring-blue-100/80';
+
+        const bar = document.createElement('div');
+        bar.className = 'h-1 w-full bg-blue-500';
+        section.appendChild(bar);
+
+        const content = document.createElement('div');
+        content.className = 'p-4 sm:p-5';
+
+        const header = document.createElement('div');
+        header.className = 'mb-3 flex items-center gap-2';
+        const icon = document.createElement('i');
+        icon.setAttribute('data-lucide', 'info');
+        icon.className = 'h-4 w-4 text-blue-600 stroke-[2.5px]';
+        const title = document.createElement('h3');
+        title.className = 'text-[14px] font-bold text-blue-900 m-0';
+        title.textContent = field.label || '提示';
+        header.appendChild(icon);
+        header.appendChild(title);
+
+        const items = document.createElement('div');
+        items.className = 'space-y-2 pl-6 text-[13px] leading-relaxed text-blue-800';
+        options.forEach(opt => {
+            const p = document.createElement('p');
+            p.className = 'relative';
+            const dot = document.createElement('span');
+            dot.className = 'absolute -left-[14px] top-[7px] flex h-1.5 w-1.5 rounded-sm bg-blue-400';
+            p.appendChild(dot);
+            p.appendChild(document.createTextNode(opt.label || opt.value || ''));
+            items.appendChild(p);
+        });
+
+        content.appendChild(header);
+        content.appendChild(items);
+        section.appendChild(content);
+        wrapper.appendChild(section);
         return wrapper;
     }
 
@@ -81,23 +98,41 @@ export function createPreviewField(field) {
         const sigDiv = document.createElement('div');
         sigDiv.className = 'mt-2 bg-white border border-[#e5e7eb] rounded-lg p-4 shadow-sm';
         const options = field.options || [];
-            
-        const labelsHtml = options.map(opt => `
-            <label class="flex items-start gap-2.5 cursor-pointer group">
-                <input type="checkbox" class="mt-1 flex-shrink-0 rounded text-[#1677ff] preview-input-checkbox" value="${opt.value}" required>
-                <span class="text-sm text-black/75 leading-5 group-hover:text-black/85 transition-colors">${opt.label || opt.value || ''}</span>
-            </label>
-        `).join('');
 
-        sigDiv.innerHTML = `
-            <div class="flex flex-col gap-3 mb-5">
-                ${labelsHtml}
-            </div>
-            <div class="w-full h-32 bg-[#f8fafc] border-2 border-dashed border-[#cbd5e1] rounded-lg flex flex-col items-center justify-center text-[#94a3b8] cursor-pointer hover:border-[#1677ff] hover:bg-[#f0f7ff] hover:text-[#1677ff] transition-all relative overflow-hidden group">
-                <i data-lucide="pen-tool" class="h-6 w-6 mb-2"></i>
-                <span class="text-sm font-medium">点击此处进行手写签名</span>
-            </div>
-        `;
+        const checks = document.createElement('div');
+        checks.className = 'flex flex-col gap-3 mb-5';
+        options.forEach(opt => {
+            const checkLabel = document.createElement('label');
+            checkLabel.className = 'flex items-start gap-2.5 cursor-pointer group';
+
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.className = 'mt-1 flex-shrink-0 rounded text-[#1677ff] preview-input-checkbox';
+            input.value = opt.value || '';
+            input.required = true;
+
+            const text = document.createElement('span');
+            text.className = 'text-sm text-black/75 leading-5 group-hover:text-black/85 transition-colors';
+            text.textContent = opt.label || opt.value || '';
+
+            checkLabel.appendChild(input);
+            checkLabel.appendChild(text);
+            checks.appendChild(checkLabel);
+        });
+
+        const signArea = document.createElement('div');
+        signArea.className = 'w-full h-32 bg-[#f8fafc] border-2 border-dashed border-[#cbd5e1] rounded-lg flex flex-col items-center justify-center text-[#94a3b8] cursor-pointer hover:border-[#1677ff] hover:bg-[#f0f7ff] hover:text-[#1677ff] transition-all relative overflow-hidden group';
+        const penIcon = document.createElement('i');
+        penIcon.setAttribute('data-lucide', 'pen-tool');
+        penIcon.className = 'h-6 w-6 mb-2';
+        const signText = document.createElement('span');
+        signText.className = 'text-sm font-medium';
+        signText.textContent = '点击此处进行手写签名';
+        signArea.appendChild(penIcon);
+        signArea.appendChild(signText);
+
+        sigDiv.appendChild(checks);
+        sigDiv.appendChild(signArea);
         wrapper.appendChild(sigDiv);
     }
 
@@ -128,7 +163,7 @@ export function createPreviewField(field) {
             fakeSelect.className = 'preview-input flex items-center gap-1.5 flex-wrap min-h-[32px] cursor-pointer relative bg-white';
             fakeSelect.style.paddingRight = '28px';
             
-            let selectedValues = (field.defaultValue || '').split(',').filter(Boolean);
+            let selectedValues = parseMultiValue(field.defaultValue);
             const maxSelections = field.maxSelections ? parseInt(field.maxSelections, 10) : null;
             
             const menu = document.createElement('div');
@@ -259,7 +294,7 @@ export function createPreviewField(field) {
     if (field.type === 'radio' || field.type === 'checkbox') {
         const group = document.createElement('div');
         group.className = field.layout === 'stack' ? 'flex flex-col gap-2' : 'flex flex-wrap gap-4';
-        const selectedValues = String(field.defaultValue || '').split(',').map(item => item.trim()).filter(Boolean);
+        const selectedValues = parseMultiValue(field.defaultValue);
 
         field.options.forEach(option => {
             const optionValue = option.value || '';
@@ -310,26 +345,37 @@ export function renderPreviewStep() {
         DOM.previewStepperContainer.classList.remove('hidden');
         DOM.previewStepperContainer.classList.add('flex');
         
-        const stepsHtml = previewSchema.pages.map((p, i) => `
-            <div class="preview-step-item cursor-pointer flex items-start gap-3 transition hover:opacity-80 ${i === currentPreviewStep ? 'text-[#1677ff]' : 'text-black/45'}">
-                <div class="flex flex-col items-center">
-                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${i === currentPreviewStep ? 'border-current font-medium bg-[#e6f4ff]' : 'border-gray-300'}">${i + 1}</span>
-                    ${i < previewSchema.pages.length - 1 ? '<div class="w-px h-8 bg-gray-200 my-1"></div>' : ''}
-                </div>
-                <span class="pt-1 text-sm font-medium leading-5">${p.title}</span>
-            </div>
-        `).join('');
-        DOM.previewStepperContainer.innerHTML = stepsHtml;
-        
-        // 为每一个步骤绑定点击事件，实现随时切换预览
-        const stepElements = DOM.previewStepperContainer.querySelectorAll('.preview-step-item');
-        stepElements.forEach((el, index) => {
-            el.addEventListener('click', () => {
-                if (currentPreviewStep !== index) {
-                    currentPreviewStep = index;
+        DOM.previewStepperContainer.innerHTML = '';
+        previewSchema.pages.forEach((p, i) => {
+            const step = document.createElement('div');
+            step.className = `preview-step-item cursor-pointer flex items-start gap-3 transition hover:opacity-80 ${i === currentPreviewStep ? 'text-[#1677ff]' : 'text-black/45'}`;
+
+            const markerWrap = document.createElement('div');
+            markerWrap.className = 'flex flex-col items-center';
+            const marker = document.createElement('span');
+            marker.className = `flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${i === currentPreviewStep ? 'border-current font-medium bg-[#e6f4ff]' : 'border-gray-300'}`;
+            marker.textContent = String(i + 1);
+            markerWrap.appendChild(marker);
+
+            if (i < previewSchema.pages.length - 1) {
+                const line = document.createElement('div');
+                line.className = 'w-px h-8 bg-gray-200 my-1';
+                markerWrap.appendChild(line);
+            }
+
+            const title = document.createElement('span');
+            title.className = 'pt-1 text-sm font-medium leading-5';
+            title.textContent = p.title || `第 ${i + 1} 页`;
+
+            step.appendChild(markerWrap);
+            step.appendChild(title);
+            step.addEventListener('click', () => {
+                if (currentPreviewStep !== i) {
+                    currentPreviewStep = i;
                     renderPreviewStep();
                 }
             });
+            DOM.previewStepperContainer.appendChild(step);
         });
 
         // 更新手机端内部的极简进度指示器
@@ -450,7 +496,7 @@ window.toggleSchemaSidebar = function() {
     }
 };
 
-window.publishForm = async function() {
+window.publishForm = async function(event) {
     const btn = event ? event.currentTarget : null;
     const originalHtml = btn ? btn.innerHTML : '';
     
@@ -463,7 +509,7 @@ window.publishForm = async function() {
     try {
         const response = await FormAPI.publishForm(previewSchema);
         if (response.success) {
-            alert('🎉 表单发布成功！\n线上访问地址: ' + response.data.url);
+            alert('表单发布成功！\n线上访问地址: ' + response.data.url);
             closePreviewModal();
         } else {
             throw new Error('发布失败');

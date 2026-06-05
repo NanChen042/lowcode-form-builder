@@ -1,8 +1,9 @@
 import { state, setSelectedElement } from '../core/state.js';
-import { safeCreateIcons, writeOptions, readOptions } from '../utils/helpers.js';
+import { notifySchemaChange, safeCreateIcons, stringifyMultiValue, writeOptions, readOptions } from '../utils/helpers.js';
 import { optionTypes, valueTypes } from '../components/registry.js';
 import * as DOM from './dom.js';
 import { updateDefaultValueUI, renderOptionsEditor, syncMaxSelectionsUI } from './properties.js';
+import { createElementFromSchema, serializeElement } from '../core/schema.js';
 
 const PAGE_WIDTH = 390;
 const PAGE_GAP = 160;
@@ -292,6 +293,8 @@ export function addPage(afterPageId = null, options = {}) {
         focusOnPage(newId, true, true);
         selectElement(frame);
     }
+
+    notifySchemaChange();
 }
 
 // 从画布和状态中删除指定页面，并重新排列后续页面的位置
@@ -312,6 +315,7 @@ export function deletePage(pageId) {
     drawConnections();
     updatePageSequenceBadges();
     focusOnPage(state.pages[Math.max(0, index - 1)].id);
+    notifySchemaChange();
 }
 
 // 更新所有画布左上角的序号角标
@@ -690,6 +694,7 @@ export function deleteElement(event, el) {
     el.remove();
     checkEmptyState();
     refreshNestedEmptyStates();
+    notifySchemaChange();
 }
 
 window.deleteElement = deleteElement;
@@ -697,30 +702,32 @@ window.deleteElement = deleteElement;
 // 复制指定的组件并在其后插入新的一份拷贝
 window.duplicateElement = function(event, el) {
     event.stopPropagation();
-    const clone = el.cloneNode(true);
-    
-    const newId = `field_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-    clone.id = newId;
-    clone.dataset.key = newId;
-    
-    const nested = clone.querySelectorAll('.canvas-element');
-    nested.forEach(item => {
-        const innerNewId = `field_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-        item.id = innerNewId;
-        item.dataset.key = innerNewId;
-    });
+
+    const schema = serializeElement(el);
+    const remapIds = field => {
+        const id = `cmp_${getUniqueId()}`;
+        field.id = id;
+        field.key = `${field.type}_${String(id).replace('cmp_', '')}`;
+
+        if (field.columns) {
+            field.columns.forEach((column, colIndex) => {
+                column.id = `col_${getUniqueId()}_${colIndex + 1}`;
+                (column.elements || []).forEach(remapIds);
+            });
+        }
+    };
+    remapIds(schema);
+
+    const clone = createElementFromSchema(schema);
+    if (!clone) return;
 
     el.parentNode.insertBefore(clone, el.nextSibling);
-    
-    const nestedDropzones = clone.querySelectorAll('.nested-dropzone');
-    nestedDropzones.forEach(dz => {
-        initDropzone(dz);
-    });
 
     safeCreateIcons();
     selectElement(clone);
     checkEmptyState();
     refreshNestedEmptyStates();
+    notifySchemaChange();
 }
 
 // Ensure initDropzone uses the builder functions but builder uses initDropzone
@@ -733,7 +740,7 @@ import { getUniqueId } from '../core/state.js';
 export function initDropzone(containerEl) {
     new Sortable(containerEl, {
         group: 'shared',
-        animation: 150,
+        animation: 180,
         easing: 'cubic-bezier(0.2, 0, 0, 1)',
         ghostClass: 'sortable-ghost',
         dragClass: 'sortable-drag',
@@ -828,6 +835,7 @@ export function initDropzone(containerEl) {
 
             checkEmptyState();
             refreshNestedEmptyStates();
+            notifySchemaChange();
             setTimeout(() => {
                 selectElement(itemEl);
             }, 20);
@@ -835,9 +843,11 @@ export function initDropzone(containerEl) {
         onRemove: function() {
             checkEmptyState();
             refreshNestedEmptyStates();
+            notifySchemaChange();
         },
         onSort: function() {
             refreshNestedEmptyStates();
+            notifySchemaChange();
         }
     });
 }
@@ -901,14 +911,6 @@ export function bindCanvasEvents() {
         }
     });
 
-    DOM.canvasWorld.addEventListener('keydown', e => {
-        // inline editing state is managed locally in builder.js now
-    });
-
-    DOM.canvasWorld.addEventListener('focusout', e => {
-        // inline editing state is managed locally in builder.js now
-    });
-
     DOM.canvasWorld.addEventListener('input', e => {
         const canvasElement = e.target.closest('.canvas-element');
         if (!canvasElement) return;
@@ -932,10 +934,10 @@ export function bindCanvasEvents() {
                 canvasElement.dataset.defaultValue = e.target.value;
             } else {
                 const checkedInputs = Array.from(canvasElement.querySelectorAll('input[type="checkbox"]:checked'));
-                canvasElement.dataset.defaultValue = checkedInputs.map(i => i.value).join(',');
+                canvasElement.dataset.defaultValue = stringifyMultiValue(checkedInputs.map(i => i.value));
             }
             if (state.selectedElement === canvasElement) {
-                DOM.inputDefault.value = canvasElement.dataset.defaultValue;
+                updateDefaultValueUI(canvasElement);
             }
         }
     });
@@ -1091,13 +1093,7 @@ export function bindCanvasEvents() {
     }, { capture: true });
 
     document.addEventListener('mousemove', e => {
-        if (state.isDrawingConnection) {
-            e.preventDefault();
-            const rect = DOM.canvasWorld.getBoundingClientRect();
-            state.connectionTempX = (e.clientX - rect.left) / state.canvasState.scale;
-            state.connectionTempY = (e.clientY - rect.top) / state.canvasState.scale;
-            drawConnections();
-        } else if (state.isPanning) {
+        if (state.isPanning) {
             e.preventDefault();
             state.canvasState.x = state.panStartCanvasX + (e.clientX - state.panStartX);
             state.canvasState.y = state.panStartCanvasY + (e.clientY - state.panStartY);

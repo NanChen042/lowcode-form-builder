@@ -1,6 +1,6 @@
 import { state } from '../core/state.js';
 import { optionTypes } from '../components/registry.js';
-import { readOptions, writeOptions, safeCreateIcons } from '../utils/helpers.js';
+import { notifySchemaChange, parseMultiValue, stringifyMultiValue, readOptions, writeOptions, safeCreateIcons } from '../utils/helpers.js';
 import { renderDefaultValue, renderOptions } from '../components/builder.js';
 import { setLabelText, renderHelpText } from '../components/builder.js';
 import * as DOM from './dom.js';
@@ -40,13 +40,7 @@ export function updateDefaultValueUI(el) {
         DOM.inputDefault.style.display = 'none'; // 隐藏普通的文本输入框
         
         const options = readOptions(el);
-        let values = [];
-        try {
-            values = JSON.parse(el.dataset.defaultValue || '[]');
-            if (!Array.isArray(values)) values = (el.dataset.defaultValue || '').split(',').filter(v => v);
-        } catch (e) {
-            values = (el.dataset.defaultValue || '').split(',').filter(v => v);
-        }
+        const values = parseMultiValue(el.dataset.defaultValue);
 
         // 判断是否是支持多选的类型
         const isMultiChoice = type === 'checkbox' || type === 'country' || type === 'nationality';
@@ -81,7 +75,7 @@ export function updateDefaultValueUI(el) {
                         }
 
                         const newVals = Array.from(DOM.checkboxDefaultGroup.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
-                        state.selectedElement.dataset.defaultValue = JSON.stringify(newVals);
+                        state.selectedElement.dataset.defaultValue = stringifyMultiValue(newVals);
                         renderDefaultValue(state.selectedElement);
                         renderOptions(state.selectedElement);
                     });
@@ -129,47 +123,55 @@ export function renderOptionsEditor() {
 
     const useTextarea = state.selectedElement.dataset.type === 'signature' || state.selectedElement.dataset.type === 'alert';
 
-    DOM.optionsEditor.className = 'options-editor custom-scrollbar max-h-[300px] overflow-y-auto pr-1';
+    DOM.optionsEditor.className = 'options-editor custom-scrollbar';
 
     options.forEach((option, index) => {
         const row = document.createElement('div');
-        row.className = 'flex items-start gap-2 mb-3';
+        row.className = 'group flex items-start gap-2 mb-2.5';
         
         let labelInput;
         
         if (useTextarea) {
             labelInput = document.createElement('textarea');
-            labelInput.rows = 2;
-            labelInput.className = 'ant-input text-xs resize-y flex-1';
-            labelInput.style.minHeight = '56px';
+            labelInput.rows = 3;
+            labelInput.className = 'ant-input text-xs resize-y flex-1 min-h-[64px] pr-8';
             labelInput.placeholder = '请输入内容...';
         } else {
             labelInput = document.createElement('input');
             labelInput.type = 'text';
-            labelInput.className = 'ant-input text-xs flex-1';
+            labelInput.className = 'ant-input text-xs flex-1 min-w-0';
             labelInput.placeholder = '选项名称';
         }
         labelInput.value = option.label || '';
-
+        
         const valueInput = document.createElement('input');
         valueInput.type = 'text';
         valueInput.value = option.value || '';
         valueInput.readOnly = true;
         valueInput.title = '选项底层提交值 (Value)';
-        valueInput.className = 'ant-input text-[11px] font-mono !bg-black/[0.02] !text-black/45 !cursor-default !border-transparent !shadow-none w-[75px] shrink-0 px-2';
+        valueInput.className = 'ant-input text-[10px] font-mono !bg-black/[0.02] !text-black/45 !cursor-default !border-transparent !shadow-none w-[65px] shrink-0 px-1.5';
         if (useTextarea) {
             valueInput.style.display = 'none';
         }
         
         const removeButton = document.createElement('button');
         removeButton.type = 'button';
-        removeButton.className = 'icon-btn shrink-0';
-        removeButton.innerHTML = '<i data-lucide="minus-circle" class="h-4 w-4 text-slate-400 hover:text-red-500 transition-colors"></i>';
         removeButton.setAttribute('title', '删除');
-        if (useTextarea) {
-            removeButton.style.marginTop = '4px';
-        }
+        removeButton.innerHTML = '<i data-lucide="minus-circle" class="h-4 w-4"></i>';
         
+        if (useTextarea) {
+            // For textarea, absolute position the delete button inside the textarea wrapper or just float it
+            row.className = 'group relative mb-3';
+            removeButton.className = 'absolute top-1.5 right-1.5 p-1 text-slate-300 hover:text-red-500 hover:bg-slate-100 rounded-md opacity-0 group-hover:opacity-100 transition-all';
+            row.appendChild(labelInput);
+            row.appendChild(removeButton);
+        } else {
+            removeButton.className = 'icon-btn shrink-0 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all pt-1.5';
+            row.appendChild(labelInput);
+            row.appendChild(valueInput);
+            row.appendChild(removeButton);
+        }
+
         removeButton.addEventListener('click', () => {
             const latestOptions = readOptions(state.selectedElement);
             latestOptions.splice(index, 1);
@@ -177,11 +179,10 @@ export function renderOptionsEditor() {
             renderOptions(state.selectedElement);
             renderOptionsEditor();
             updateDefaultValueUI(state.selectedElement);
+            notifySchemaChange();
         });
-        
-        row.appendChild(labelInput);
-        row.appendChild(valueInput);
-        row.appendChild(removeButton);
+
+        DOM.optionsEditor.appendChild(row);
 
         // 虚拟焦点映射
         let focusedTarget = null;
@@ -203,9 +204,8 @@ export function renderOptionsEditor() {
             writeOptions(state.selectedElement, latestOptions);
             renderOptions(state.selectedElement);
             updateDefaultValueUI(state.selectedElement);
+            notifySchemaChange();
         });
-
-        DOM.optionsEditor.appendChild(row);
     });
 
     safeCreateIcons();
@@ -312,7 +312,7 @@ export function bindPropEvents() {
             if (!state.selectedElement) return;
             if (state.selectedElement.dataset.type === 'checkbox') {
                 const values = Array.from(e.target.selectedOptions).map(o => o.value).filter(v => v !== "");
-                state.selectedElement.dataset.defaultValue = JSON.stringify(values);
+                state.selectedElement.dataset.defaultValue = stringifyMultiValue(values);
             } else {
                 state.selectedElement.dataset.defaultValue = e.target.value;
             }
@@ -402,5 +402,6 @@ export function bindPropEvents() {
         renderOptions(state.selectedElement);
         renderOptionsEditor();
         updateDefaultValueUI(state.selectedElement);
+        notifySchemaChange();
     });
 }
