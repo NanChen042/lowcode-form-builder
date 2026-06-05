@@ -602,7 +602,7 @@
     <div id="preview-modal"
         class="fixed inset-0 z-[1000] flex opacity-0 pointer-events-none transition-opacity duration-200 bg-black/45 p-8">
         <div id="preview-modal-content"
-            class="mx-auto flex h-full w-full max-w-[1120px] scale-95 opacity-0 transition-all duration-200 flex-col overflow-hidden rounded-lg bg-white shadow-[0_6px_16px_rgba(0,0,0,0.08),0_9px_28px_rgba(0,0,0,0.12),0_12px_48px_rgba(0,0,0,0.16)]">
+            class="mx-auto flex h-full w-[95vw] max-w-[1400px] scale-95 opacity-0 transition-all duration-200 flex-col overflow-hidden rounded-lg bg-white shadow-[0_6px_16px_rgba(0,0,0,0.08),0_9px_28px_rgba(0,0,0,0.12),0_12px_48px_rgba(0,0,0,0.16)]">
             <header class="flex h-16 shrink-0 items-center justify-between border-b border-[#f0f0f0] px-5">
                 <div>
                     <h2 id="preview-modal-title" class="m-0 text-base font-semibold leading-6">
@@ -629,18 +629,40 @@
                     <!-- 左侧独立大纲进度条 -->
                     <div id="preview-stepper-container" class="hidden w-[240px] shrink-0 flex-col"></div>
 
-                    <div
-                        class="relative flex h-[812px] max-h-full w-[375px] shrink-0 flex-col overflow-hidden rounded-[40px] border-[10px] border-[#222] bg-white shadow-2xl transition-all duration-300">
-                        <!-- 手机刘海屏区域 -->
-                        <div class="absolute left-1/2 top-0 z-10 h-6 w-32 -translate-x-1/2 rounded-b-2xl bg-[#222]">
+                    <div class="relative flex h-[812px] max-h-full w-[375px] shrink-0 flex-col rounded-[48px] bg-gradient-to-br from-[#ffffff] via-[#f4f4f5] to-[#d4d4d8] p-[3px] shadow-[0_0_0_1px_rgba(0,0,0,0.05),0_24px_48px_rgba(0,0,0,0.1),inset_0_2px_4px_rgba(255,255,255,0.9),inset_0_-2px_4px_rgba(0,0,0,0.15)] transition-all duration-300">
+                        <!-- 黑色屏幕内圈 (还原真实的手机玻璃黑边) -->
+                        <div class="relative flex flex-1 flex-col overflow-hidden rounded-[45px] bg-[#0a0a0a] p-[6px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)]">
+                            <!-- 真正的纯白屏幕显示区域 -->
+                            <div class="relative flex flex-1 flex-col overflow-hidden rounded-[39px] bg-white ring-1 ring-black/5">
+                                
+                                <!-- 经典黑色刘海 (完美衔接顶部黑边) -->
+                                <div class="absolute left-1/2 top-0 z-30 h-[26px] w-[140px] -translate-x-1/2 rounded-b-[20px] bg-[#0a0a0a] shadow-[inset_0_-1px_2px_rgba(255,255,255,0.08)]"></div>
+                                
+                                <!-- 顶部状态栏 -->
+                                <div class="flex h-12 shrink-0 items-center justify-between px-6 text-[13px] font-semibold text-black z-20">
+                                    <span id="preview-time">9:41</span>
+                                    <div class="flex items-center gap-1.5">
+                                        <i data-lucide="bar-chart-2" class="h-3.5 w-3.5"></i>
+                                        <i data-lucide="wifi" class="h-3.5 w-3.5"></i>
+                                        <i data-lucide="battery-full" class="h-4 w-4"></i>
+                                    </div>
+                                </div>
+
+                            <!-- 手机主视图 (滚动区) -->
+                            <!-- 隐藏原生滚动条 -->
+                            <div class="flex-1 overflow-auto px-5 pb-12 pt-2 scrollbar-hide" style="scrollbar-width: none; -ms-overflow-style: none;">
+                                <style>
+                                    .scrollbar-hide::-webkit-scrollbar { display: none; }
+                                </style>
+                                <div id="preview-mobile-progress" class="mb-4 hidden text-[13px] font-medium tracking-wider text-[#1677ff]"></div>
+                                <h3 id="preview-form-title" class="m-0 text-[20px] font-semibold leading-7"></h3>
+                                <p id="preview-form-desc" class="mb-5 mt-1.5 text-xs text-black/65"></p>
+                                <form id="preview-form-body" class="flex flex-col gap-4"></form>
+                            </div>
+
+                            <!-- 底部 Home Indicator -->
+                            <div class="pointer-events-none absolute bottom-2 left-1/2 h-[4px] w-[120px] -translate-x-1/2 rounded-full bg-slate-300"></div>
                         </div>
-                        <!-- 手机主视图 -->
-                        <div class="custom-scrollbar flex-1 overflow-auto p-5 pt-10 pb-10">
-                            <div id="preview-mobile-progress"
-                                class="mb-4 text-[13px] font-medium text-[#1677ff] hidden tracking-wider"></div>
-                            <h3 id="preview-form-title" class="m-0 text-[20px] font-semibold leading-7"></h3>
-                            <p id="preview-form-desc" class="mb-5 mt-1.5 text-xs text-black/65"></p>
-                            <form id="preview-form-body" class="flex flex-col gap-4"></form>
                         </div>
                     </div>
                 </section>
@@ -1184,6 +1206,16 @@
                 if (window.lucide) window.lucide.createIcons({ root: parent });
             }
         }
+
+        function updatePreviewTime() {
+            const timeEl = document.getElementById('preview-time');
+            if (timeEl) {
+                const now = new Date();
+                timeEl.textContent = now.getHours() + ':' + now.getMinutes().toString().padStart(2, '0');
+            }
+        }
+        setInterval(updatePreviewTime, 1000);
+        updatePreviewTime();
     </script>
     <script type="module" src="./js/main.js"></script>
     </body>
