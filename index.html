@@ -112,7 +112,7 @@
             </div>
         </header>
 
-        <main class="grid min-h-0 flex-1 grid-cols-[300px_minmax(460px,1fr)_336px]">
+        <main class="grid min-h-0 flex-1 grid-cols-[300px_minmax(460px,1fr)_280px]">
             <aside
                 class="flex h-screen w-[300px] flex-col border-r border-slate-200 bg-[#FAFAFA] font-sans text-slate-900 transition-all duration-300">
                 <header class="flex-none border-b border-slate-200 bg-[#FAFAFA] px-4 pb-3 pt-4">
@@ -308,7 +308,7 @@
 
             <aside
                 class="min-h-0 flex flex-col border-l border-[#f0f0f0] bg-white transition-all duration-300 overflow-hidden">
-                <section class="flex flex-1 min-h-0 flex-col w-[336px]">
+                <section class="flex flex-1 min-h-0 flex-col w-[280px]">
                     <div class="flex items-center justify-between gap-3 border-b border-[#f0f0f0] p-4">
                         <div>
                             <h2 class="m-0 text-sm font-semibold leading-6">属性配置</h2>
@@ -324,7 +324,7 @@
                     </div>
 
                     <form id="prop-editor"
-                        class="custom-scrollbar hidden min-h-0 flex-1 flex-col overflow-auto p-4 pb-12"
+                        class="custom-scrollbar hidden min-h-0 flex-1 flex-col overflow-auto pb-12"
                         onsubmit="return false;">
                         <section class="prop-section">
                             <div class="section-title">
@@ -335,18 +335,12 @@
                                 <span>标题 Label</span>
                                 <input class="ant-input" type="text" id="prop-label-input" />
                             </label>
-                            <label class="form-control">
-                                <span>字段标识 Field Key</span>
-                                <input
-                                    class="ant-input text-xs font-mono !bg-black/[0.02] !text-black/45 !cursor-default !border-transparent !shadow-none"
-                                    type="text" id="prop-key-input" readonly title="系统生成的唯一标识符，不允许修改" />
-                            </label>
                         </section>
 
                         <section class="prop-section" id="prop-placeholder-group">
                             <label class="form-control">
                                 <span>占位提示 Placeholder</span>
-                                <textarea class="ant-input" rows="2" id="prop-placeholder-input"></textarea>
+                                <input class="ant-input" type="text" id="prop-placeholder-input" />
                             </label>
                         </section>
 
@@ -367,8 +361,8 @@
                         <section class="prop-section" id="prop-help-group">
                             <label class="form-control">
                                 <span>提示文本 Help Text</span>
-                                <textarea class="ant-input" rows="3" id="prop-help-input"
-                                    placeholder="显示在字段下方的说明或填写提示"></textarea>
+                                <input class="ant-input" type="text" id="prop-help-input"
+                                    placeholder="显示在字段下方的说明或填写提示" />
                             </label>
                         </section>
 
@@ -439,7 +433,7 @@
                     </form>
 
                     <form id="page-prop-editor"
-                        class="custom-scrollbar hidden min-h-0 flex-1 flex-col overflow-auto p-4"
+                        class="custom-scrollbar hidden min-h-0 flex-1 flex-col overflow-auto pb-12"
                         onsubmit="return false;">
                         <section class="prop-section">
                             <div class="section-title">
@@ -533,7 +527,7 @@
                     <i data-lucide="trash-2"></i>
                 </button>
             </div>
-            <label class="component-label">单行文本 <span class="req-star hidden">*</span></label>
+            <div class="component-label">单行文本 <span class="req-star hidden">*</span></div>
             <input type="text" class="component-placeholder" placeholder="请输入内容" />
         </div>
     </template>
@@ -550,7 +544,7 @@
                     <i data-lucide="trash-2"></i>
                 </button>
             </div>
-            <label class="component-label">多行文本 <span class="req-star hidden">*</span></label>
+            <div class="component-label">多行文本 <span class="req-star hidden">*</span></div>
             <textarea rows="3" class="component-placeholder" placeholder="请输入详细描述..."></textarea>
         </div>
     </template>
@@ -567,7 +561,7 @@
                     <i data-lucide="trash-2"></i>
                 </button>
             </div>
-            <label class="component-label">下拉选择 <span class="req-star hidden">*</span></label>
+            <div class="component-label">下拉选择 <span class="req-star hidden">*</span></div>
             <select class="component-placeholder">
                 <option value="">请选择选项</option>
             </select>
@@ -586,7 +580,7 @@
                     <i data-lucide="trash-2"></i>
                 </button>
             </div>
-            <label class="component-label">国家选择 <span class="req-star hidden">*</span></label>
+            <div class="component-label">国家选择 <span class="req-star hidden">*</span></div>
             <select class="component-placeholder"></select>
         </div>
     </template>
@@ -603,7 +597,7 @@
                     <i data-lucide="trash-2"></i>
                 </button>
             </div>
-            <label class="component-label">国籍选择 <span class="req-star hidden">*</span></label>
+            <div class="component-label">国籍选择 <span class="req-star hidden">*</span></div>
             <select class="component-placeholder"></select>
         </div>
     </template>
@@ -620,7 +614,7 @@
                     <i data-lucide="trash-2"></i>
                 </button>
             </div>
-            <label class="component-label">声明与签名 <span class="req-star hidden">*</span></label>
+            <div class="component-label">声明与签名 <span class="req-star hidden">*</span></div>
             <div class="signature-canvas-mock bg-white border border-[#e5e7eb] rounded-lg p-4"
                 style="pointer-events: none">
                 <div class="signature-options-container mb-4 flex flex-col gap-3"></div>
@@ -645,7 +639,7 @@
                     <i data-lucide="trash-2"></i>
                 </button>
             </div>
-            <label class="component-label">单选框组 <span class="req-star hidden">*</span></label>
+            <div class="component-label">单选框组 <span class="req-star hidden">*</span></div>
             <div class="choice-group"></div>
         </div>
     </template>
@@ -662,7 +656,7 @@
                     <i data-lucide="trash-2"></i>
                 </button>
             </div>
-            <label class="component-label">多选框组 <span class="req-star hidden">*</span></label>
+            <div class="component-label">多选框组 <span class="req-star hidden">*</span></div>
             <div class="choice-group"></div>
         </div>
     </template>
@@ -679,7 +673,7 @@
                     <i data-lucide="trash-2"></i>
                 </button>
             </div>
-            <label class="component-label">日期选择 <span class="req-star hidden">*</span></label>
+            <div class="component-label">日期选择 <span class="req-star hidden">*</span></div>
             <input type="date" class="component-placeholder" />
         </div>
     </template>
@@ -704,7 +698,7 @@
                         <svg class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        <h3 class="component-label text-[14px] font-bold text-blue-900 m-0"><span class="label-text">提示</span></h3>
+                        <h3 class="component-label text-[14px] font-bold text-blue-900 m-0">提示</h3>
                     </div>
                     <div class="alert-content-wrapper space-y-2 pl-6 text-[13px] leading-relaxed text-blue-800">
                         <p class="relative">
@@ -733,7 +727,7 @@
                     <i data-lucide="trash-2"></i>
                 </button>
             </div>
-            <label class="component-label">双列布局容器 <span class="req-star hidden">*</span></label>
+            <div class="component-label">双列布局容器 <span class="req-star hidden">*</span></div>
             <div class="grid-columns">
                 <div class="nested-dropzone">
                     <div class="empty-hint">拖入左列</div>
@@ -766,8 +760,8 @@
                         rows="1" aria-label="页面描述" oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';">
 在此输入页面的描述信息...</textarea>
                 </div>
-                <div class="canvas-pages-container relative flex-1 bg-white">
-                    <div class="canvas-dropzone relative min-h-[520px] p-3 transition" data-page-id="">
+                <div class="canvas-pages-container relative flex-1 bg-white flex flex-col">
+                    <div class="canvas-dropzone relative flex-1 min-h-[520px] p-3 transition" data-page-id="">
                         <div
                             class="empty-state canvas-empty-state flex h-full min-h-[496px] w-full flex-col items-center justify-center  border-top border-dashed border-slate-200/80 bg-slate-50/30 transition-colors duration-200 hover:border-blue-400 hover:bg-blue-50/20">
 
@@ -834,7 +828,7 @@
             ).checked;
 
             const leftCol = leftVisible ? "300px" : "0px";
-            const rightCol = rightVisible ? "336px" : "0px";
+            const rightCol = rightVisible ? "280px" : "0px";
 
             main.style.transition =
                 "grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1)";

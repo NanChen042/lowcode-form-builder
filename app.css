@@ -1,4 +1,5 @@
-html, body {
+html,
+body {
     margin: 0;
     padding: 0;
     width: 100vw;
@@ -7,7 +8,12 @@ html, body {
 }
 
 body {
-    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
 }
 
 body.is-dragging-component,
@@ -44,7 +50,11 @@ body.is-panning * {
     color: rgba(0, 0, 0, 0.88);
     font-size: 14px;
     line-height: 22px;
-    transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    transition:
+        color 0.2s,
+        border-color 0.2s,
+        background 0.2s,
+        box-shadow 0.2s;
 }
 
 .ant-btn:hover {
@@ -81,7 +91,11 @@ body.is-panning * {
     border: 1px solid #d9d9d9;
     background: #fff;
     color: rgba(0, 0, 0, 0.65);
-    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    transition:
+        color 0.2s,
+        border-color 0.2s,
+        background 0.2s;
+    cursor: pointer !important;
 }
 
 .icon-btn:hover {
@@ -116,8 +130,6 @@ body.is-panning * {
     line-height: 20px;
 }
 
-
-
 .component-copy {
     display: flex;
     flex: 1;
@@ -136,7 +148,8 @@ body.is-panning * {
 }
 
 .canvas-grid {
-    background-color: #f1f3f4;     background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1.5px, transparent 1.5px);
+    background-color: #f1f3f4;
+    background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1.5px, transparent 1.5px);
     background-size: 24px 24px;
 }
 
@@ -173,7 +186,9 @@ body.space-panning-ready * {
 
 .mobile-frame {
     cursor: grab;
-    transition: box-shadow 0.2s, border-color 0.2s;
+    transition:
+        box-shadow 0.2s,
+        border-color 0.2s;
     position: absolute;
     transform-origin: 0 0;
 }
@@ -186,7 +201,9 @@ body.space-panning-ready * {
     stroke-linecap: round;
     stroke-linejoin: round;
     pointer-events: stroke;
-    transition: stroke 0.3s ease, stroke-width 0.3s ease;
+    transition:
+        stroke 0.3s ease,
+        stroke-width 0.3s ease;
     marker-end: url(#arrowhead);
 }
 
@@ -225,18 +242,7 @@ body.space-panning-ready * {
     cursor: grabbing;
 }
 
-.mobile-frame input,
-.mobile-frame textarea,
-.mobile-frame select,
-.mobile-frame button,
-.mobile-frame .canvas-element,
-.mobile-frame .canvas-element * {
-    cursor: auto;
-}
-
-
-
-button{
+button {
     cursor: pointer;
 }
 .ruler-corner {
@@ -304,9 +310,7 @@ button{
 
 .canvas-dropzone.is-dragging {
     border-color: #1677ff;
-    background:
-        linear-gradient(135deg, rgba(22, 119, 255, 0.08), rgba(19, 194, 194, 0.06)),
-        #f7fbff;
+    background: linear-gradient(135deg, rgba(22, 119, 255, 0.08), rgba(19, 194, 194, 0.06)), #f7fbff;
     box-shadow: inset 0 0 0 2px rgba(22, 119, 255, 0.08);
 }
 
@@ -322,16 +326,25 @@ button{
     border: 1px solid transparent;
     background: #fff;
     padding: 16px;
-    box-shadow: 0 2px 4px rgba(15, 23, 42, 0.03), 0 0 0 1px rgba(15, 23, 42, 0.05);
-    transition: box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:
+        0 2px 4px rgba(15, 23, 42, 0.03),
+        0 0 0 1px rgba(15, 23, 42, 0.05);
+    transition:
+        box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .canvas-element:hover {
-    box-shadow: 0 8px 16px -4px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(59, 130, 246, 0.4);
+    box-shadow:
+        0 8px 16px -4px rgba(15, 23, 42, 0.06),
+        0 0 0 1px rgba(59, 130, 246, 0.4);
 }
 
 .canvas-element.is-selected {
-    box-shadow: 0 8px 24px -4px rgba(59, 130, 246, 0.15), 0 0 0 2px #3b82f6;
+    box-shadow:
+        0 8px 24px -4px rgba(59, 130, 246, 0.15),
+        0 0 0 2px #3b82f6;
     z-index: 10;
 }
 
@@ -364,7 +377,9 @@ button{
     display: inline-block;
     color: #1677ff;
     box-shadow: 0 2px 0 0 #1677ff;
-    transition: color 0.2s, box-shadow 0.2s;
+    transition:
+        color 0.2s,
+        box-shadow 0.2s;
 }
 
 .canvas-text-editing {
@@ -413,7 +428,9 @@ button{
     font-size: 13px;
     line-height: 1.5715;
     outline: 0;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
 }
 
 .ant-input:focus,
@@ -517,7 +534,10 @@ textarea.preview-input {
     border: 1.5px dashed #cbd5e1;
     background: #f8fafc;
     padding: 12px;
-    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    transition:
+        border-color 0.2s,
+        background 0.2s,
+        box-shadow 0.2s;
 }
 
 .nested-dropzone:hover {
@@ -542,15 +562,20 @@ textarea.preview-input {
 }
 
 .prop-section {
-    border-radius: 8px;
-    border: 1px solid #f0f0f0;
-    background: #fff;
-    padding: 16px;
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+    background: transparent;
+    padding: 20px 16px;
     flex-shrink: 0;
 }
 
+.prop-section:last-child {
+    border-bottom: none;
+}
+
 .prop-section + .prop-section {
-    margin-top: 12px;
+    margin-top: 0;
 }
 
 .section-title {
@@ -560,6 +585,7 @@ textarea.preview-input {
     justify-content: space-between;
     gap: 12px;
     color: rgba(0, 0, 0, 0.88);
+    font-size: 13px;
     font-weight: 600;
 }
 
@@ -575,9 +601,18 @@ textarea.preview-input {
     display: block;
     margin-bottom: 6px;
     color: rgba(0, 0, 0, 0.88);
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
-    line-height: 22px;
+    line-height: 20px;
+}
+
+.form-control .ant-input,
+.form-control select,
+.form-control textarea {
+    font-size: 12px;
+    min-height: 32px;
+    padding: 4px 10px;
+    border-radius: 6px;
 }
 
 .options-editor {
@@ -659,10 +694,12 @@ textarea.preview-input {
     min-height: 64px !important;
     margin-bottom: 10px !important;
     opacity: 1 !important;
-    border: 2px dashed #93c5fd !important;     border-radius: 8px !important; 
-    
-    background: #eff6ff !important;     box-shadow: none !important;
-    
+    border: 2px dashed #93c5fd !important;
+    border-radius: 8px !important;
+
+    background: #eff6ff !important;
+    box-shadow: none !important;
+
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -677,7 +714,7 @@ textarea.preview-input {
 
 .sortable-ghost::before,
 .drop-placeholder::before {
-    content: '';
+    content: "";
     display: block;
     width: 16px;
     height: 16px;
@@ -689,8 +726,15 @@ textarea.preview-input {
 }
 
 @keyframes dropSmooth {
-    0%, 100% { transform: translateY(-3px); opacity: 0.6; }
-    50% { transform: translateY(3px); opacity: 1; }
+    0%,
+    100% {
+        transform: translateY(-3px);
+        opacity: 0.6;
+    }
+    50% {
+        transform: translateY(3px);
+        opacity: 1;
+    }
 }
 
 .sortable-ghost::after,
@@ -698,13 +742,14 @@ textarea.preview-input {
     content: "松开以放置组件";
     font-size: 13px;
     letter-spacing: 1px;
-    color: #3b82f6;     font-weight: 500;
+    color: #3b82f6;
+    font-weight: 500;
 }
 
 .canvas-dropzone .canvas-element.sortable-ghost {
     display: block !important;
     width: 100% !important;
-    height: auto !important; 
+    height: auto !important;
     background: #eff6ff !important;
     border: 2px dashed #93c5fd !important;
     box-shadow: none !important;
@@ -723,27 +768,32 @@ textarea.preview-input {
 
 .canvas-dropzone .component-item.sortable-ghost {
     width: 100% !important;
-    height: 88px !important; 
-    flex-direction: row !important; 
+    height: 88px !important;
+    flex-direction: row !important;
     gap: 8px !important;
 }
 
 .canvas-dropzone .component-item[data-type="signature"].sortable-ghost {
-    height: 201px !important; }
+    height: 201px !important;
+}
 
 .canvas-dropzone .component-item[data-type="textarea"].sortable-ghost {
-    height: 127px !important; }
+    height: 127px !important;
+}
 
 .canvas-dropzone .component-item[data-type="grid"].sortable-ghost {
-    height: 122px !important; }
+    height: 122px !important;
+}
 
 .canvas-dropzone .component-item[data-type="radio"].sortable-ghost,
 .canvas-dropzone .component-item[data-type="checkbox"].sortable-ghost {
-    height: 98px !important; }
+    height: 98px !important;
+}
 
 .canvas-dropzone .component-item.sortable-ghost > * {
     display: block !important;
-    color: #3b82f6 !important;     font-size: 14px !important;
+    color: #3b82f6 !important;
+    font-size: 14px !important;
     font-weight: 500 !important;
 }
 
@@ -758,7 +808,8 @@ textarea.preview-input {
     min-height: 0 !important;
     height: auto !important;
     margin-bottom: 0 !important;
-    border: 1px dashed rgba(148, 163, 184, 0.4) !important;     background: transparent !important;
+    border: 1px dashed rgba(148, 163, 184, 0.4) !important;
+    background: transparent !important;
     box-shadow: none !important;
 }
 
@@ -781,13 +832,17 @@ textarea.preview-input {
 .sortable-drag {
     transition: none !important;
     cursor: grabbing !important;
-    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 2px #3b82f6 !important;
+    box-shadow:
+        0 25px 50px -12px rgba(15, 23, 42, 0.25),
+        0 0 0 2px #3b82f6 !important;
 }
 
 .drag-fallback {
     transition: none !important;
     pointer-events: none !important;
-    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 2px #3b82f6 !important;
+    box-shadow:
+        0 25px 50px -12px rgba(15, 23, 42, 0.25),
+        0 0 0 2px #3b82f6 !important;
     z-index: 9999 !important;
     opacity: 1 !important;
 }
@@ -804,6 +859,26 @@ textarea.preview-input {
 .drag-fallback-visual {
     margin: 0 !important;
     transform-origin: 0 0 !important;
+}
+
+@keyframes highlightPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(22, 119, 255, 0.4);
+        border-color: #1677ff;
+        background-color: #e6f4ff;
+    }
+    50% {
+        box-shadow: 0 0 0 4px rgba(22, 119, 255, 0);
+        border-color: #1677ff;
+        background-color: #fff;
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(22, 119, 255, 0);
+    }
+}
+
+.pulse-highlight {
+    animation: highlightPulse 1.2s ease-out !important;
 }
 
 .drag-chosen {
@@ -824,23 +899,26 @@ textarea.preview-input {
     background: #ff4d4f;
     padding: 12px 16px;
     color: #fff;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08), 0 9px 28px rgba(0, 0, 0, 0.12);
+    box-shadow:
+        0 6px 16px rgba(0, 0, 0, 0.08),
+        0 9px 28px rgba(0, 0, 0, 0.12);
 }
 
-
-/* 提示区块的特殊无边框透明卡片样式 */
+/* 提示区块无底层卡片样式，但保留标准选中发光特效 */
 .canvas-element[data-type="alert"] {
     background: transparent;
     padding: 0;
-    border: none;
     box-shadow: none;
-    border-radius: 12px; /* 匹配 rounded-xl */
 }
 
 .canvas-element[data-type="alert"]:hover {
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+    box-shadow:
+        0 8px 16px -4px rgba(15, 23, 42, 0.06),
+        0 0 0 1px rgba(59, 130, 246, 0.4);
 }
 
 .canvas-element[data-type="alert"].is-selected {
-    box-shadow: 0 0 0 2px #3b82f6;
+    box-shadow:
+        0 8px 24px -4px rgba(59, 130, 246, 0.15),
+        0 0 0 2px #3b82f6;
 }

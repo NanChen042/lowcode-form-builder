@@ -264,6 +264,11 @@ export function renderOptions(el) {
                         span.textContent = opt.label || opt.value || '';
                         span.dispatchEvent(new Event('input', { bubbles: true }));
                     }
+                    const optData = readOptions(el);
+                    if (optData[index]) {
+                        optData[index].label = span.textContent;
+                        writeOptions(el, optData);
+                    }
                 });
                 
                 span.addEventListener('mousedown', e => e.stopPropagation());
@@ -299,17 +304,28 @@ export function renderOptions(el) {
                 dot.className = 'absolute -left-[14px] top-[7px] flex h-1.5 w-1.5 rounded-sm bg-blue-400';
                 
                 const span = document.createElement('span');
-                span.className = 'option-text outline-none transition-all duration-200 hover:bg-blue-100 cursor-text';
+                span.className = 'option-text outline-none transition-all duration-200 cursor-text';
                 span.dataset.index = index;
                 span.contentEditable = "plaintext-only";
                 span.spellcheck = false;
                 span.textContent = opt.label || opt.value || '';
                 
+                const focusClasses = [
+                    'shadow-[0_2px_0_0_#1677ff]', 
+                    'text-[#1677ff]'
+                ];
+                span.addEventListener('focus', () => span.classList.add(...focusClasses));
+                
                 span.addEventListener('blur', () => {
+                    span.classList.remove(...focusClasses);
                     if (!span.textContent.trim()) {
                         span.textContent = opt.label || opt.value || '';
-                        // 触发 input 事件以同步默认文本回面板
                         span.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                    const optData = readOptions(el);
+                    if (optData[index]) {
+                        optData[index].label = span.textContent;
+                        writeOptions(el, optData);
                     }
                 });
                 

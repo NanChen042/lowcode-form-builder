@@ -600,7 +600,7 @@ export function selectElement(el) {
     const type = el.dataset.type || 'field';
     const hasPlaceholder = Boolean(el.querySelector('.component-placeholder')) || type === 'select' || type === 'signature';
     const hasOptions = optionTypes.includes(type);
-    const hasDefaultValue = valueTypes.includes(type) || hasOptions;
+    const hasDefaultValue = valueTypes.includes(type) || (hasOptions && type !== 'alert' && type !== 'signature');
     const canStackChoices = type === 'radio' || type === 'checkbox';
 
     DOM.propEmpty.classList.add('hidden');
@@ -618,29 +618,6 @@ export function selectElement(el) {
         propTitle.value = titleInput.value;
         propDesc.value = descInput.value;
         
-        const toggleFocus = (element, isFocused) => {
-            element.classList.toggle('canvas-text-focus', isFocused);
-        };
-
-        // Remove old event listeners
-        const newPropTitle = propTitle.cloneNode(true);
-        propTitle.parentNode.replaceChild(newPropTitle, propTitle);
-        newPropTitle.addEventListener('input', (e) => {
-            titleInput.value = e.target.value;
-            titleInput.dispatchEvent(new Event('input'));
-        });
-        newPropTitle.addEventListener('focus', () => toggleFocus(titleInput, true));
-        newPropTitle.addEventListener('blur', () => toggleFocus(titleInput, false));
-
-        const newPropDesc = propDesc.cloneNode(true);
-        propDesc.parentNode.replaceChild(newPropDesc, propDesc);
-        newPropDesc.addEventListener('input', (e) => {
-            descInput.value = e.target.value;
-            descInput.dispatchEvent(new Event('input'));
-        });
-        newPropDesc.addEventListener('focus', () => toggleFocus(descInput, true));
-        newPropDesc.addEventListener('blur', () => toggleFocus(descInput, false));
-        
         return;
     }
     
@@ -649,7 +626,7 @@ export function selectElement(el) {
     DOM.propIdText.textContent = el.id;
     DOM.propTypeBadge.textContent = type;
     DOM.inputLabel.value = el.dataset.label || '';
-    DOM.inputKey.value = el.dataset.key || '';
+    // 字段标识已从基础信息中移除，因为顶部已有显示
     DOM.inputHelp.value = el.dataset.help || '';
     updateDefaultValueUI(el);
     DOM.inputPlaceholder.value = el.dataset.placeholder || '';
@@ -1031,11 +1008,87 @@ export function bindCanvasEvents() {
         } else {
             if (e.target.closest('.element-actions')) return;
             const element = e.target.closest('.canvas-element');
+            const pageTitleInput = e.target.closest('.page-title-input');
+            const pageDescInput = e.target.closest('.page-desc-input');
+            
             if (element && DOM.canvasWorld.contains(element) && e.button === 0) {
+                // 阻止浏览器在点击组件空白处时自动将焦点转移到内部的 contenteditable 元素
+                if (!e.target.closest('.label-text, .option-text, .signature-declaration-text')) {
+                    e.preventDefault();
+                }
                 selectElement(element);
+                
+                setTimeout(() => {
+                    const labelText = e.target.closest('.label-text');
+                    const placeholderText = e.target.closest('.component-placeholder');
+                    const helpText = e.target.closest('.field-help');
+                    const optionText = e.target.closest('.option-text, .signature-declaration-text');
+
+                    const triggerHighlight = (input) => {
+                        if (!input) return;
+                        input.classList.remove('pulse-highlight');
+                        void input.offsetWidth;
+                        input.classList.add('pulse-highlight');
+                        
+                        const editor = document.getElementById('prop-editor');
+                        if (editor && !editor.classList.contains('hidden')) {
+                            const editorRect = editor.getBoundingClientRect();
+                            const inputRect = input.getBoundingClientRect();
+                            const targetScroll = editor.scrollTop + (inputRect.top - editorRect.top) - (editorRect.height / 2) + (inputRect.height / 2);
+                            editor.scrollTo({ top: targetScroll, behavior: 'smooth' });
+                        }
+                        setTimeout(() => input.classList.remove('pulse-highlight'), 1200);
+                    };
+
+                    if (labelText) {
+                        triggerHighlight(document.getElementById('prop-label-input'));
+                    } else if (placeholderText) {
+                        triggerHighlight(document.getElementById('prop-placeholder-input'));
+                    } else if (helpText) {
+                        triggerHighlight(document.getElementById('prop-help-input'));
+                    } else if (optionText) {
+                        const targets = Array.from(element.querySelectorAll('.option-text, .signature-declaration-text'));
+                        const index = targets.indexOf(optionText);
+                        if (index !== -1) {
+                            const editor = document.getElementById('options-editor');
+                            if (editor && editor.children[index]) {
+                                triggerHighlight(editor.children[index].querySelector('input, textarea'));
+                            }
+                        }
+                    }
+                }, 10);
+            } else if ((pageTitleInput || pageDescInput) && e.button === 0) {
+                const frame = e.target.closest('.mobile-frame');
+                if (frame) {
+                    selectElement(frame);
+                    
+                    setTimeout(() => {
+                        const triggerHighlight = (input) => {
+                            if (!input) return;
+                            input.classList.remove('pulse-highlight');
+                            void input.offsetWidth;
+                            input.classList.add('pulse-highlight');
+                            
+                            const editor = document.getElementById('page-prop-editor');
+                            if (editor && !editor.classList.contains('hidden')) {
+                                const editorRect = editor.getBoundingClientRect();
+                                const inputRect = input.getBoundingClientRect();
+                                const targetScroll = editor.scrollTop + (inputRect.top - editorRect.top) - (editorRect.height / 2) + (inputRect.height / 2);
+                                editor.scrollTo({ top: targetScroll, behavior: 'smooth' });
+                            }
+                            setTimeout(() => input.classList.remove('pulse-highlight'), 1200);
+                        };
+
+                        if (pageTitleInput) {
+                            triggerHighlight(document.getElementById('page-prop-title-input'));
+                        } else if (pageDescInput) {
+                            triggerHighlight(document.getElementById('page-prop-desc-input'));
+                        }
+                    }, 10);
+                }
             }
         }
-    });
+    }, { capture: true });
 
     document.addEventListener('mousemove', e => {
         if (state.isDrawingConnection) {

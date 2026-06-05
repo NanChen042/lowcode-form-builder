@@ -129,31 +129,61 @@ export function renderOptionsEditor() {
 
     const useTextarea = state.selectedElement.dataset.type === 'signature' || state.selectedElement.dataset.type === 'alert';
 
+    DOM.optionsEditor.className = 'options-editor custom-scrollbar max-h-[300px] overflow-y-auto pr-1';
+
     options.forEach((option, index) => {
         const row = document.createElement('div');
-        row.className = 'option-row';
-        if (useTextarea) {
-            row.style.gridTemplateColumns = 'minmax(0, 1fr) 32px';
-            row.style.alignItems = 'flex-start';
-        }
-
+        row.className = 'flex items-start gap-2 mb-3';
+        
         let labelInput;
-        // 签名与提示组件使用文本域作为选项名称输入，以容纳较长的内容
+        
         if (useTextarea) {
             labelInput = document.createElement('textarea');
             labelInput.rows = 2;
-            labelInput.className = 'ant-input text-xs resize-y';
-            labelInput.style.minHeight = '48px';
+            labelInput.className = 'ant-input text-xs resize-y flex-1';
+            labelInput.style.minHeight = '56px';
             labelInput.placeholder = '请输入内容...';
         } else {
             labelInput = document.createElement('input');
             labelInput.type = 'text';
-            labelInput.className = 'ant-input text-xs';
-            labelInput.placeholder = 'Label';
+            labelInput.className = 'ant-input text-xs flex-1';
+            labelInput.placeholder = '选项名称';
         }
         labelInput.value = option.label || '';
+
+        const valueInput = document.createElement('input');
+        valueInput.type = 'text';
+        valueInput.value = option.value || '';
+        valueInput.readOnly = true;
+        valueInput.title = '选项底层提交值 (Value)';
+        valueInput.className = 'ant-input text-[11px] font-mono !bg-black/[0.02] !text-black/45 !cursor-default !border-transparent !shadow-none w-[75px] shrink-0 px-2';
+        if (useTextarea) {
+            valueInput.style.display = 'none';
+        }
         
-        // 虚拟焦点映射：当选中右侧输入框时，高亮左边对应的选项文本
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'icon-btn shrink-0';
+        removeButton.innerHTML = '<i data-lucide="minus-circle" class="h-4 w-4 text-slate-400 hover:text-red-500 transition-colors"></i>';
+        removeButton.setAttribute('title', '删除');
+        if (useTextarea) {
+            removeButton.style.marginTop = '4px';
+        }
+        
+        removeButton.addEventListener('click', () => {
+            const latestOptions = readOptions(state.selectedElement);
+            latestOptions.splice(index, 1);
+            writeOptions(state.selectedElement, latestOptions);
+            renderOptions(state.selectedElement);
+            renderOptionsEditor();
+            updateDefaultValueUI(state.selectedElement);
+        });
+        
+        row.appendChild(labelInput);
+        row.appendChild(valueInput);
+        row.appendChild(removeButton);
+
+        // 虚拟焦点映射
         let focusedTarget = null;
         labelInput.addEventListener('focus', () => {
             if (!state.selectedElement) return;
@@ -166,28 +196,6 @@ export function renderOptionsEditor() {
             focusedTarget = null;
         });
 
-        // 选项值输入框 (开发者专用的底层标识符，禁止用户编辑以防冲突)
-        const valueInput = document.createElement('input');
-        valueInput.type = 'text';
-        valueInput.value = option.value || '';
-        valueInput.readOnly = true;
-        valueInput.title = '系统自动生成的底层标识符 (Value)';
-        valueInput.className = 'ant-input text-[11px] font-mono !bg-black/[0.02] !text-black/45 !cursor-default !border-transparent !shadow-none px-2';
-        // 签名与提示组件不需要独立的 value 输入框
-        if (useTextarea) {
-            valueInput.style.display = 'none';
-        }
-
-        // 删除选项的按钮
-        const removeButton = document.createElement('button');
-        removeButton.type = 'button';
-        removeButton.className = 'icon-btn';
-        if (useTextarea) {
-            removeButton.style.marginTop = '6px';
-        }
-        removeButton.innerHTML = '<i data-lucide="x" class="h-3.5 w-3.5"></i>';
-        removeButton.setAttribute('aria-label', '删除选项');
-
         // 监听选项标签变化并更新组件数据
         labelInput.addEventListener('input', e => {
             const latestOptions = readOptions(state.selectedElement);
@@ -197,19 +205,6 @@ export function renderOptionsEditor() {
             updateDefaultValueUI(state.selectedElement);
         });
 
-        // 处理选项的删除操作
-        removeButton.addEventListener('click', () => {
-            const latestOptions = readOptions(state.selectedElement);
-            latestOptions.splice(index, 1);
-            writeOptions(state.selectedElement, latestOptions);
-            renderOptions(state.selectedElement);
-            renderOptionsEditor();
-            updateDefaultValueUI(state.selectedElement);
-        });
-
-        row.appendChild(labelInput);
-        row.appendChild(valueInput);
-        row.appendChild(removeButton);
         DOM.optionsEditor.appendChild(row);
     });
 
@@ -250,6 +245,31 @@ export function bindPropEvents() {
     bindVirtualFocus(DOM.inputPlaceholder, '.component-placeholder');
     bindVirtualFocus(DOM.inputHelp, '.field-help');
     bindVirtualFocus(DOM.inputDefault, '.component-placeholder');
+    
+    // 绑定页面属性相关事件
+    const propPageTitle = document.getElementById('page-prop-title-input');
+    const propPageDesc = document.getElementById('page-prop-desc-input');
+    
+    bindVirtualFocus(propPageTitle, '.page-title-input');
+    bindVirtualFocus(propPageDesc, '.page-desc-input');
+    
+    propPageTitle.addEventListener('input', e => {
+        if (!state.selectedElement || !state.selectedElement.classList.contains('mobile-frame')) return;
+        const titleInput = state.selectedElement.querySelector('.page-title-input');
+        if (titleInput) {
+            titleInput.value = e.target.value;
+            titleInput.dispatchEvent(new Event('input'));
+        }
+    });
+
+    propPageDesc.addEventListener('input', e => {
+        if (!state.selectedElement || !state.selectedElement.classList.contains('mobile-frame')) return;
+        const descInput = state.selectedElement.querySelector('.page-desc-input');
+        if (descInput) {
+            descInput.value = e.target.value;
+            descInput.dispatchEvent(new Event('input'));
+        }
+    });
 
     // 绑定标签输入事件
     DOM.inputLabel.addEventListener('input', e => {
