@@ -320,20 +320,26 @@ export function loadSchema(schema) {
                 });
             }
         });
+        
+        const globalEmpty = document.getElementById('canvas-global-empty');
+        if (globalEmpty) globalEmpty.classList.add('hidden');
     } else {
-        // 如果没有页面，至少兜底创建一个空页
-        addPage(null, { focus: false });
+        // 如果没有页面，显示全局空状态
+        const globalEmpty = document.getElementById('canvas-global-empty');
+        if (globalEmpty) globalEmpty.classList.remove('hidden');
     }
 
     // 4. 更新整个表单的元信息（标题和描述），默认应用到第一页
-    const firstPageFrame = document.getElementById(`frame_${state.pages[0].id}`);
-    if (firstPageFrame && schema.meta) {
-        const titleInput = firstPageFrame.querySelector('.page-title-input');
-        const descInput = firstPageFrame.querySelector('.page-desc-input');
-        if (titleInput) titleInput.value = schema.meta.title || '';
-        if (descInput) {
-            descInput.value = schema.meta.description || '';
-            descInput.dispatchEvent(new Event('input'));
+    if (state.pages.length > 0) {
+        const firstPageFrame = document.getElementById(`frame_${state.pages[0].id}`);
+        if (firstPageFrame && schema.meta) {
+            const titleInput = firstPageFrame.querySelector('.page-title-input');
+            const descInput = firstPageFrame.querySelector('.page-desc-input');
+            if (titleInput) titleInput.value = schema.meta.title || '';
+            if (descInput) {
+                descInput.value = schema.meta.description || '';
+                descInput.dispatchEvent(new Event('input'));
+            }
         }
     }
 
@@ -344,6 +350,37 @@ export function loadSchema(schema) {
     
     // 初始化或重置交互状态
     resetCanvasViewAfterLayout();
+    
+    // 控制全局空状态显示与工具条
+    const globalEmpty = document.getElementById('canvas-global-empty');
+    const globalEmptyCard = document.getElementById('canvas-global-empty-card');
+    const controlsToolbar = document.getElementById('canvas-controls-toolbar');
+    
+    if (state.pages.length === 0) {
+        if (globalEmpty) {
+            globalEmpty.classList.remove('opacity-0', 'pointer-events-none');
+            globalEmpty.classList.add('opacity-100');
+        }
+        if (globalEmptyCard) {
+            globalEmptyCard.classList.remove('scale-95');
+            globalEmptyCard.classList.add('scale-100');
+        }
+        if (controlsToolbar) {
+            controlsToolbar.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+        }
+    } else {
+        if (globalEmpty) {
+            globalEmpty.classList.remove('opacity-100');
+            globalEmpty.classList.add('opacity-0', 'pointer-events-none');
+        }
+        if (globalEmptyCard) {
+            globalEmptyCard.classList.remove('scale-100');
+            globalEmptyCard.classList.add('scale-95');
+        }
+        if (controlsToolbar) {
+            controlsToolbar.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+        }
+    }
     
     // 清除选中的属性面板数据并刷新UI
     clearSelection();

@@ -121,56 +121,56 @@ export function renderOptionsEditor() {
     const options = readOptions(state.selectedElement);
     DOM.optionsEditor.innerHTML = '';
 
-    const useTextarea = state.selectedElement.dataset.type === 'signature' || state.selectedElement.dataset.type === 'alert';
+    const isDisplayOnly = state.selectedElement.dataset.type === 'signature' || state.selectedElement.dataset.type === 'alert';
 
-    DOM.optionsEditor.className = 'options-editor custom-scrollbar';
+    DOM.optionsEditor.className = 'options-editor custom-scrollbar max-h-[300px] overflow-y-auto pr-1';
 
     options.forEach((option, index) => {
         const row = document.createElement('div');
-        row.className = 'group flex items-start gap-2 mb-2.5';
+        // 缩紧行间距与元素间距
+        row.className = 'flex items-start gap-1.5 mb-2';
         
+        // 输入区容器
+        const inputContainer = document.createElement('div');
+        inputContainer.className = 'relative flex-1 min-w-0 flex items-start gap-1.5';
+
         let labelInput;
-        
-        if (useTextarea) {
+        if (isDisplayOnly) {
             labelInput = document.createElement('textarea');
             labelInput.rows = 3;
-            labelInput.className = 'ant-input text-xs resize-y flex-1 min-h-[64px] pr-8';
-            labelInput.placeholder = '请输入内容...';
+            labelInput.className = 'ant-input resize-y w-full min-h-[64px] !text-[12px] !px-[10px] !py-[6px] !rounded-[6px] !leading-[20px] shadow-sm transition-shadow hover:shadow-md hover:shadow-slate-200/20';
+            labelInput.placeholder = '请输入提示或声明内容...';
         } else {
             labelInput = document.createElement('input');
             labelInput.type = 'text';
-            labelInput.className = 'ant-input text-xs flex-1 min-w-0';
+            labelInput.className = 'ant-input w-full !min-h-[32px] !h-[32px] !text-[12px] !px-[10px] !py-[4px] !rounded-[6px] shadow-sm transition-shadow hover:shadow-md hover:shadow-slate-200/20';
             labelInput.placeholder = '选项名称';
         }
         labelInput.value = option.label || '';
+        inputContainer.appendChild(labelInput);
         
-        const valueInput = document.createElement('input');
-        valueInput.type = 'text';
-        valueInput.value = option.value || '';
-        valueInput.readOnly = true;
-        valueInput.title = '选项底层提交值 (Value)';
-        valueInput.className = 'ant-input text-[10px] font-mono !bg-black/[0.02] !text-black/45 !cursor-default !border-transparent !shadow-none w-[65px] shrink-0 px-1.5';
-        if (useTextarea) {
-            valueInput.style.display = 'none';
+        // Value 标识 (仅普通选项展示)
+        let valueInput = null;
+        if (!isDisplayOnly) {
+            valueInput = document.createElement('input');
+            valueInput.type = 'text';
+            valueInput.value = option.value || '';
+            valueInput.readOnly = true;
+            valueInput.title = '选项底层提交值 (Value)';
+            // 极简微标签
+            valueInput.className = 'ant-input !h-[32px] !min-h-[32px] text-[10px] font-mono text-slate-400 bg-slate-50/50 border-slate-200/60 w-[60px] shrink-0 !px-[6px] !py-[4px] !rounded-[6px] text-center focus:!border-slate-200 focus:!shadow-none';
+            inputContainer.appendChild(valueInput);
         }
         
+        // 删除按钮 (常驻显示，但保持极其克制的颜色)
         const removeButton = document.createElement('button');
         removeButton.type = 'button';
         removeButton.setAttribute('title', '删除');
-        removeButton.innerHTML = '<i data-lucide="minus-circle" class="h-4 w-4"></i>';
-        
-        if (useTextarea) {
-            // For textarea, absolute position the delete button inside the textarea wrapper or just float it
-            row.className = 'group relative mb-3';
-            removeButton.className = 'absolute top-1.5 right-1.5 p-1 text-slate-300 hover:text-red-500 hover:bg-slate-100 rounded-md opacity-0 group-hover:opacity-100 transition-all';
-            row.appendChild(labelInput);
-            row.appendChild(removeButton);
-        } else {
-            removeButton.className = 'icon-btn shrink-0 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all pt-1.5';
-            row.appendChild(labelInput);
-            row.appendChild(valueInput);
-            row.appendChild(removeButton);
-        }
+        removeButton.className = 'mt-[4px] flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500';
+        removeButton.innerHTML = '<i data-lucide="trash-2" class="h-[14px] w-[14px]"></i>';
+
+        row.appendChild(inputContainer);
+        row.appendChild(removeButton);
 
         removeButton.addEventListener('click', () => {
             const latestOptions = readOptions(state.selectedElement);

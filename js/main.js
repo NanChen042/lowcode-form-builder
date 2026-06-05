@@ -1,12 +1,12 @@
 import { FormAPI } from './core/api.js';
 import { safeCreateIcons } from './utils/helpers.js';
 import { bindPropEvents } from './ui/properties.js';
-import { addPage, bindCanvasEvents, initPages, checkEmptyState, resetCanvasView } from './ui/canvas.js';
+import { addPage, bindCanvasEvents, initPages, checkEmptyState, resetCanvasView, deletePage } from './ui/canvas.js';
 import { bindPreviewEvents } from './ui/preview.js';
 import { addComponentToCanvas } from './components/builder.js';
 import { state } from './core/state.js';
 import { loadSchema, saveToServer, markDirty, isDirty, establishBaseline } from './core/schema.js';
-import { blankTemplate, kycClientTemplate, kycIndividualTemplate, kycEntityTemplate } from './templates/recommend.js';
+import { blankTemplate, kycIndividualTemplate, kycEntityTemplate } from './templates/recommend.js';
 
 window.saveToServer = saveToServer;
 
@@ -121,7 +121,6 @@ async function bootstrap() {
     }
     
     bindTemplateBtn('btn-clear-canvas-sidebar', blankTemplate, null);
-    bindTemplateBtn('btn-tpl-kyc-client-modal', kycClientTemplate, 'kyc-client');
     bindTemplateBtn('btn-tpl-kyc-individual-modal', kycIndividualTemplate, 'kyc-individual');
     bindTemplateBtn('btn-tpl-kyc-entity-modal', kycEntityTemplate, 'kyc-entity');
 
@@ -143,9 +142,7 @@ async function bootstrap() {
     const urlParams = new URLSearchParams(window.location.search);
     const tplParam = urlParams.get('tpl');
     
-    if (tplParam === 'kyc-client') {
-        loadSchema(kycClientTemplate);
-    } else if (tplParam === 'kyc-individual') {
+    if (tplParam === 'kyc-individual') {
         loadSchema(kycIndividualTemplate);
     } else if (tplParam === 'kyc-entity') {
         loadSchema(kycEntityTemplate);
@@ -194,15 +191,37 @@ async function bootstrap() {
     // ================= 右键菜单逻辑 =================
     const contextMenu = document.getElementById('canvas-context-menu');
     const canvasArea = document.getElementById('canvas-scroll-area');
+    const deletePageBtn = document.getElementById('menu-btn-delete-page');
+    let contextMenuTargetPageId = null;
     
     // 监听画布背景的右键事件
     canvasArea.addEventListener('contextmenu', (e) => {
-        // 如果点击的是组件或者页面框架，不干预（可选：也可全局屏蔽）
-        if (e.target.closest('.canvas-element') || e.target.closest('.mobile-frame')) {
-            return;
+        // 阻止系统默认右键菜单
+        e.preventDefault();
+
+        // 查找是否点击在特定的画布页面上
+        const dropzoneNode = e.target.closest('.canvas-dropzone');
+        const frameNode = e.target.closest('.mobile-frame');
+        
+        let pageId = null;
+        if (dropzoneNode) {
+            pageId = dropzoneNode.dataset.pageId;
+        } else if (frameNode) {
+            const idMatch = frameNode.id && frameNode.id.replace('frame_', '');
+            if (idMatch) pageId = idMatch;
         }
         
-        e.preventDefault();
+        const newPageBtnText = document.querySelector('#menu-btn-new-page span');
+        
+        if (pageId) {
+            contextMenuTargetPageId = pageId;
+            deletePageBtn.classList.remove('hidden');
+            if (newPageBtnText) newPageBtnText.textContent = "在当前画布后方插入";
+        } else {
+            contextMenuTargetPageId = null;
+            deletePageBtn.classList.add('hidden');
+            if (newPageBtnText) newPageBtnText.textContent = "新建画布页面";
+        }
         
         // 显示菜单并定位
         contextMenu.classList.remove('hidden');
@@ -227,12 +246,23 @@ async function bootstrap() {
 
     // 绑定右键菜单功能按钮
     document.getElementById('menu-btn-new-page').addEventListener('click', () => {
-        addPage();
+        addPage(contextMenuTargetPageId);
         contextMenu.classList.add('hidden');
     });
 
     document.getElementById('menu-btn-reset-view').addEventListener('click', () => {
         resetCanvasView();
+        contextMenu.classList.add('hidden');
+    });
+
+    deletePageBtn.addEventListener('click', () => {
+        if (contextMenuTargetPageId) {
+            const page = state.pages.find(p => p.id === contextMenuTargetPageId);
+            const isEmpty = !page || !page.fields || page.fields.length === 0;
+            if (isEmpty || confirm('确定要删除当前画布及其所有内容吗？此操作不可撤销。')) {
+                deletePage(contextMenuTargetPageId);
+            }
+        }
         contextMenu.classList.add('hidden');
     });
 }

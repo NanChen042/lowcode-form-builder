@@ -29,7 +29,7 @@
     <style>
         @theme {
             --animate-shimmer: shimmer 2s infinite;
- 
+
             --keyframes-shimmer: {
                 100% {
                     transform: translateX(100%);
@@ -44,32 +44,16 @@
 <body class="h-screen w-screen overflow-hidden bg-[#f5f5f5] text-black/85 antialiased">
 
     <div class="flex h-full flex-col">
-        <header class="flex h-16 shrink-0 items-center justify-between border-b border-[#f0f0f0] bg-white px-6 relative">
+        <header
+            class="flex h-16 shrink-0 items-center justify-between border-b border-[#f0f0f0] bg-white px-6 relative">
             <div class="flex min-w-0 items-center">
                 <!-- <img class="object-contain h-10" src="https://app.algocandy.com/algo/images/logo.png" alt="AlgoCandy"> -->
-                 自定义拖拽代码平台
+                自定义拖拽代码平台
             </div>
 
 
 
             <div class="flex items-center gap-2">
-                <!-- 视图缩放控制条 -->
-                <div class="flex items-center rounded-lg border border-slate-200 bg-white p-1 shadow-sm mr-2 h-8">
-                    <button class="flex h-full w-7 items-center justify-center rounded-[4px] text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors" id="zoom-out-btn" title="缩小 (Cmd/Ctrl + 滚轮)">
-                        <i data-lucide="minus" class="h-3.5 w-3.5"></i>
-                    </button>
-                    <div class="flex h-full min-w-[54px] items-center justify-center px-1 cursor-default select-none">
-                        <span class="font-mono text-[11px] font-medium text-slate-600" id="zoom-percent-text">100%</span>
-                    </div>
-                    <button class="flex h-full w-7 items-center justify-center rounded-[4px] text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors" id="zoom-in-btn" title="放大 (Cmd/Ctrl + 滚轮)">
-                        <i data-lucide="plus" class="h-3.5 w-3.5"></i>
-                    </button>
-                    <div class="mx-1.5 h-4 w-[1px] bg-slate-200"></div>
-                    <button class="flex h-full w-7 items-center justify-center rounded-[4px] text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors" id="zoom-reset-btn" title="居中与重置视图">
-                        <i data-lucide="maximize" class="h-3.5 w-3.5"></i>
-                    </button>
-                </div>
-
                 <div class="relative mr-2">
                     <button
                         class="flex items-center justify-center rounded-md border border-transparent bg-transparent px-2 py-1.5 text-black/45 transition hover:bg-black/5"
@@ -94,7 +78,8 @@
                         </label>
                     </div>
                 </div>
-                <span id="save-status" class="mr-3 flex items-center gap-1.5 text-[13px] text-slate-500 opacity-0 transition-opacity duration-300">
+                <span id="save-status"
+                    class="mr-3 flex items-center gap-1.5 text-[13px] text-slate-500 opacity-0 transition-opacity duration-300">
                 </span>
                 <button class="ant-btn" type="button" onclick="saveToServer()">
                     <i data-lucide="save" class="h-4 w-4"></i>
@@ -113,72 +98,105 @@
 
         <main class="grid min-h-0 flex-1 grid-cols-[300px_minmax(460px,1fr)_280px]">
             <aside
-                class="flex h-screen w-[300px] flex-col border-r border-slate-200 bg-[#FAFAFA] font-sans text-slate-900 transition-all duration-300">
+                class="flex h-full w-[300px] flex-col border-r border-slate-200 bg-[#FAFAFA] font-sans text-slate-900 transition-all duration-300">
                 <header class="flex-none border-b border-slate-200 bg-[#FAFAFA] px-4 pb-3 pt-4">
-                    <div class="mb-3.5 flex items-center gap-2.5">
-                        <div
-                            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-blue-200 bg-white shadow-sm transition-colors hover:border-blue-400">
-                            <i data-lucide="blocks" class="h-3.5 w-3.5 text-blue-600"></i>
+                    <div class="flex flex-col gap-3 transition-all duration-300" id="sidebar-header-top">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <!-- <div
+                                    class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-blue-100 bg-blue-50 text-[#1677ff]">
+                                    <i data-lucide="blocks" class="h-4 w-4"></i>
+                                </div> -->
+                                <h2 class="text-[15px] font-bold tracking-tight text-slate-800">表单构建器</h2>
+                                <!-- <span
+                                    class="ml-1 rounded-[3px] border border-blue-100 bg-blue-50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#1677ff] shadow-sm">
+                                    Pro
+                                </span> -->
+                            </div>
+
+                            <button id="sidebar-search-toggle" style="outline: none;"
+                                class="relative flex h-7 w-7 items-center justify-center rounded-md border border-transparent text-slate-400 transition-all duration-300 hover:bg-blue-50 hover:text-blue-600 !outline-none focus:!outline-none focus:!ring-0 focus-visible:!outline-none focus-visible:!ring-0 [&.active]:border-blue-500 [&.active]:bg-blue-50 [&.active]:!text-blue-600"
+                                onclick="toggleSidebarSearch()">
+                                <i data-lucide="search"
+                                    class="absolute h-[14px] w-[14px] transition-all duration-300 transform rotate-0 opacity-100 scale-100 search-icon-default"></i>
+                                <i data-lucide="chevron-up"
+                                    class="absolute h-[16px] w-[16px] transition-all duration-300 transform rotate-90 opacity-0 scale-75 search-icon-close"></i>
+                            </button>
                         </div>
-                        <div>
-                            <h2 class="text-[14px] font-semibold tracking-tight text-slate-800">表单构建器</h2>
+
+                        <div class="flex items-center gap-1.5 px-1">
+                            <span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
+                            <span class="text-[11px] font-medium text-slate-500">当前项目：内部工单系统</span>
                         </div>
                     </div>
 
-                    <div class="relative group">
-                        <i data-lucide="search"
-                            class="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-blue-600"></i>
-                        <input id="component-search"
-                            class="block h-8 w-full rounded-md border border-slate-200 bg-white py-1.5 pl-8 pr-10 text-[12px] text-slate-700 outline-none transition-colors placeholder:text-slate-400 hover:border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                            type="search" placeholder="查找组件或模块..." />
-                        <div class="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <kbd
-                                class="flex h-4 items-center justify-center rounded border border-slate-100 bg-slate-50 px-1 font-sans text-[9px] font-medium text-slate-400">⌘K</kbd>
+                    <div id="sidebar-search-container"
+                        class="grid grid-rows-[0fr] opacity-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]">
+                        <div class="overflow-hidden">
+                            <div class="relative group mt-4">
+                                <i data-lucide="search"
+                                    class="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-slate-500"></i>
+                                <input id="component-search"
+                                    class="block h-8 w-full rounded-md border border-slate-200 bg-white py-1.5 pl-8 pr-10 text-[12px] text-slate-700 outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-300 focus:ring-0"
+                                    type="search" placeholder="查找组件或模块..." />
+                                <div class="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                                    <kbd
+                                        class="flex h-4 items-center justify-center rounded border border-slate-100 bg-slate-50 px-1 font-sans text-[9px] font-medium text-slate-400">⌘K</kbd>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </header>
 
                 <main class="custom-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pb-8 pt-2">
                     <div class="mb-6 px-2 mt-4">
-                        <h3 class="mb-3 pl-1 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
+                        <h3 class="mb-3 pl-1 text-[12px] font-semibold tracking-wider text-slate-500 uppercase">
                             创建方式
                         </h3>
 
-                        <button id="btn-open-gallery" type="button"
-                            class="group relative w-full overflow-hidden rounded-xl border border-blue-100 bg-gradient-to-b from-blue-50/30 to-white p-3 text-left shadow-sm transition-all hover:border-blue-300 hover:shadow-md active:scale-[0.98]"
-                            onclick="document.getElementById('template-modal').classList.remove('opacity-0', 'pointer-events-none'); document.getElementById('template-modal-content').classList.remove('scale-95', 'opacity-0');">
-                            <div class="flex items-center gap-3">
+                        <div class="w-full overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
 
-                                <div
-                                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-b from-blue-500 to-blue-600 shadow-[0_2px_8px_rgba(37,99,235,0.25),inset_0_1px_0_rgba(255,255,255,0.3)] transition-transform duration-300 group-hover:scale-105 group-hover:shadow-[0_4px_12px_rgba(37,99,235,0.35),inset_0_1px_0_rgba(255,255,255,0.3)]">
+                            <button type="button" id="btn-open-gallery"
+                                class="group relative flex w-full items-center justify-between gap-3 overflow-hidden bg-white px-3.5 py-3 text-left transition-colors hover:bg-blue-50/50 active:bg-blue-50"
+                                onclick="document.getElementById('template-modal').classList.remove('opacity-0', 'pointer-events-none'); document.getElementById('template-modal-content').classList.remove('scale-95', 'opacity-0');">
 
-                                    <svg class="h-[22px] w-[22px]" viewBox="0 0 24 24" fill="none"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <rect x="2" y="2" width="8" height="8" rx="2" fill="white" />
-                                        <rect x="14" y="2" width="8" height="11" rx="2" fill="white"
-                                            fill-opacity="0.3" />
-                                        <rect x="2" y="14" width="8" height="8" rx="2" fill="white"
-                                            fill-opacity="0.5" />
-                                        <rect x="14" y="17" width="8" height="5" rx="2" fill="white" />
-                                    </svg>
+                                <div class="relative z-10 flex items-start gap-2.5">
+                                    <div
+                                        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-blue-100 bg-blue-50 text-[#1677ff] transition-colors group-hover:bg-blue-100 group-active:bg-blue-200">
+                                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                                            <rect x="14" y="3" width="7" height="11" rx="1.5" opacity="0.6" />
+                                            <rect x="3" y="14" width="7" height="7" rx="1.5" opacity="0.8" />
+                                            <rect x="14" y="18" width="7" height="3" rx="1" />
+                                        </svg>
+                                    </div>
 
+                                    <div class="flex-1 mt-0.5">
+                                        <span
+                                            class="block text-[13px] font-semibold text-slate-800 transition-colors group-hover:text-blue-600">场景模板库</span>
+                                        <span class="block mt-[1px] text-[10px] text-slate-400">优选高频业务结构</span>
+                                    </div>
                                 </div>
 
-                                <div>
+                                <div class="relative z-10 flex items-center">
                                     <span
-                                        class="block text-[13px] font-bold text-slate-800 transition-colors group-hover:text-blue-700">场景模板</span>
-                                    <span class="block mt-0.5 text-[10px] font-medium text-slate-500">按业务场景快速创建</span>
+                                        class="rounded bg-gradient-to-r from-[#1677ff] to-[#1062d6] px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-white shadow-sm">推荐</span>
                                 </div>
-                            </div>
-                        </button>
+                            </button>
 
-                        <button id="btn-clear-canvas-sidebar" type="button"
-                            class="group mt-2 flex w-full items-center justify-center gap-1.5 rounded-md py-1.5 transition-colors hover:bg-slate-100 active:bg-slate-200">
-                            <i data-lucide="file-plus"
-                                class="h-3.5 w-3.5 text-slate-400 transition-colors group-hover:text-slate-600"></i>
-                            <span
-                                class="text-[11px] font-medium text-slate-500 transition-colors group-hover:text-slate-800">跳过，创建空白画布</span>
-                        </button>
+                            <button type="button" id="btn-clear-canvas-sidebar"
+                                class="group flex w-full items-center gap-2 border-t border-slate-100 bg-slate-50/80 px-3.5 py-2.5 text-left transition-colors hover:bg-slate-100">
+                                <svg class="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                <span
+                                    class="text-[11px] font-medium text-slate-500 group-hover:text-slate-700">创建空白画布</span>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="space-y-8 px-2">
@@ -266,13 +284,19 @@
                                 高级布局
                             </h3>
                             <div id="components-layout" class="grid grid-cols-2 gap-2.5">
-                                <div class="component-item select-none group flex cursor-pointer items-center gap-2.5 rounded-md border border-slate-200 shadow-sm bg-white px-3 py-2 transition-all hover:border-blue-400 hover:bg-blue-50/30 hover:shadow-md active:bg-blue-50/60 active:border-blue-500" data-type="grid">
-                                    <i data-lucide="layout-grid" class="h-4 w-4 text-slate-400 transition-colors group-hover:text-blue-500"></i>
-                                    <span class="text-[12px] font-medium text-slate-600 transition-colors group-hover:text-blue-700">双列栅格</span>
+                                <div class="component-item select-none group flex cursor-pointer items-center gap-2.5 rounded-md border border-slate-200 shadow-sm bg-white px-3 py-2 transition-all hover:border-blue-400 hover:bg-blue-50/30 hover:shadow-md active:bg-blue-50/60 active:border-blue-500"
+                                    data-type="grid">
+                                    <i data-lucide="layout-grid"
+                                        class="h-4 w-4 text-slate-400 transition-colors group-hover:text-blue-500"></i>
+                                    <span
+                                        class="text-[12px] font-medium text-slate-600 transition-colors group-hover:text-blue-700">双列栅格</span>
                                 </div>
-                                <div class="component-item select-none group flex cursor-pointer items-center gap-2.5 rounded-md border border-slate-200 shadow-sm bg-white px-3 py-2 transition-all hover:border-blue-400 hover:bg-blue-50/30 hover:shadow-md active:bg-blue-50/60 active:border-blue-500" data-type="alert">
-                                    <i data-lucide="info" class="h-4 w-4 text-slate-400 transition-colors group-hover:text-blue-500"></i>
-                                    <span class="text-[12px] font-medium text-slate-600 transition-colors group-hover:text-blue-700">提示区块</span>
+                                <div class="component-item select-none group flex cursor-pointer items-center gap-2.5 rounded-md border border-slate-200 shadow-sm bg-white px-3 py-2 transition-all hover:border-blue-400 hover:bg-blue-50/30 hover:shadow-md active:bg-blue-50/60 active:border-blue-500"
+                                    data-type="alert">
+                                    <i data-lucide="info"
+                                        class="h-4 w-4 text-slate-400 transition-colors group-hover:text-blue-500"></i>
+                                    <span
+                                        class="text-[12px] font-medium text-slate-600 transition-colors group-hover:text-blue-700">提示区块</span>
                                 </div>
                             </div>
                         </section>
@@ -291,18 +315,106 @@
                     <svg id="canvas-connections" class="absolute inset-0 pointer-events-none"
                         style="overflow: visible; z-index: 0">
                         <defs>
-                            <marker id="arrowhead" viewBox="0 0 12 12" refX="9" refY="6"
-                                markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-                                <path d="M 3 3 L 9 6 L 3 9" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="connection-arrowhead" />
+                            <marker id="arrowhead" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="8"
+                                markerHeight="8" orient="auto-start-reverse">
+                                <path d="M 3 3 L 9 6 L 3 9" fill="none" stroke="#cbd5e1" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" class="connection-arrowhead" />
                             </marker>
                         </defs>
                     </svg>
+                </div>
+
+                <div id="canvas-global-empty"
+                    class="opacity-0 pointer-events-none absolute inset-0 flex items-center justify-center z-10 bg-slate-50/60 backdrop-blur-sm transition-all duration-500 ease-out">
+                    <div id="canvas-global-empty-card"
+                        class="scale-95 flex flex-col items-center justify-center w-full max-w-[420px] px-12 py-10 bg-white rounded-lg shadow-sm border border-slate-200 transition-all duration-500 ease-out">
+
+                        <h3 class="mb-2 text-[17px] font-medium text-slate-800">暂无画布页面</h3>
+                        <p class="mb-8 text-sm text-slate-500 text-center">
+                            你的工作区准备就绪。创建一个画布来配置表单字段与布局。
+                        </p>
+
+                        <div class="flex flex-col gap-3 w-full max-w-[200px]">
+                            <button onclick="document.getElementById('menu-btn-new-page').click()"
+                                class="ant-btn ant-btn-primary flex h-9 w-full items-center justify-center gap-2">
+                                <i data-lucide="plus" class="h-4 w-4"></i>
+                                新建空白画布
+                            </button>
+                            <button onclick="document.getElementById('btn-open-gallery').click()"
+                                class="ant-btn flex h-9 w-full items-center justify-center gap-2">
+                                <i data-lucide="layout-template" class="h-4 w-4"></i>
+                                浏览场景模板
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <button id="right-sidebar-toggle-btn"
                     class="absolute right-0 top-1/2 z-30 flex h-16 w-4 -translate-y-1/2 cursor-pointer items-center justify-center rounded-l-md border border-r-0 border-[#d9d9d9] bg-white text-black/45 shadow-sm transition hover:bg-[#f5f5f5] hover:text-[#1677ff]"
                     onclick="toggleRightSidebarInline()" title="收起/展开属性面板">
                     <i data-lucide="chevron-right" id="right-sidebar-chevron" class="h-3 w-3"></i>
                 </button>
+
+                <!-- 悬浮画布控制与帮助组 -->
+                <div id="canvas-controls-toolbar"
+                    class="absolute bottom-8 right-8 z-50 flex items-center gap-2 opacity-50 transition-all duration-500 ease-out hover:opacity-100">
+                    <!-- 缩放控制胶囊 -->
+                    <div
+                        class="flex items-center gap-1 rounded-lg border border-white/60 bg-white/70 p-1 shadow-[0_8px_32px_rgba(0,0,0,0.12)] backdrop-blur-md">
+                        <button
+                            class="group relative flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition-all hover:bg-slate-100 hover:text-slate-900"
+                            id="zoom-out-btn">
+                            <i data-lucide="minus" class="h-3.5 w-3.5"></i>
+                            <div
+                                class="pointer-events-none invisible absolute bottom-full left-1/2 mb-2.5 w-max -translate-x-1/2 rounded bg-slate-800 px-2.5 py-1 text-[11px] font-medium tracking-wide text-white opacity-0 shadow-xl transition-all duration-200 group-hover:visible group-hover:opacity-100">
+                                缩小画布 (Cmd/Ctrl + -)
+                                <div
+                                    class="absolute left-1/2 top-full -mt-[4px] h-2 w-2 -translate-x-1/2 rotate-45 bg-slate-800">
+                                </div>
+                            </div>
+                        </button>
+                        <div class="flex h-7 min-w-[48px] cursor-default select-none items-center justify-center px-1">
+                            <span class="font-mono text-[12px] font-semibold text-slate-700"
+                                id="zoom-percent-text">100%</span>
+                        </div>
+                        <button
+                            class="group relative flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition-all hover:bg-slate-100 hover:text-slate-900"
+                            id="zoom-in-btn">
+                            <i data-lucide="plus" class="h-3.5 w-3.5"></i>
+                            <div
+                                class="pointer-events-none invisible absolute bottom-full left-1/2 mb-2.5 w-max -translate-x-1/2 rounded bg-slate-800 px-2.5 py-1 text-[11px] font-medium tracking-wide text-white opacity-0 shadow-xl transition-all duration-200 group-hover:visible group-hover:opacity-100">
+                                放大画布 (Cmd/Ctrl + +)
+                                <div
+                                    class="absolute left-1/2 top-full -mt-[4px] h-2 w-2 -translate-x-1/2 rotate-45 bg-slate-800">
+                                </div>
+                            </div>
+                        </button>
+                        <div class="mx-1 h-3.5 w-[1px] bg-slate-300/60"></div>
+                        <button
+                            class="group relative flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition-all hover:bg-slate-100 hover:text-slate-900"
+                            id="zoom-reset-btn">
+                            <i data-lucide="maximize" class="h-3.5 w-3.5"></i>
+                            <div
+                                class="pointer-events-none invisible absolute bottom-full left-1/2 mb-2.5 w-max -translate-x-1/2 rounded bg-slate-800 px-2.5 py-1 text-[11px] font-medium tracking-wide text-white opacity-0 shadow-xl transition-all duration-200 group-hover:visible group-hover:opacity-100">
+                                恢复 100% 比例并居中
+                                <div
+                                    class="absolute left-1/2 top-full -mt-[4px] h-2 w-2 -translate-x-1/2 rotate-45 bg-slate-800">
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- 帮助与快捷键按钮 -->
+                    <button
+                        class="group relative flex h-9 w-9 items-center justify-center rounded-lg border border-white/60 bg-white/70 text-slate-500 shadow-[0_8px_32px_rgba(0,0,0,0.12)] backdrop-blur-md transition-all hover:bg-white hover:text-blue-600 hover:shadow-xl"
+                        onclick="alert('开发中：这里可能会展示键盘快捷键与平台使用指南')">
+                        <i data-lucide="help-circle" class="h-4 w-4"></i>
+                        <div
+                            class="pointer-events-none invisible absolute bottom-full right-0 mb-3 w-max rounded bg-slate-800 px-2.5 py-1 text-[11px] font-medium tracking-wide text-white opacity-0 shadow-xl transition-all duration-200 group-hover:visible group-hover:opacity-100">
+                            平台帮助与快捷键
+                            <div class="absolute right-4 top-full -mt-[4px] h-2 w-2 rotate-45 bg-slate-800"></div>
+                        </div>
+                    </button>
+                </div>
             </section>
 
             <aside
@@ -322,8 +434,7 @@
                         <span class="text-xs leading-5">点击画布中的字段开始编辑</span>
                     </div>
 
-                    <form id="prop-editor"
-                        class="custom-scrollbar hidden min-h-0 flex-1 flex-col overflow-auto pb-12"
+                    <form id="prop-editor" class="custom-scrollbar hidden min-h-0 flex-1 flex-col overflow-auto pb-12"
                         onsubmit="return false;">
                         <section class="prop-section">
                             <div class="section-title">
@@ -331,14 +442,14 @@
                                 <span id="prop-type-badge" class="code-badge">field</span>
                             </div>
                             <label class="form-control">
-                                <span>标题 Label</span>
+                                <span>标题</span>
                                 <input class="ant-input" type="text" id="prop-label-input" />
                             </label>
                         </section>
 
                         <section class="prop-section" id="prop-placeholder-group">
                             <label class="form-control">
-                                <span>占位提示 Placeholder</span>
+                                <span>占位提示</span>
                                 <input class="ant-input" type="text" id="prop-placeholder-input" />
                             </label>
                         </section>
@@ -347,19 +458,30 @@
                             <label class="form-control">
                                 <span>日期格式</span>
                                 <select class="ant-input" id="prop-date-type-select">
-                                    <option value="date">年月日 (Date)</option>
-                                    <option value="datetime-local">
-                                        年月日时间 (DateTime)
-                                    </option>
-                                    <option value="month">年月 (Month)</option>
-                                    <option value="time">时间 (Time)</option>
+                                    <option value="date">年月日</option>
+                                    <option value="datetime-local">年月日时间</option>
+                                    <option value="month">年月</option>
+                                    <option value="time">时间</option>
                                 </select>
                             </label>
                         </section>
 
                         <section class="prop-section" id="prop-help-group">
                             <label class="form-control">
-                                <span>提示文本 Help Text</span>
+                                <span class="!flex items-center gap-1.5 w-fit">
+                                    提示文本
+                                    <div class="relative flex items-center group cursor-help">
+                                        <i data-lucide="help-circle"
+                                            class="h-3.5 w-3.5 text-slate-400 transition-colors group-hover:text-blue-500"></i>
+                                        <div
+                                            class="absolute bottom-full left-[-40px] mb-2 w-48 rounded bg-slate-800 p-2 text-[11px] leading-relaxed text-white shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 font-normal cursor-default text-left">
+                                            显示在组件下方的说明性文字，用于指导用户如何填写。
+                                            <div
+                                                class="absolute left-[47px] top-full -translate-x-1/2 border-[5px] border-transparent border-t-slate-800">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </span>
                                 <input class="ant-input" type="text" id="prop-help-input"
                                     placeholder="显示在字段下方的说明或填写提示" />
                             </label>
@@ -367,7 +489,20 @@
 
                         <section class="prop-section" id="prop-default-group">
                             <label class="form-control">
-                                <span>默认值 Default Value</span>
+                                <span class="!flex items-center gap-1.5 w-fit">
+                                    默认值
+                                    <div class="relative flex items-center group cursor-help">
+                                        <i data-lucide="help-circle"
+                                            class="h-3.5 w-3.5 text-slate-400 transition-colors group-hover:text-blue-500"></i>
+                                        <div
+                                            class="absolute bottom-full left-[-40px] mb-2 w-48 rounded bg-slate-800 p-2 text-[11px] leading-relaxed text-white shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 font-normal cursor-default text-left">
+                                            组件的初始默认内容，用户在填写表单时可在此基础上进行修改。
+                                            <div
+                                                class="absolute left-[47px] top-full -translate-x-1/2 border-[5px] border-transparent border-t-slate-800">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </span>
                                 <input class="ant-input" type="text" id="prop-default-input" />
                                 <select class="ant-input" id="prop-default-select" style="display: none"></select>
                                 <div id="prop-default-checkbox-group"
@@ -378,7 +513,20 @@
 
                         <section class="prop-section hidden" id="prop-options-group">
                             <div class="section-title">
-                                <span>选项配置</span>
+                                <div class="!flex items-center gap-1.5 text-[13px] text-black/85 font-medium leading-5">
+                                    <span>选项配置</span>
+                                    <div class="relative flex items-center group cursor-help">
+                                        <i data-lucide="help-circle"
+                                            class="h-3.5 w-3.5 text-slate-400 transition-colors group-hover:text-blue-500"></i>
+                                        <div
+                                            class="absolute bottom-full left-[-40px] mb-2 w-48 rounded bg-slate-800 p-2 text-[11px] leading-relaxed text-white shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 font-normal cursor-default text-left">
+                                            设置列表的具体选项，Label用于展示给用户，右侧灰底值是系统底层提交的标识(Value)。
+                                            <div
+                                                class="absolute left-[47px] top-full -translate-x-1/2 border-[5px] border-transparent border-t-slate-800">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <button class="ant-btn ant-btn-small" type="button" id="add-option-btn">
                                     <i data-lucide="plus" class="h-3.5 w-3.5"></i>
                                     添加
@@ -386,9 +534,6 @@
                             </div>
                             <div id="options-editor"
                                 class="options-editor custom-scrollbar max-h-[300px] overflow-y-auto pr-1"></div>
-                            <p class="mt-2.5 mb-0 text-xs leading-5 text-black/45">
-                                Label 用于展示，Value 用于提交数据。
-                            </p>
                         </section>
 
                         <section class="prop-section" id="prop-layout-group">
@@ -402,7 +547,7 @@
                         </section>
 
                         <section class="prop-section flex items-center justify-between">
-                            <span class="text-xs leading-5 text-black/65">是否必填 Required</span>
+                            <span class="text-xs leading-5 text-black/65">是否必填</span>
                             <label class="ant-switch">
                                 <input type="checkbox" id="prop-required-toggle" />
                                 <span></span>
@@ -411,7 +556,7 @@
 
                         <section class="prop-section hidden" id="prop-max-selections-group">
                             <div class="flex items-center justify-between">
-                                <span class="text-xs leading-5 text-black/65">最大选择数量 Max</span>
+                                <span class="text-xs leading-5 text-black/65">最大选择数量</span>
                                 <div
                                     class="flex items-center h-7 rounded border border-[#d9d9d9] overflow-hidden bg-white transition-colors focus-within:border-[#1677ff]">
                                     <button type="button" id="prop-max-minus"
@@ -440,11 +585,11 @@
                                 <span class="code-badge bg-blue-50 text-blue-600">page</span>
                             </div>
                             <label class="form-control">
-                                <span>页面标题 Title</span>
+                                <span>页面标题</span>
                                 <input class="ant-input" type="text" id="page-prop-title-input" />
                             </label>
                             <label class="form-control mt-4">
-                                <span>页面描述 Description</span>
+                                <span>页面描述</span>
                                 <textarea class="ant-input resize-none" rows="3" id="page-prop-desc-input"></textarea>
                             </label>
                         </section>
@@ -454,7 +599,8 @@
         </main>
     </div>
 
-    <div id="preview-modal" class="fixed inset-0 z-[1000] flex opacity-0 pointer-events-none transition-opacity duration-200 bg-black/45 p-8">
+    <div id="preview-modal"
+        class="fixed inset-0 z-[1000] flex opacity-0 pointer-events-none transition-opacity duration-200 bg-black/45 p-8">
         <div id="preview-modal-content"
             class="mx-auto flex h-full w-full max-w-[1120px] scale-95 opacity-0 transition-all duration-200 flex-col overflow-hidden rounded-lg bg-white shadow-[0_6px_16px_rgba(0,0,0,0.08),0_9px_28px_rgba(0,0,0,0.12),0_12px_48px_rgba(0,0,0,0.16)]">
             <header class="flex h-16 shrink-0 items-center justify-between border-b border-[#f0f0f0] px-5">
@@ -467,7 +613,8 @@
                     </p>
                 </div>
                 <div class="flex items-center gap-4">
-                    <button class="ant-btn ant-btn-default h-8 px-3 text-xs flex items-center gap-1.5" onclick="toggleSchemaSidebar()">
+                    <button class="ant-btn ant-btn-default h-8 px-3 text-xs flex items-center gap-1.5"
+                        onclick="toggleSchemaSidebar()">
                         <i data-lucide="code" class="h-3.5 w-3.5"></i>
                         <span>Schema JSON</span>
                     </button>
@@ -476,40 +623,61 @@
                     </button>
                 </div>
             </header>
-            <div id="preview-layout-container" class="relative min-h-0 flex-1 overflow-hidden">
-                <section id="preview-ui-section" class="absolute inset-0 flex items-center justify-center gap-12 overflow-auto bg-[#f5f5f5] py-8 transition-all duration-300 opacity-100">
+            <div id="preview-layout-container" class="relative min-h-0 flex-1 flex overflow-hidden">
+                <section id="preview-ui-section"
+                    class="flex-1 flex items-center justify-center gap-12 overflow-auto bg-[#f5f5f5] py-8 transition-all duration-300 relative">
                     <!-- 左侧独立大纲进度条 -->
                     <div id="preview-stepper-container" class="hidden w-[240px] shrink-0 flex-col"></div>
-                    
-                    <div class="relative flex h-[812px] max-h-full w-[375px] shrink-0 flex-col overflow-hidden rounded-[40px] border-[10px] border-[#222] bg-white shadow-2xl">
+
+                    <div
+                        class="relative flex h-[812px] max-h-full w-[375px] shrink-0 flex-col overflow-hidden rounded-[40px] border-[10px] border-[#222] bg-white shadow-2xl transition-all duration-300">
                         <!-- 手机刘海屏区域 -->
-                        <div class="absolute left-1/2 top-0 z-10 h-6 w-32 -translate-x-1/2 rounded-b-2xl bg-[#222]"></div>
+                        <div class="absolute left-1/2 top-0 z-10 h-6 w-32 -translate-x-1/2 rounded-b-2xl bg-[#222]">
+                        </div>
                         <!-- 手机主视图 -->
                         <div class="custom-scrollbar flex-1 overflow-auto p-5 pt-10 pb-10">
-                            <div id="preview-mobile-progress" class="mb-4 text-[13px] font-medium text-[#1677ff] hidden tracking-wider"></div>
+                            <div id="preview-mobile-progress"
+                                class="mb-4 text-[13px] font-medium text-[#1677ff] hidden tracking-wider"></div>
                             <h3 id="preview-form-title" class="m-0 text-[20px] font-semibold leading-7"></h3>
                             <p id="preview-form-desc" class="mb-5 mt-1.5 text-xs text-black/65"></p>
                             <form id="preview-form-body" class="flex flex-col gap-4"></form>
                         </div>
                     </div>
                 </section>
-                <aside id="schema-sidebar" class="absolute inset-0 flex flex-col bg-white transition-all duration-300 opacity-0 pointer-events-none">
-                    <div class="flex h-12 shrink-0 items-center justify-between border-b border-[#f0f0f0] px-4 font-semibold">
-                        <div class="flex items-center gap-2">
-                            <span>Schema JSON</span>
-                            <button id="copy-schema-btn" class="flex h-6 w-6 items-center justify-center rounded text-black/45 transition hover:bg-[#f0f0f0] hover:text-[#1677ff]" title="复制 JSON">
-                                <i data-lucide="copy" class="h-3.5 w-3.5"></i>
-                            </button>
+                <aside id="schema-sidebar"
+                    class="w-0 shrink-0 border-l border-[#f0f0f0] bg-[#282c34] transition-all duration-300 overflow-hidden flex flex-col opacity-0">
+                    <div class="w-[450px] flex-1 flex flex-col h-full">
+                        <div
+                            class="flex h-12 shrink-0 items-center justify-between border-b border-white/10 px-5 font-semibold text-[#abb2bf]">
+                            <div class="flex items-center gap-2">
+                                <span>Schema JSON</span>
+                                <button id="copy-schema-btn"
+                                    class="flex h-6 w-6 items-center justify-center rounded text-[#abb2bf] transition hover:bg-white/10 hover:text-white"
+                                    title="复制 JSON">
+                                    <i data-lucide="copy" class="h-3.5 w-3.5"></i>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span id="schema-field-count"
+                                    class="code-badge bg-white/10 text-white border-none font-normal">0 fields</span>
+                                <button
+                                    class="flex h-6 w-6 items-center justify-center rounded text-[#abb2bf] transition hover:bg-white/10 hover:text-red-400"
+                                    onclick="toggleSchemaSidebar()" title="关闭 Schema">
+                                    <i data-lucide="x" class="h-4 w-4"></i>
+                                </button>
+                            </div>
                         </div>
-                        <span id="schema-field-count" class="code-badge">0 fields</span>
+                        <pre id="schema-output"
+                            class="custom-scrollbar m-0 flex-1 overflow-auto bg-transparent p-5 font-mono text-[13px] leading-6 text-[#d19a66] selection:bg-[#3e4451]"></pre>
                     </div>
-                    <pre id="schema-output"
-                        class="custom-scrollbar m-0 flex-1 overflow-auto bg-[#282c34] p-5 font-mono text-[13px] leading-6 text-[#abb2bf] selection:bg-[#3e4451]"></pre>
                 </aside>
             </div>
-            <footer class="flex h-14 shrink-0 items-center justify-end border-t border-[#f0f0f0] bg-[#fafafa] px-5 z-10">
-                <button class="ant-btn ant-btn-default mr-3 h-8 px-4 text-xs font-medium" onclick="closePreviewModal()">取消</button>
-                <button class="ant-btn ant-btn-primary h-8 px-5 text-xs font-medium" onclick="publishForm(event)">发布表单</button>
+            <footer
+                class="flex h-14 shrink-0 items-center justify-end border-t border-[#f0f0f0] bg-[#fafafa] px-5 z-10">
+                <button class="ant-btn ant-btn-default mr-3 h-8 px-4 text-xs font-medium"
+                    onclick="closePreviewModal()">取消</button>
+                <button class="ant-btn ant-btn-primary h-8 px-5 text-xs font-medium"
+                    onclick="publishForm(event)">发布表单</button>
             </footer>
         </div>
     </div>
@@ -689,23 +857,28 @@
                     <i data-lucide="trash-2"></i>
                 </button>
             </div>
-            
-            <section class="overflow-hidden rounded-xl bg-blue-50/40 shadow-sm ring-1 ring-blue-100/80 pointer-events-none">
+
+            <section
+                class="overflow-hidden rounded-xl bg-blue-50/40 shadow-sm ring-1 ring-blue-100/80 pointer-events-none">
                 <div class="h-1 w-full bg-blue-500"></div>
                 <div class="p-4 sm:p-5">
                     <div class="mb-3 flex items-center gap-2">
-                        <svg class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        <svg class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                         <h3 class="component-label text-[14px] font-bold text-blue-900 m-0">提示</h3>
                     </div>
                     <div class="alert-content-wrapper space-y-2 pl-6 text-[13px] leading-relaxed text-blue-800">
                         <p class="relative">
-                            <span class="absolute -left-[14px] top-[7px] flex h-1.5 w-1.5 rounded-sm bg-blue-400"></span>
+                            <span
+                                class="absolute -left-[14px] top-[7px] flex h-1.5 w-1.5 rounded-sm bg-blue-400"></span>
                             您将作为以下公司的授权代表，完成KYC问卷填写。
                         </p>
                         <p class="relative">
-                            <span class="absolute -left-[14px] top-[7px] flex h-1.5 w-1.5 rounded-sm bg-blue-400"></span>
+                            <span
+                                class="absolute -left-[14px] top-[7px] flex h-1.5 w-1.5 rounded-sm bg-blue-400"></span>
                             请确认以下信息是否准确，如需修改，请联系服务商修改后再进行下一步。
                         </p>
                     </div>
@@ -738,15 +911,13 @@
         </div>
     </template>
 
-        <template id="tpl-page-frame">
-            <div
-            class="mobile-frame absolute min-h-[720px] w-[390px] bg-[#F7F8FA] rounded-2xl shadow-sm ring-1 ring-slate-200 flex flex-col transition-shadow hover:shadow-md"
-            style="transform-origin: 0 0;"
-            >
+    <template id="tpl-page-frame">
+        <div class="mobile-frame absolute min-h-[720px] w-[390px] bg-[#F7F8FA] rounded-2xl shadow-sm ring-1 ring-slate-200 flex flex-col transition-shadow hover:shadow-md"
+            style="transform-origin: 0 0;">
             <div
                 class="absolute -top-7 left-0 flex items-center gap-1.5 text-[12px] font-medium tracking-wider text-black/40">
                 <i data-lucide="smartphone" class="h-3.5 w-3.5"></i>
-                <span class="font-mono">STEP <span class="page-sequence-badge">1</span></span>
+                <span class="font-mono">第<span class="page-sequence-badge">1</span>页</span>
             </div>
             <!-- 页面主容器 -->
             <div class="flex-1 overflow-hidden flex flex-col w-full h-full rounded-2xl">
@@ -756,7 +927,8 @@
                         value="页面标题" aria-label="页面标题" />
                     <textarea
                         class="page-desc-input mt-1.5 w-full overflow-hidden resize-none bg-transparent text-[15px] leading-6 text-slate-500 outline-none transition-all focus:text-blue-500 focus:shadow-[0_2px_0_0_#3b82f6] pb-1"
-                        rows="1" aria-label="页面描述" oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';">
+                        rows="1" aria-label="页面描述"
+                        oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';">
 在此输入页面的描述信息...</textarea>
                 </div>
                 <div class="canvas-pages-container relative flex-1 bg-white flex flex-col">
@@ -791,7 +963,7 @@
                 title="在右侧添加新页面">
                 <i data-lucide="plus" class="h-4 w-4"></i>
             </div>
-        </article>
+            </article>
     </template>
 
     <script>
@@ -799,6 +971,52 @@
             e.stopPropagation();
             const menu = document.getElementById("layout-settings-menu");
             menu.classList.toggle("hidden");
+        }
+
+        function toggleSidebarSearch() {
+            const container = document.getElementById("sidebar-search-container");
+            const iconBtn = document.getElementById("sidebar-search-toggle");
+            const searchIcon = iconBtn.querySelector(".search-icon-default");
+            const closeIcon = iconBtn.querySelector(".search-icon-close");
+            const input = document.getElementById("component-search");
+
+            const isHidden = container.classList.contains("grid-rows-[0fr]");
+
+            if (isHidden) {
+                // Expand
+                container.classList.remove("grid-rows-[0fr]", "opacity-0");
+                container.classList.add("grid-rows-[1fr]", "opacity-100");
+                iconBtn.classList.add("active");
+
+                // Icon animation: hide search, show chevron
+                if (searchIcon) {
+                    searchIcon.classList.remove("rotate-0", "opacity-100", "scale-100");
+                    searchIcon.classList.add("-rotate-90", "opacity-0", "scale-75");
+                }
+                if (closeIcon) {
+                    closeIcon.classList.remove("rotate-90", "opacity-0", "scale-75");
+                    closeIcon.classList.add("rotate-0", "opacity-100", "scale-100");
+                }
+
+                setTimeout(() => {
+                    input.focus();
+                }, 300);
+            } else {
+                // Collapse
+                container.classList.remove("grid-rows-[1fr]", "opacity-100");
+                container.classList.add("grid-rows-[0fr]", "opacity-0");
+                iconBtn.classList.remove("active");
+
+                // Icon animation: hide chevron, show search
+                if (searchIcon) {
+                    searchIcon.classList.remove("-rotate-90", "opacity-0", "scale-75");
+                    searchIcon.classList.add("rotate-0", "opacity-100", "scale-100");
+                }
+                if (closeIcon) {
+                    closeIcon.classList.remove("rotate-0", "opacity-100", "scale-100");
+                    closeIcon.classList.add("rotate-90", "opacity-0", "scale-75");
+                }
+            }
         }
 
         document.addEventListener("click", (e) => {
@@ -876,15 +1094,23 @@
         }
     </script>
     <!-- 右键菜单 -->
-    <div id="canvas-context-menu" class="fixed z-[9999] hidden min-w-[160px] rounded-lg border border-slate-200 bg-white p-1 shadow-lg shadow-black/5">
-        <button id="menu-btn-new-page" class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200">
+    <div id="canvas-context-menu"
+        class="fixed z-[9999] hidden min-w-[160px] rounded-lg border border-slate-200 bg-white p-1 shadow-lg shadow-black/5">
+        <button id="menu-btn-new-page"
+            class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200">
             <i data-lucide="file-plus" class="h-4 w-4 text-slate-400"></i>
             <span>新建画布页面</span>
         </button>
         <div class="my-1 h-[1px] bg-slate-100"></div>
-        <button id="menu-btn-reset-view" class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200">
+        <button id="menu-btn-reset-view"
+            class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200">
             <i data-lucide="expand" class="h-4 w-4 text-slate-400"></i>
             <span>重置画布视角</span>
+        </button>
+        <button id="menu-btn-delete-page"
+            class="hidden flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 active:bg-red-100">
+            <i data-lucide="trash-2" class="h-4 w-4 text-red-500"></i>
+            <span>删除当前画布</span>
         </button>
     </div>
     <script type="module" src="./js/main.js"></script>
@@ -900,7 +1126,7 @@
                         <i data-lucide="library" class="h-4 w-4 text-slate-500"></i>
                         模板库
                     </h2>
-                    <p class="mt-1 text-[13px] text-slate-500">选择一个专业预设模板作为起点，加载后将覆盖当前画布内容。</p>
+                    <p class="mt-1 text-[13px] text-slate-500">从预设模板开始创建，加载模板后将覆盖当前画布内容。</p>
                 </div>
                 <button type="button"
                     class="flex h-7 w-7 items-center justify-center rounded border border-transparent text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 active:bg-slate-200"
@@ -910,54 +1136,47 @@
             </div>
 
             <div class="bg-slate-50/80 px-6 py-6">
-                <div class="grid grid-cols-1 gap-5 md:grid-cols-3">
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
 
-                    <div id="btn-tpl-kyc-client-modal"
-                        class="group cursor-pointer rounded-md border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-blue-500 hover:shadow-md">
-                        <div
-                            class="mb-4 flex h-24 w-full items-center justify-center rounded bg-slate-50 border border-slate-100 transition-colors group-hover:border-blue-100 group-hover:bg-blue-50/50">
-                            <i data-lucide="layout-template"
-                                class="h-6 w-6 text-slate-400 transition-colors group-hover:text-blue-500"></i>
-                        </div>
-                        <h3
-                            class="text-[14px] font-semibold text-slate-800 transition-colors group-hover:text-blue-600">
-                            客户 KYC
-                        </h3>
-                        <p class="mt-1.5 text-[12px] leading-relaxed text-slate-500">
-                            标准客户合规建档与风险评估，包含基础调查选项。
-                        </p>
-                    </div>
-
+                    <!-- 个人 KYC 卡片 -->
                     <div id="btn-tpl-kyc-individual-modal"
-                        class="group cursor-pointer rounded-md border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-blue-500 hover:shadow-md">
+                        class="group flex cursor-pointer overflow-hidden rounded-md border border-slate-200 bg-white transition-all duration-200 hover:border-emerald-400 hover:shadow-sm">
+
+                        <!-- 左侧结构化图标区 -->
                         <div
-                            class="mb-4 flex h-24 w-full items-center justify-center rounded bg-slate-50 border border-slate-100 transition-colors group-hover:border-blue-100 group-hover:bg-blue-50/50">
-                            <i data-lucide="user-check"
-                                class="h-6 w-6 text-slate-400 transition-colors group-hover:text-blue-500"></i>
+                            class="flex w-14 shrink-0 items-center justify-center bg-slate-50 border-r border-slate-100 text-slate-400 transition-colors duration-200 group-hover:bg-emerald-500 group-hover:border-emerald-500 group-hover:text-white">
+                            <i data-lucide="user-check" class="h-5 w-5"></i>
                         </div>
-                        <h3
-                            class="text-[14px] font-semibold text-slate-800 transition-colors group-hover:text-blue-600">
-                            个人 KYC
-                        </h3>
-                        <p class="mt-1.5 text-[12px] leading-relaxed text-slate-500">
-                            深入了解个人身份信息、财务背景与偏好。
-                        </p>
+
+                        <!-- 右侧文本区 -->
+                        <div class="flex flex-1 flex-col justify-center p-4 pr-5">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-[14px] font-bold text-slate-800">个人 KYC</h3>
+                                <!-- 极简加号，暗示“新建/选择” -->
+                                <i data-lucide="plus"
+                                    class="h-4 w-4 text-slate-300 transition-colors group-hover:text-emerald-500"></i>
+                            </div>
+                            <p class="mt-0.5 text-[12px] leading-relaxed text-slate-500">适用于个人用户进行KYC表单填写和身份验证。</p>
+                        </div>
                     </div>
 
+                    <!-- 实体 KYC 卡片 -->
                     <div id="btn-tpl-kyc-entity-modal"
-                        class="group cursor-pointer rounded-md border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-blue-500 hover:shadow-md">
+                        class="group flex cursor-pointer overflow-hidden rounded-md border border-slate-200 bg-white transition-all duration-200 hover:border-blue-500 hover:shadow-sm">
+
                         <div
-                            class="mb-4 flex h-24 w-full items-center justify-center rounded bg-slate-50 border border-slate-100 transition-colors group-hover:border-blue-100 group-hover:bg-blue-50/50">
-                            <i data-lucide="building-2"
-                                class="h-6 w-6 text-slate-400 transition-colors group-hover:text-blue-500"></i>
+                            class="flex w-14 shrink-0 items-center justify-center bg-slate-50 border-r border-slate-100 text-slate-400 transition-colors duration-200 group-hover:bg-[#1677ff] group-hover:border-[#1677ff] group-hover:text-white">
+                            <i data-lucide="building-2" class="h-5 w-5"></i>
                         </div>
-                        <h3
-                            class="text-[14px] font-semibold text-slate-800 transition-colors group-hover:text-blue-600">
-                            实体 KYC
-                        </h3>
-                        <p class="mt-1.5 text-[12px] leading-relaxed text-slate-500">
-                            针对企业与机构的详尽尽职调查及结构穿透。
-                        </p>
+
+                        <div class="flex flex-1 flex-col justify-center p-4 pr-5">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-[14px] font-bold text-slate-800">实体 KYC</h3>
+                                <i data-lucide="plus"
+                                    class="h-4 w-4 text-slate-300 transition-colors group-hover:text-[#1677ff]"></i>
+                            </div>
+                            <p class="mt-0.5 text-[12px] leading-relaxed text-slate-500">适用于公司、机构实体进行的KYC表单和身份验证</p>
+                        </div>
                     </div>
 
                 </div>

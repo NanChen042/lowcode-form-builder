@@ -239,10 +239,14 @@ export function addPage(afterPageId = null, options = {}) {
     });
     
     const deleteBtn = frame.querySelector('.page-delete-btn');
-    if (!isFirst) {
-        deleteBtn.classList.replace('hidden', 'flex');
-        deleteBtn.addEventListener('click', () => deletePage(newId));
-    }
+    deleteBtn.classList.replace('hidden', 'flex');
+    deleteBtn.addEventListener('click', () => {
+        const page = state.pages.find(p => p.id === newId);
+        const isEmpty = !page || !page.fields || page.fields.length === 0;
+        if (isEmpty || confirm('确定要删除当前画布及其所有内容吗？此操作不可撤销。')) {
+            deletePage(newId);
+        }
+    });
     
     const addNextBtn = frame.querySelector('.add-next-page-btn');
     addNextBtn.addEventListener('click', (e) => {
@@ -269,8 +273,29 @@ export function addPage(afterPageId = null, options = {}) {
         } else {
             DOM.canvasWorld.appendChild(clone);
         }
+    }
+    
+    // 如果是首个页面，隐藏全局空状态并显示右下角工具条
+    if (isFirst) {
+        const globalEmpty = document.getElementById('canvas-global-empty');
+        const globalEmptyCard = document.getElementById('canvas-global-empty-card');
+        if (globalEmpty) {
+            globalEmpty.classList.remove('opacity-100');
+            globalEmpty.classList.add('opacity-0', 'pointer-events-none');
+        }
+        if (globalEmptyCard) {
+            globalEmptyCard.classList.remove('scale-100');
+            globalEmptyCard.classList.add('scale-95');
+        }
         
-        // 重新排列后续页面的位置
+        const controlsToolbar = document.getElementById('canvas-controls-toolbar');
+        if (controlsToolbar) {
+            controlsToolbar.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+        }
+    }
+    
+    // 重新排列后续页面的位置
+    if (!isFirst && insertIndex < state.pages.length - 1) {
         for (let i = insertIndex + 1; i < state.pages.length; i++) {
             state.pages[i].x = state.pages[i-1].x + PAGE_WIDTH + PAGE_GAP;
             const currentFrame = document.getElementById(`frame_${state.pages[i].id}`);
@@ -299,8 +324,8 @@ export function addPage(afterPageId = null, options = {}) {
 
 // 从画布和状态中删除指定页面，并重新排列后续页面的位置
 export function deletePage(pageId) {
-    if (state.pages.length <= 1) return;
     const index = state.pages.findIndex(p => p.id === pageId);
+    if (index === -1) return;
     state.pages.splice(index, 1);
     
     const frame = document.getElementById(`frame_${pageId}`);
@@ -314,7 +339,48 @@ export function deletePage(pageId) {
     
     drawConnections();
     updatePageSequenceBadges();
-    focusOnPage(state.pages[Math.max(0, index - 1)].id);
+    
+    if (state.pages.length > 0) {
+        focusOnPage(state.pages[Math.max(0, index - 1)].id);
+    } else {
+        // If 0 pages left, clear selected element and show empty state in right sidebar
+        state.selectedElement = null;
+        const propEmpty = document.getElementById('prop-empty');
+        const propEditor = document.getElementById('prop-editor');
+        const pagePropEditor = document.getElementById('page-prop-editor');
+        const propIdText = document.getElementById('prop-id');
+        
+        if (propEmpty && propEditor && pagePropEditor) {
+            propEmpty.classList.remove('hidden');
+            propEditor.classList.add('hidden');
+            pagePropEditor.classList.add('hidden');
+            if (propIdText) propIdText.textContent = 'None';
+        }
+        
+        // 显示全局大画布空状态并隐藏右下角工具条
+        const globalEmpty = document.getElementById('canvas-global-empty');
+        const globalEmptyCard = document.getElementById('canvas-global-empty-card');
+        if (globalEmpty) {
+            globalEmpty.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+            globalEmpty.classList.add('opacity-100');
+        }
+        if (globalEmptyCard) {
+            globalEmptyCard.classList.remove('scale-95');
+            globalEmptyCard.classList.add('scale-100');
+        }
+        
+        const controlsToolbar = document.getElementById('canvas-controls-toolbar');
+        if (controlsToolbar) {
+            controlsToolbar.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+        }
+        
+        // 重置视角居中，以便展示空状态
+        state.canvasState.x = 0;
+        state.canvasState.y = 0;
+        state.canvasState.scale = 1;
+        renderCanvasTransform();
+    }
+    
     notifySchemaChange();
 }
 
@@ -961,6 +1027,7 @@ export function bindCanvasEvents() {
     });
 
     DOM.canvasScrollArea.addEventListener('mousedown', e => {
+        if (state.pages.length === 0) return;
         if (e.target.closest('.ruler')) return;
         
         const isSpaceDrag = state.isSpacePressed;
@@ -1129,6 +1196,7 @@ export function bindCanvasEvents() {
     });
 
     DOM.canvasScrollArea.addEventListener('wheel', e => {
+        if (state.pages.length === 0) return;
         e.preventDefault();
 
         if (e.ctrlKey || e.metaKey) {

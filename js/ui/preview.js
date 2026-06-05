@@ -333,13 +333,30 @@ export function renderPreviewStep() {
     if (!previewSchema || !previewSchema.pages) return;
     DOM.previewFormBody.innerHTML = '';
     
+    if (previewSchema.pages.length === 0) {
+        DOM.previewFormTitle.textContent = previewSchema.meta?.title || '未命名表单';
+        DOM.previewFormDesc.textContent = '该表单目前是空的';
+        DOM.previewStepperContainer.classList.add('hidden');
+        if (DOM.previewMobileProgress) DOM.previewMobileProgress.classList.add('hidden');
+        
+        const empty = document.createElement('div');
+        empty.className = 'py-12 flex flex-col items-center justify-center text-slate-400';
+        empty.innerHTML = `
+            <i data-lucide="inbox" class="h-10 w-10 mb-3 opacity-40"></i>
+            <p class="text-sm">暂无页面，请先在画布中创建</p>
+        `;
+        DOM.previewFormBody.appendChild(empty);
+        safeCreateIcons();
+        return;
+    }
+    
     const page = previewSchema.pages[currentPreviewStep];
     const isFirst = currentPreviewStep === 0;
     const isLast = currentPreviewStep === previewSchema.pages.length - 1;
     
     // 动态切换预览表单顶部的标题和描述为当前页面的独立数据
-    DOM.previewFormTitle.textContent = page.title || previewSchema.meta.title;
-    DOM.previewFormDesc.textContent = page.description || previewSchema.meta.description || '暂无描述';
+    DOM.previewFormTitle.textContent = page.title || previewSchema.meta?.title || '未命名表单';
+    DOM.previewFormDesc.textContent = page.description || previewSchema.meta?.description || '暂无描述';
     
     if (previewSchema.pages.length > 1) {
         DOM.previewStepperContainer.classList.remove('hidden');
@@ -458,10 +475,17 @@ export function renderPreview(mode) {
     safeCreateIcons();
 }
 
-// 关闭预览弹窗
 export function closePreviewModal() {
     DOM.previewModal.classList.add('opacity-0', 'pointer-events-none');
     DOM.previewModalContent.classList.add('scale-95', 'opacity-0');
+    
+    const sidebar = document.getElementById('schema-sidebar');
+    if (sidebar && sidebar.classList.contains('w-[450px]')) {
+        setTimeout(() => {
+            sidebar.classList.remove('w-[450px]', 'opacity-100');
+            sidebar.classList.add('w-0', 'opacity-0');
+        }, 300);
+    }
 }
 
 // 触发普通预览模式
@@ -476,23 +500,13 @@ export function saveForm() {
 
 window.toggleSchemaSidebar = function() {
     const sidebar = document.getElementById('schema-sidebar');
-    const uiSection = document.getElementById('preview-ui-section');
     
-    // Check if sidebar is currently hidden (opacity-0)
-    if (sidebar.classList.contains('opacity-0')) {
-        // Fade in schema, fade out UI
-        sidebar.classList.remove('opacity-0', 'pointer-events-none');
-        sidebar.classList.add('opacity-100');
-        
-        uiSection.classList.remove('opacity-100');
-        uiSection.classList.add('opacity-0', 'pointer-events-none');
+    if (sidebar.classList.contains('w-0')) {
+        sidebar.classList.remove('w-0', 'opacity-0');
+        sidebar.classList.add('w-[450px]', 'opacity-100');
     } else {
-        // Fade out schema, fade in UI
-        sidebar.classList.remove('opacity-100');
-        sidebar.classList.add('opacity-0', 'pointer-events-none');
-        
-        uiSection.classList.remove('opacity-0', 'pointer-events-none');
-        uiSection.classList.add('opacity-100');
+        sidebar.classList.remove('w-[450px]', 'opacity-100');
+        sidebar.classList.add('w-0', 'opacity-0');
     }
 };
 
