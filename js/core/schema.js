@@ -145,8 +145,8 @@ export function markDirty() {
             isDirty = true;
             if (statusEl) {
                 statusEl.innerHTML = `<i data-lucide="circle-alert" class="h-3.5 w-3.5"></i>未保存`;
-                statusEl.classList.remove('opacity-0', 'text-orange-500');
-                statusEl.classList.add('text-slate-500'); // 按照要求使用灰色
+                statusEl.classList.remove('opacity-0', 'text-slate-500');
+                statusEl.classList.add('text-orange-500'); 
                 if (window.lucide) window.lucide.createIcons({ root: statusEl });
             }
         } else if (!hasChanged && isDirty) {

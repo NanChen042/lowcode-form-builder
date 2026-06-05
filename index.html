@@ -48,7 +48,7 @@
             class="flex h-16 shrink-0 items-center justify-between border-b border-[#f0f0f0] bg-white px-6 relative">
             <div class="flex min-w-0 items-center">
                 <!-- <img class="object-contain h-10" src="https://app.algocandy.com/algo/images/logo.png" alt="AlgoCandy"> -->
-                自定义拖拽代码平台
+                定制表单构建器
             </div>
 
 
@@ -126,7 +126,7 @@
 
                         <div class="flex items-center gap-1.5 px-1">
                             <span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-                            <span class="text-[11px] font-medium text-slate-500">当前项目：内部工单系统</span>
+                            <span class="text-[11px] font-medium text-slate-500">当前项目：10086 个人KYC表单</span>
                         </div>
                     </div>
 
@@ -682,6 +682,98 @@
         </div>
     </div>
 
+    <!-- 右键菜单 -->
+    <div id="canvas-context-menu"
+        class="fixed z-[9999] hidden min-w-[160px] rounded-lg border border-slate-200 bg-white p-1 shadow-lg shadow-black/5">
+        <button id="menu-btn-new-page"
+            class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200">
+            <i data-lucide="file-plus" class="h-4 w-4 text-slate-400"></i>
+            <span>新建画布页面</span>
+        </button>
+        <div class="my-1 h-[1px] bg-slate-100"></div>
+        <button id="menu-btn-reset-view"
+            class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200">
+            <i data-lucide="expand" class="h-4 w-4 text-slate-400"></i>
+            <span>重置画布视角</span>
+        </button>
+        <button id="menu-btn-delete-page"
+            class="hidden flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 active:bg-red-100">
+            <i data-lucide="trash-2" class="h-4 w-4 text-red-500"></i>
+            <span>删除当前画布</span>
+        </button>
+    </div>
+
+
+<div id="template-modal"
+        class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 opacity-0 pointer-events-none transition-opacity duration-200">
+
+        <div id="template-modal-content"
+            class="relative w-full max-w-4xl scale-95 opacity-0 overflow-hidden rounded-lg bg-white shadow-2xl ring-1 ring-slate-200 transition-all duration-200">
+
+            <div class="flex items-start justify-between border-b border-slate-200 px-6 py-5">
+                <div>
+                    <h2 class="flex items-center gap-2 text-[16px] font-semibold tracking-tight text-slate-800">
+                        <i data-lucide="library" class="h-4 w-4 text-slate-500"></i>
+                        模板库
+                    </h2>
+                    <p class="mt-1 text-[13px] text-slate-500">从预设模板开始创建，加载模板后将覆盖当前画布内容。</p>
+                </div>
+                <button type="button"
+                    class="flex h-7 w-7 items-center justify-center rounded border border-transparent text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 active:bg-slate-200"
+                    onclick="document.getElementById('template-modal').classList.add('opacity-0', 'pointer-events-none'); document.getElementById('template-modal-content').classList.add('scale-95', 'opacity-0');">
+                    <i data-lucide="x" class="h-4 w-4"></i>
+                </button>
+            </div>
+
+            <div class="bg-slate-50/80 px-6 py-6">
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+                    <!-- 个人 KYC 卡片 -->
+                    <div id="btn-tpl-kyc-individual-modal"
+                        class="group flex cursor-pointer overflow-hidden rounded-md border border-slate-200 bg-white transition-all duration-200 hover:border-emerald-400 hover:shadow-sm">
+
+                        <!-- 左侧结构化图标区 -->
+                        <div
+                            class="flex w-14 shrink-0 items-center justify-center bg-slate-50 border-r border-slate-100 text-slate-400 transition-colors duration-200 group-hover:bg-emerald-500 group-hover:border-emerald-500 group-hover:text-white">
+                            <i data-lucide="user-check" class="h-5 w-5"></i>
+                        </div>
+
+                        <!-- 右侧文本区 -->
+                        <div class="flex flex-1 flex-col justify-center p-4 pr-5">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-[14px] font-bold text-slate-800">个人 KYC</h3>
+                                <!-- 极简加号，暗示“新建/选择” -->
+                                <i data-lucide="plus"
+                                    class="h-4 w-4 text-slate-300 transition-colors group-hover:text-emerald-500"></i>
+                            </div>
+                            <p class="mt-0.5 text-[12px] leading-relaxed text-slate-500">适用于个人用户进行KYC表单填写和身份验证。</p>
+                        </div>
+                    </div>
+
+                    <!-- 实体 KYC 卡片 -->
+                    <div id="btn-tpl-kyc-entity-modal"
+                        class="group flex cursor-pointer overflow-hidden rounded-md border border-slate-200 bg-white transition-all duration-200 hover:border-blue-500 hover:shadow-sm">
+
+                        <div
+                            class="flex w-14 shrink-0 items-center justify-center bg-slate-50 border-r border-slate-100 text-slate-400 transition-colors duration-200 group-hover:bg-[#1677ff] group-hover:border-[#1677ff] group-hover:text-white">
+                            <i data-lucide="building-2" class="h-5 w-5"></i>
+                        </div>
+
+                        <div class="flex flex-1 flex-col justify-center p-4 pr-5">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-[14px] font-bold text-slate-800">实体 KYC</h3>
+                                <i data-lucide="plus"
+                                    class="h-4 w-4 text-slate-300 transition-colors group-hover:text-[#1677ff]"></i>
+                            </div>
+                            <p class="mt-0.5 text-[12px] leading-relaxed text-slate-500">适用于公司、机构实体进行的KYC表单和身份验证</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
     <template id="tpl-input">
         <div class="canvas-element">
             <div class="element-actions">
@@ -1093,96 +1185,7 @@
             }
         }
     </script>
-    <!-- 右键菜单 -->
-    <div id="canvas-context-menu"
-        class="fixed z-[9999] hidden min-w-[160px] rounded-lg border border-slate-200 bg-white p-1 shadow-lg shadow-black/5">
-        <button id="menu-btn-new-page"
-            class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200">
-            <i data-lucide="file-plus" class="h-4 w-4 text-slate-400"></i>
-            <span>新建画布页面</span>
-        </button>
-        <div class="my-1 h-[1px] bg-slate-100"></div>
-        <button id="menu-btn-reset-view"
-            class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200">
-            <i data-lucide="expand" class="h-4 w-4 text-slate-400"></i>
-            <span>重置画布视角</span>
-        </button>
-        <button id="menu-btn-delete-page"
-            class="hidden flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[13px] text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 active:bg-red-100">
-            <i data-lucide="trash-2" class="h-4 w-4 text-red-500"></i>
-            <span>删除当前画布</span>
-        </button>
-    </div>
     <script type="module" src="./js/main.js"></script>
-    <div id="template-modal"
-        class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 opacity-0 pointer-events-none transition-opacity duration-200">
-
-        <div id="template-modal-content"
-            class="relative w-full max-w-4xl scale-95 opacity-0 overflow-hidden rounded-lg bg-white shadow-2xl ring-1 ring-slate-200 transition-all duration-200">
-
-            <div class="flex items-start justify-between border-b border-slate-200 px-6 py-5">
-                <div>
-                    <h2 class="flex items-center gap-2 text-[16px] font-semibold tracking-tight text-slate-800">
-                        <i data-lucide="library" class="h-4 w-4 text-slate-500"></i>
-                        模板库
-                    </h2>
-                    <p class="mt-1 text-[13px] text-slate-500">从预设模板开始创建，加载模板后将覆盖当前画布内容。</p>
-                </div>
-                <button type="button"
-                    class="flex h-7 w-7 items-center justify-center rounded border border-transparent text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 active:bg-slate-200"
-                    onclick="document.getElementById('template-modal').classList.add('opacity-0', 'pointer-events-none'); document.getElementById('template-modal-content').classList.add('scale-95', 'opacity-0');">
-                    <i data-lucide="x" class="h-4 w-4"></i>
-                </button>
-            </div>
-
-            <div class="bg-slate-50/80 px-6 py-6">
-                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-
-                    <!-- 个人 KYC 卡片 -->
-                    <div id="btn-tpl-kyc-individual-modal"
-                        class="group flex cursor-pointer overflow-hidden rounded-md border border-slate-200 bg-white transition-all duration-200 hover:border-emerald-400 hover:shadow-sm">
-
-                        <!-- 左侧结构化图标区 -->
-                        <div
-                            class="flex w-14 shrink-0 items-center justify-center bg-slate-50 border-r border-slate-100 text-slate-400 transition-colors duration-200 group-hover:bg-emerald-500 group-hover:border-emerald-500 group-hover:text-white">
-                            <i data-lucide="user-check" class="h-5 w-5"></i>
-                        </div>
-
-                        <!-- 右侧文本区 -->
-                        <div class="flex flex-1 flex-col justify-center p-4 pr-5">
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-[14px] font-bold text-slate-800">个人 KYC</h3>
-                                <!-- 极简加号，暗示“新建/选择” -->
-                                <i data-lucide="plus"
-                                    class="h-4 w-4 text-slate-300 transition-colors group-hover:text-emerald-500"></i>
-                            </div>
-                            <p class="mt-0.5 text-[12px] leading-relaxed text-slate-500">适用于个人用户进行KYC表单填写和身份验证。</p>
-                        </div>
-                    </div>
-
-                    <!-- 实体 KYC 卡片 -->
-                    <div id="btn-tpl-kyc-entity-modal"
-                        class="group flex cursor-pointer overflow-hidden rounded-md border border-slate-200 bg-white transition-all duration-200 hover:border-blue-500 hover:shadow-sm">
-
-                        <div
-                            class="flex w-14 shrink-0 items-center justify-center bg-slate-50 border-r border-slate-100 text-slate-400 transition-colors duration-200 group-hover:bg-[#1677ff] group-hover:border-[#1677ff] group-hover:text-white">
-                            <i data-lucide="building-2" class="h-5 w-5"></i>
-                        </div>
-
-                        <div class="flex flex-1 flex-col justify-center p-4 pr-5">
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-[14px] font-bold text-slate-800">实体 KYC</h3>
-                                <i data-lucide="plus"
-                                    class="h-4 w-4 text-slate-300 transition-colors group-hover:text-[#1677ff]"></i>
-                            </div>
-                            <p class="mt-0.5 text-[12px] leading-relaxed text-slate-500">适用于公司、机构实体进行的KYC表单和身份验证</p>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
+    </body>
 
 </html>
