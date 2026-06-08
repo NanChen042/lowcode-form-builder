@@ -241,11 +241,7 @@ export function addPage(afterPageId = null, options = {}) {
     const deleteBtn = frame.querySelector('.page-delete-btn');
     deleteBtn.classList.replace('hidden', 'flex');
     deleteBtn.addEventListener('click', () => {
-        const page = state.pages.find(p => p.id === newId);
-        const isEmpty = !page || !page.fields || page.fields.length === 0;
-        if (isEmpty || confirm('确定要删除当前画布及其所有内容吗？此操作不可撤销。')) {
-            deletePage(newId);
-        }
+        requestDeletePage(newId);
     });
     
     const addNextBtn = frame.querySelector('.add-next-page-btn');
@@ -320,6 +316,20 @@ export function addPage(afterPageId = null, options = {}) {
     }
 
     notifySchemaChange();
+}
+
+// 从实际 DOM 判断页面是否为空，避免依赖运行时未维护的 page.fields。
+export function isPageEmpty(pageId) {
+    const dropzone = document.getElementById(pageId);
+    if (!dropzone) return true;
+    return !dropzone.querySelector(':scope > .canvas-element');
+}
+
+export function requestDeletePage(pageId) {
+    if (!pageId) return;
+    if (isPageEmpty(pageId) || confirm('确定要删除当前画布及其所有内容吗？此操作不可撤销。')) {
+        deletePage(pageId);
+    }
 }
 
 // 从画布和状态中删除指定页面，并重新排列后续页面的位置

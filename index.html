@@ -124,9 +124,10 @@
                             </button>
                         </div>
 
-                        <div class="flex items-center gap-1.5 px-1">
-                            <span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-                            <span class="text-[11px] font-medium text-slate-500">当前项目：10086 个人KYC表单</span>
+                        <div id="sidebar-template-status" class="flex items-center gap-1.5 px-1">
+                            <span id="sidebar-template-status-dot" class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+                            <span id="sidebar-current-template-text"
+                                class="text-[11px] font-medium text-slate-500">当前模板：新建画布</span>
                         </div>
                     </div>
 
@@ -137,12 +138,14 @@
                                 <i data-lucide="search"
                                     class="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-slate-500"></i>
                                 <input id="component-search"
-                                    class="block h-8 w-full rounded-md border border-slate-200 bg-white py-1.5 pl-8 pr-10 text-[12px] text-slate-700 outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-300 focus:ring-0"
-                                    type="search" placeholder="查找组件或模块..." />
-                                <div class="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                                    <kbd
-                                        class="flex h-4 items-center justify-center rounded border border-slate-100 bg-slate-50 px-1 font-sans text-[9px] font-medium text-slate-400">⌘K</kbd>
-                                </div>
+                                    class="ant-input block !h-8 !min-h-8 w-full !rounded-md !py-1.5 !pl-8 !pr-9 !text-[12px] placeholder:text-slate-400"
+                                    type="text" placeholder="查找组件或模块..." autocomplete="off" />
+                                <kbd id="component-search-shortcut"
+                                    class="pointer-events-none absolute right-1.5 top-1/2 flex h-4 -translate-y-1/2 items-center justify-center rounded border border-slate-100 bg-slate-50 px-1 font-sans text-[9px] font-medium text-slate-400">⌘K</kbd>
+                                <button id="component-search-clear" type="button" title="清空搜索"
+                                    class="absolute right-1 top-1/2 hidden h-6 w-6 -translate-y-1/2 items-center justify-center rounded text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600">
+                                    <i data-lucide="x" class="h-3.5 w-3.5"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -153,54 +156,34 @@
                         <h3 class="mb-3 pl-1 text-[12px] font-semibold tracking-wider text-slate-500 uppercase">
                             创建方式
                         </h3>
-
-                        <div class="w-full overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
-
+                        <div class="flex flex-col gap-1.5">
                             <button type="button" id="btn-open-gallery"
-                                class="group relative flex w-full items-center justify-between gap-3 overflow-hidden bg-white px-3.5 py-3 text-left transition-colors hover:bg-blue-50/50 active:bg-blue-50"
+                                class="group flex w-full items-center justify-between rounded-md bg-[#1677ff] px-3.5 py-2.5 text-left shadow-sm transition-colors hover:bg-[#4096ff]"
                                 onclick="document.getElementById('template-modal').classList.remove('opacity-0', 'pointer-events-none'); document.getElementById('template-modal-content').classList.remove('scale-95', 'opacity-0');">
 
-                                <div class="relative z-10 flex items-start gap-2.5">
-                                    <div
-                                        class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-blue-100 bg-blue-50 text-[#1677ff] transition-colors group-hover:bg-blue-100 group-active:bg-blue-200">
-                                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <rect x="3" y="3" width="7" height="7" rx="1.5" />
-                                            <rect x="14" y="3" width="7" height="11" rx="1.5" opacity="0.6" />
-                                            <rect x="3" y="14" width="7" height="7" rx="1.5" opacity="0.8" />
-                                            <rect x="14" y="18" width="7" height="3" rx="1" />
-                                        </svg>
-                                    </div>
-
-                                    <div class="flex-1 mt-0.5">
-                                        <span
-                                            class="block text-[13px] font-semibold text-slate-800 transition-colors group-hover:text-blue-600">场景模板库</span>
-                                        <span class="block mt-[1px] text-[10px] text-slate-400">优选高频业务结构</span>
-                                    </div>
+                                <div class="flex items-center gap-2.5">
+                                    <i id="template-gallery-icon" data-lucide="layout-template"
+                                        class="h-4 w-4 text-white"></i>
+                                    <span id="template-gallery-title"
+                                        class="text-[13px] font-bold text-white tracking-wide">从场景模板创建</span>
                                 </div>
 
-                                <div class="relative z-10 flex items-center">
-                                    <span
-                                        class="rounded bg-gradient-to-r from-[#1677ff] to-[#1062d6] px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-white shadow-sm">推荐</span>
-                                </div>
+                                <span id="template-gallery-badge"
+                                    class="rounded bg-white/20 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-white backdrop-blur-sm">推荐</span>
                             </button>
 
                             <button type="button" id="btn-clear-canvas-sidebar"
-                                class="group flex w-full items-center gap-2 border-t border-slate-100 bg-slate-50/80 px-3.5 py-2.5 text-left transition-colors hover:bg-slate-100">
-                                <svg class="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                </svg>
+                                class="group flex w-full items-center justify-center gap-1.5 rounded-md border border-transparent bg-transparent py-2 transition-colors hover:bg-slate-100">
                                 <span
-                                    class="text-[11px] font-medium text-slate-500 group-hover:text-slate-700">创建空白画布</span>
+                                    class="text-[11px] font-medium text-slate-500 transition-colors group-hover:text-slate-700">或者直接新建空白画布</span>
+                                <i data-lucide="arrow-right"
+                                    class="h-3 w-3 text-slate-400 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100 group-hover:text-slate-600"></i>
                             </button>
                         </div>
                     </div>
 
                     <div class="space-y-8 px-2">
-                        <section>
+                        <section data-component-section>
                             <h3 class="mb-3 pl-1 text-[12px] font-semibold tracking-wider text-slate-500 uppercase">
                                 基础输入
                             </h3>
@@ -250,7 +233,7 @@
                             </div>
                         </section>
 
-                        <section>
+                        <section data-component-section>
                             <h3 class="mb-3 pl-1 text-[12px] font-semibold tracking-wider text-slate-500 uppercase">
                                 业务组件
                             </h3>
@@ -279,7 +262,7 @@
                             </div>
                         </section>
 
-                        <section>
+                        <section data-component-section>
                             <h3 class="mb-3 pl-1 text-[12px] font-semibold tracking-wider text-slate-500 uppercase">
                                 高级布局
                             </h3>
@@ -300,6 +283,11 @@
                                 </div>
                             </div>
                         </section>
+
+                        <div id="component-search-empty"
+                            class="hidden rounded-md border border-dashed border-slate-200 bg-white/70 px-4 py-6 text-center text-[12px] leading-5 text-slate-400">
+                            未找到匹配的组件
+                        </div>
                     </div>
                 </main>
             </aside>
@@ -338,7 +326,7 @@
                             <button onclick="document.getElementById('menu-btn-new-page').click()"
                                 class="ant-btn ant-btn-primary flex h-9 w-full items-center justify-center gap-2">
                                 <i data-lucide="plus" class="h-4 w-4"></i>
-                                新建空白画布
+                                新建画布
                             </button>
                             <button onclick="document.getElementById('btn-open-gallery').click()"
                                 class="ant-btn flex h-9 w-full items-center justify-center gap-2">
@@ -629,17 +617,23 @@
                     <!-- 左侧独立大纲进度条 -->
                     <div id="preview-stepper-container" class="hidden w-[240px] shrink-0 flex-col"></div>
 
-                    <div class="relative flex h-[812px] max-h-full w-[375px] shrink-0 flex-col rounded-[48px] bg-gradient-to-br from-[#ffffff] via-[#f4f4f5] to-[#d4d4d8] p-[3px] shadow-[0_0_0_1px_rgba(0,0,0,0.05),0_24px_48px_rgba(0,0,0,0.1),inset_0_2px_4px_rgba(255,255,255,0.9),inset_0_-2px_4px_rgba(0,0,0,0.15)] transition-all duration-300">
+                    <div
+                        class="relative flex h-[812px] max-h-full w-[375px] shrink-0 flex-col rounded-[48px] bg-gradient-to-br from-[#ffffff] via-[#f4f4f5] to-[#d4d4d8] p-[3px] shadow-[0_0_0_1px_rgba(0,0,0,0.05),0_24px_48px_rgba(0,0,0,0.1),inset_0_2px_4px_rgba(255,255,255,0.9),inset_0_-2px_4px_rgba(0,0,0,0.15)] transition-all duration-300">
                         <!-- 黑色屏幕内圈 (还原真实的手机玻璃黑边) -->
-                        <div class="relative flex flex-1 flex-col overflow-hidden rounded-[45px] bg-[#0a0a0a] p-[6px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)]">
+                        <div
+                            class="relative flex flex-1 flex-col overflow-hidden rounded-[45px] bg-[#0a0a0a] p-[6px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)]">
                             <!-- 真正的纯白屏幕显示区域 -->
-                            <div class="relative flex flex-1 flex-col overflow-hidden rounded-[39px] bg-white ring-1 ring-black/5">
-                                
+                            <div
+                                class="relative flex flex-1 flex-col overflow-hidden rounded-[39px] bg-white ring-1 ring-black/5">
+
                                 <!-- 经典黑色刘海 (完美衔接顶部黑边) -->
-                                <div class="absolute left-1/2 top-0 z-30 h-[26px] w-[140px] -translate-x-1/2 rounded-b-[20px] bg-[#0a0a0a] shadow-[inset_0_-1px_2px_rgba(255,255,255,0.08)]"></div>
-                                
+                                <div
+                                    class="absolute left-1/2 top-0 z-30 h-[26px] w-[140px] -translate-x-1/2 rounded-b-[20px] bg-[#0a0a0a] shadow-[inset_0_-1px_2px_rgba(255,255,255,0.08)]">
+                                </div>
+
                                 <!-- 顶部状态栏 -->
-                                <div class="flex h-12 shrink-0 items-center justify-between px-6 text-[13px] font-semibold text-black z-20">
+                                <div
+                                    class="flex h-12 shrink-0 items-center justify-between px-6 text-[13px] font-semibold text-black z-20">
                                     <span id="preview-time">9:41</span>
                                     <div class="flex items-center gap-1.5">
                                         <i data-lucide="bar-chart-2" class="h-3.5 w-3.5"></i>
@@ -648,21 +642,27 @@
                                     </div>
                                 </div>
 
-                            <!-- 手机主视图 (滚动区) -->
-                            <!-- 隐藏原生滚动条 -->
-                            <div class="flex-1 overflow-auto px-5 pb-12 pt-2 scrollbar-hide" style="scrollbar-width: none; -ms-overflow-style: none;">
-                                <style>
-                                    .scrollbar-hide::-webkit-scrollbar { display: none; }
-                                </style>
-                                <div id="preview-mobile-progress" class="mb-4 hidden text-[13px] font-medium tracking-wider text-[#1677ff]"></div>
-                                <h3 id="preview-form-title" class="m-0 text-[20px] font-semibold leading-7"></h3>
-                                <p id="preview-form-desc" class="mb-5 mt-1.5 text-xs text-black/65"></p>
-                                <form id="preview-form-body" class="flex flex-col gap-4"></form>
-                            </div>
+                                <!-- 手机主视图 (滚动区) -->
+                                <!-- 隐藏原生滚动条 -->
+                                <div class="flex-1 overflow-auto px-5 pb-12 pt-2 scrollbar-hide"
+                                    style="scrollbar-width: none; -ms-overflow-style: none;">
+                                    <style>
+                                        .scrollbar-hide::-webkit-scrollbar {
+                                            display: none;
+                                        }
+                                    </style>
+                                    <div id="preview-mobile-progress"
+                                        class="mb-4 hidden text-[13px] font-medium tracking-wider text-[#1677ff]"></div>
+                                    <h3 id="preview-form-title" class="m-0 text-[20px] font-semibold leading-7"></h3>
+                                    <p id="preview-form-desc" class="mb-5 mt-1.5 text-xs text-black/65"></p>
+                                    <form id="preview-form-body" class="flex flex-col gap-4"></form>
+                                </div>
 
-                            <!-- 底部 Home Indicator -->
-                            <div class="pointer-events-none absolute bottom-2 left-1/2 h-[4px] w-[120px] -translate-x-1/2 rounded-full bg-slate-300"></div>
-                        </div>
+                                <!-- 底部 Home Indicator -->
+                                <div
+                                    class="pointer-events-none absolute bottom-2 left-1/2 h-[4px] w-[120px] -translate-x-1/2 rounded-full bg-slate-300">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -726,7 +726,7 @@
     </div>
 
 
-<div id="template-modal"
+    <div id="template-modal"
         class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 opacity-0 pointer-events-none transition-opacity duration-200">
 
         <div id="template-modal-content"
@@ -751,12 +751,12 @@
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
 
                     <!-- 个人 KYC 卡片 -->
-                    <div id="btn-tpl-kyc-individual-modal"
+                    <div id="btn-tpl-kyc-individual-modal" data-template-key="kyc-individual"
                         class="group flex cursor-pointer overflow-hidden rounded-md border border-slate-200 bg-white transition-all duration-200 hover:border-emerald-400 hover:shadow-sm">
 
                         <!-- 左侧结构化图标区 -->
                         <div
-                            class="flex w-14 shrink-0 items-center justify-center bg-slate-50 border-r border-slate-100 text-slate-400 transition-colors duration-200 group-hover:bg-emerald-500 group-hover:border-emerald-500 group-hover:text-white">
+                            class="template-card-icon flex w-14 shrink-0 items-center justify-center bg-slate-50 border-r border-slate-100 text-slate-400 transition-colors duration-200 group-hover:bg-emerald-500 group-hover:border-emerald-500 group-hover:text-white">
                             <i data-lucide="user-check" class="h-5 w-5"></i>
                         </div>
 
@@ -766,18 +766,18 @@
                                 <h3 class="text-[14px] font-bold text-slate-800">个人 KYC</h3>
                                 <!-- 极简加号，暗示“新建/选择” -->
                                 <i data-lucide="plus"
-                                    class="h-4 w-4 text-slate-300 transition-colors group-hover:text-emerald-500"></i>
+                                    class="template-card-action h-4 w-4 text-slate-300 transition-colors group-hover:text-emerald-500"></i>
                             </div>
                             <p class="mt-0.5 text-[12px] leading-relaxed text-slate-500">适用于个人用户进行KYC表单填写和身份验证。</p>
                         </div>
                     </div>
 
                     <!-- 实体 KYC 卡片 -->
-                    <div id="btn-tpl-kyc-entity-modal"
+                    <div id="btn-tpl-kyc-entity-modal" data-template-key="kyc-entity"
                         class="group flex cursor-pointer overflow-hidden rounded-md border border-slate-200 bg-white transition-all duration-200 hover:border-blue-500 hover:shadow-sm">
 
                         <div
-                            class="flex w-14 shrink-0 items-center justify-center bg-slate-50 border-r border-slate-100 text-slate-400 transition-colors duration-200 group-hover:bg-[#1677ff] group-hover:border-[#1677ff] group-hover:text-white">
+                            class="template-card-icon flex w-14 shrink-0 items-center justify-center bg-slate-50 border-r border-slate-100 text-slate-400 transition-colors duration-200 group-hover:bg-[#1677ff] group-hover:border-[#1677ff] group-hover:text-white">
                             <i data-lucide="building-2" class="h-5 w-5"></i>
                         </div>
 
@@ -785,7 +785,7 @@
                             <div class="flex items-center justify-between">
                                 <h3 class="text-[14px] font-bold text-slate-800">实体 KYC</h3>
                                 <i data-lucide="plus"
-                                    class="h-4 w-4 text-slate-300 transition-colors group-hover:text-[#1677ff]"></i>
+                                    class="template-card-action h-4 w-4 text-slate-300 transition-colors group-hover:text-[#1677ff]"></i>
                             </div>
                             <p class="mt-0.5 text-[12px] leading-relaxed text-slate-500">适用于公司、机构实体进行的KYC表单和身份验证</p>
                         </div>
@@ -1117,6 +1117,10 @@
                 }, 300);
             } else {
                 // Collapse
+                if (input && input.value) {
+                    input.value = "";
+                    input.dispatchEvent(new Event("input", { bubbles: true }));
+                }
                 container.classList.remove("grid-rows-[1fr]", "opacity-100");
                 container.classList.add("grid-rows-[0fr]", "opacity-0");
                 iconBtn.classList.remove("active");
@@ -1218,6 +1222,6 @@
         updatePreviewTime();
     </script>
     <script type="module" src="./js/main.js"></script>
-    </body>
+</body>
 
 </html>

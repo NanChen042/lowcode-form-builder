@@ -1,7 +1,7 @@
 import { FormAPI } from './core/api.js';
 import { safeCreateIcons } from './utils/helpers.js';
 import { bindPropEvents } from './ui/properties.js';
-import { addPage, bindCanvasEvents, initPages, checkEmptyState, resetCanvasView, deletePage } from './ui/canvas.js';
+import { addPage, bindCanvasEvents, initPages, checkEmptyState, resetCanvasView, requestDeletePage } from './ui/canvas.js';
 import { bindPreviewEvents } from './ui/preview.js';
 import { addComponentToCanvas } from './components/builder.js';
 import { state } from './core/state.js';
@@ -10,7 +10,134 @@ import { blankTemplate, kycIndividualTemplate, kycEntityTemplate } from './templ
 
 window.saveToServer = saveToServer;
 
+const templateUiMeta = {
+    blank: {
+        label: '新建画布',
+        badge: '推荐',
+        dotClass: 'bg-slate-400',
+        galleryTheme: 'default'
+    },
+    saved: {
+        label: '最近保存的表单',
+        badge: '最近',
+        dotClass: 'bg-blue-500',
+        galleryTheme: 'entity'
+    },
+    'kyc-individual': {
+        label: '个人 KYC',
+        badge: '个人',
+        dotClass: 'bg-emerald-500',
+        galleryTheme: 'personal'
+    },
+    'kyc-entity': {
+        label: '实体 KYC',
+        badge: '实体',
+        dotClass: 'bg-blue-500',
+        galleryTheme: 'entity'
+    }
+};
 
+const galleryThemePool = [
+    'bg-[#1677ff]',
+    'hover:bg-[#4096ff]',
+    'bg-blue-500',
+    'hover:bg-blue-600',
+    'bg-emerald-500',
+    'hover:bg-emerald-600'
+];
+
+const galleryThemes = {
+    default: ['bg-[#1677ff]', 'hover:bg-[#4096ff]'],
+    entity: ['bg-blue-500', 'hover:bg-blue-600'],
+    personal: ['bg-emerald-500', 'hover:bg-emerald-600']
+};
+
+const templateCardClassPools = {
+    card: [
+        'border-slate-200', 'bg-white', 'shadow-sm',
+        'border-emerald-300', 'bg-emerald-50/60',
+        'border-blue-300', 'bg-blue-50/60'
+    ],
+    icon: [
+        'bg-slate-50', 'border-slate-100', 'text-slate-400',
+        'bg-emerald-500', 'border-emerald-500', 'text-white',
+        'bg-blue-500', 'border-blue-500', 'text-white'
+    ],
+    action: [
+        'text-slate-300', 'text-emerald-500', 'text-blue-500'
+    ]
+};
+
+const templateCardThemes = {
+    default: {
+        card: ['border-slate-200', 'bg-white'],
+        icon: ['bg-slate-50', 'border-slate-100', 'text-slate-400'],
+        action: ['text-slate-300']
+    },
+    personal: {
+        card: ['border-emerald-300', 'bg-emerald-50/60', 'shadow-sm'],
+        icon: ['bg-emerald-500', 'border-emerald-500', 'text-white'],
+        action: ['text-emerald-500']
+    },
+    entity: {
+        card: ['border-blue-300', 'bg-blue-50/60', 'shadow-sm'],
+        icon: ['bg-blue-500', 'border-blue-500', 'text-white'],
+        action: ['text-blue-500']
+    }
+};
+
+function replaceClasses(node, pool, nextClasses = []) {
+    if (!node) return;
+    node.classList.remove(...pool);
+    node.classList.add(...nextClasses);
+}
+
+function applyTemplateCardTheme(card, themeName, isActive) {
+    const theme = isActive ? templateCardThemes[themeName] : templateCardThemes.default;
+    replaceClasses(card, templateCardClassPools.card, theme.card);
+    replaceClasses(card.querySelector('.template-card-icon'), templateCardClassPools.icon, theme.icon);
+    replaceClasses(card.querySelector('.template-card-action'), templateCardClassPools.action, theme.action);
+}
+
+function setActiveTemplate(tplKey = 'blank') {
+    const activeKey = tplKey || 'blank';
+    const meta = templateUiMeta[activeKey] || templateUiMeta.blank;
+
+    const currentTemplateText = document.getElementById('sidebar-current-template-text');
+    if (currentTemplateText) {
+        currentTemplateText.textContent = `当前模板：${meta.label}`;
+    }
+
+    const dot = document.getElementById('sidebar-template-status-dot');
+    if (dot) {
+        dot.classList.remove('bg-slate-400', 'bg-blue-500', 'bg-emerald-500');
+        dot.classList.add(meta.dotClass);
+    }
+
+    const badge = document.getElementById('template-gallery-badge');
+    if (badge) {
+        badge.textContent = meta.badge;
+    }
+
+    replaceClasses(
+        document.getElementById('btn-open-gallery'),
+        galleryThemePool,
+        galleryThemes[meta.galleryTheme] || galleryThemes.default
+    );
+
+    document.querySelectorAll('[data-template-key]').forEach(node => {
+        const isActive = node.dataset.templateKey === activeKey;
+        const cardMeta = templateUiMeta[node.dataset.templateKey];
+        applyTemplateCardTheme(node, cardMeta?.galleryTheme || 'default', isActive);
+
+        const actionIcon = node.querySelector('.template-card-action');
+        if (actionIcon) {
+            actionIcon.setAttribute('data-lucide', isActive ? 'check' : 'plus');
+        }
+    });
+
+    safeCreateIcons();
+}
 
 // 应用启动初始化函数
 async function bootstrap() {
@@ -96,6 +223,7 @@ async function bootstrap() {
             btn.addEventListener('click', () => {
                 if (confirm('加载模板将清空当前所有内容，是否继续？')) {
                     loadSchema(templateObj);
+                    setActiveTemplate(tplKey || 'blank');
                     
                     // 修改 URL 加上 tpl 参数
                     if (tplKey) {
@@ -125,13 +253,86 @@ async function bootstrap() {
     bindTemplateBtn('btn-tpl-kyc-entity-modal', kycEntityTemplate, 'kyc-entity');
 
     // 实现组件搜索过滤功能
-    document.getElementById('component-search').addEventListener('input', e => {
-        const keyword = e.target.value.trim().toLowerCase();
+    const componentSearchInput = document.getElementById('component-search');
+    const componentSearchShortcut = document.getElementById('component-search-shortcut');
+    const componentSearchClear = document.getElementById('component-search-clear');
+
+    function updateComponentSearchControls() {
+        const hasKeyword = componentSearchInput.value.trim().length > 0;
+        if (componentSearchShortcut) {
+            componentSearchShortcut.classList.toggle('hidden', hasKeyword);
+        }
+        if (componentSearchClear) {
+            componentSearchClear.classList.toggle('hidden', !hasKeyword);
+            componentSearchClear.classList.toggle('flex', hasKeyword);
+        }
+    }
+
+    function filterComponentList() {
+        const keyword = componentSearchInput.value.trim().toLowerCase();
         document.querySelectorAll('.component-item').forEach(item => {
             const text = item.textContent.trim().toLowerCase();
             item.style.display = text.includes(keyword) ? '' : 'none';
         });
+        let hasAnyVisibleSection = false;
+        document.querySelectorAll('[data-component-section]').forEach(section => {
+            const hasVisibleItems = Array.from(section.querySelectorAll('.component-item'))
+                .some(item => item.style.display !== 'none');
+            section.classList.toggle('hidden', !hasVisibleItems);
+            if (hasVisibleItems) hasAnyVisibleSection = true;
+        });
+        const emptyState = document.getElementById('component-search-empty');
+        if (emptyState) {
+            emptyState.classList.toggle('hidden', !keyword || hasAnyVisibleSection);
+        }
+        updateComponentSearchControls();
+    }
+
+    function focusComponentSearch() {
+        const searchContainer = document.getElementById('sidebar-search-container');
+        const isCollapsed = searchContainer && searchContainer.classList.contains('grid-rows-[0fr]');
+        if (isCollapsed && window.toggleSidebarSearch) {
+            window.toggleSidebarSearch();
+        } else {
+            componentSearchInput.focus();
+            componentSearchInput.select();
+        }
+    }
+
+    if (componentSearchShortcut) {
+        const isMac = /Mac|iPhone|iPad|iPod/i.test(navigator.platform);
+        componentSearchShortcut.textContent = isMac ? '⌘K' : 'Ctrl K';
+    }
+
+    componentSearchInput.addEventListener('input', filterComponentList);
+
+    componentSearchInput.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            if (componentSearchInput.value) {
+                componentSearchInput.value = '';
+                filterComponentList();
+            } else {
+                componentSearchInput.blur();
+            }
+        }
     });
+
+    if (componentSearchClear) {
+        componentSearchClear.addEventListener('click', () => {
+            componentSearchInput.value = '';
+            filterComponentList();
+            componentSearchInput.focus();
+        });
+    }
+
+    document.addEventListener('keydown', e => {
+        const isSearchShortcut = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k';
+        if (!isSearchShortcut) return;
+        e.preventDefault();
+        focusComponentSearch();
+    });
+
+    updateComponentSearchControls();
 
     // 绑定各类全局事件
     bindPropEvents();
@@ -144,23 +345,28 @@ async function bootstrap() {
     
     if (tplParam === 'kyc-individual') {
         loadSchema(kycIndividualTemplate);
+        setActiveTemplate('kyc-individual');
     } else if (tplParam === 'kyc-entity') {
         loadSchema(kycEntityTemplate);
+        setActiveTemplate('kyc-entity');
     } else {
         // 从后端接口加载最新保存的模板
         try {
             const response = await FormAPI.getTemplate('default');
             if (response.success && response.data.schema && response.data.schema.pages && response.data.schema.pages.length > 0) {
                 loadSchema(response.data.schema);
+                setActiveTemplate('saved');
             } else {
                 initPages();
                 checkEmptyState();
+                setActiveTemplate('blank');
                 setTimeout(() => establishBaseline(), 100);
             }
         } catch (e) {
             console.error('加载模板失败', e);
             initPages();
             checkEmptyState();
+            setActiveTemplate('blank');
             setTimeout(() => establishBaseline(), 100);
         }
     }
@@ -257,11 +463,7 @@ async function bootstrap() {
 
     deletePageBtn.addEventListener('click', () => {
         if (contextMenuTargetPageId) {
-            const page = state.pages.find(p => p.id === contextMenuTargetPageId);
-            const isEmpty = !page || !page.fields || page.fields.length === 0;
-            if (isEmpty || confirm('确定要删除当前画布及其所有内容吗？此操作不可撤销。')) {
-                deletePage(contextMenuTargetPageId);
-            }
+            requestDeletePage(contextMenuTargetPageId);
         }
         contextMenu.classList.add('hidden');
     });
