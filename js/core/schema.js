@@ -28,7 +28,8 @@ export function serializeElement(el) {
         type,
         label: el.dataset.label || '',
         key: el.dataset.key || '',
-        required: el.dataset.required === 'true'
+        required: el.dataset.required === 'true',
+        showLabel: el.dataset.showLabel !== 'false'
     };
     
     // 提取可选的基础属性
@@ -54,18 +55,28 @@ export function serializeElement(el) {
     }
     
     // 处理占位符
-    if (type === 'input' || type === 'textarea' || type === 'date' || type === 'signature') {
+    if (type === 'input' || type === 'textarea' || type === 'select' || type === 'country' || type === 'nationality' || type === 'date' || type === 'signature') {
         base.placeholder = el.dataset.placeholder || '';
     }
     
     // 处理日期类型的特定属性
     if (type === 'date') {
         base.dateType = el.dataset.dateType || 'date';
+        base.dateMode = el.dataset.dateMode || 'single';
+        base.enableLongTerm = el.dataset.enableLongTerm === 'true';
+        base.defaultLongTerm = el.dataset.defaultLongTerm === 'true';
+        if (base.dateMode === 'range') {
+            base.endValue = el.dataset.endValue || '';
+        }
     }
 
     // 处理布局类型（内联或垂直）
     if (type === 'checkbox' || type === 'radio' || type === 'signature') {
         base.layout = el.dataset.layout || 'inline';
+    }
+
+    if (type === 'signature') {
+        base.declarationRequired = el.dataset.declarationRequired !== 'false';
     }
 
     // 处理多选类组件的最大选择数量
@@ -233,19 +244,36 @@ export function createElementFromSchema(fieldData) {
     itemEl.className = rootDiv.className;
     itemEl.innerHTML = rootDiv.innerHTML;
     itemEl.id = fieldData.id || `cmp_${getUniqueId()}`;
+    const defaults = componentDefaults[type] || {};
 
     // 恢复基础属性
     itemEl.dataset.type = type;
     itemEl.dataset.label = fieldData.label || '';
     itemEl.dataset.key = fieldData.key || '';
     itemEl.dataset.required = fieldData.required ? 'true' : 'false';
+    const showLabel = fieldData.showLabel !== undefined
+        ? fieldData.showLabel
+        : defaults.showLabel !== false;
+    itemEl.dataset.showLabel = showLabel ? 'true' : 'false';
     
     // 恢复可选属性
     if (fieldData.help !== undefined) itemEl.dataset.help = fieldData.help;
     if (fieldData.defaultValue !== undefined) itemEl.dataset.defaultValue = fieldData.defaultValue;
     if (fieldData.placeholder !== undefined) itemEl.dataset.placeholder = fieldData.placeholder;
+    if (fieldData.placeholder === undefined && defaults.placeholder !== undefined) itemEl.dataset.placeholder = defaults.placeholder;
     if (fieldData.dateType !== undefined) itemEl.dataset.dateType = fieldData.dateType;
+    if (fieldData.dateType === undefined && defaults.dateType !== undefined) itemEl.dataset.dateType = defaults.dateType;
+    if (fieldData.dateMode !== undefined) itemEl.dataset.dateMode = fieldData.dateMode;
+    if (fieldData.dateMode === undefined && defaults.dateMode !== undefined) itemEl.dataset.dateMode = defaults.dateMode;
+    if (fieldData.enableLongTerm !== undefined) itemEl.dataset.enableLongTerm = String(fieldData.enableLongTerm);
+    if (fieldData.enableLongTerm === undefined && defaults.enableLongTerm !== undefined) itemEl.dataset.enableLongTerm = String(defaults.enableLongTerm);
+    if (fieldData.defaultLongTerm !== undefined) itemEl.dataset.defaultLongTerm = String(fieldData.defaultLongTerm);
+    if (fieldData.defaultLongTerm === undefined && defaults.defaultLongTerm !== undefined) itemEl.dataset.defaultLongTerm = String(defaults.defaultLongTerm);
+    if (fieldData.endValue !== undefined) itemEl.dataset.endValue = fieldData.endValue;
+    if (fieldData.endValue === undefined && defaults.endValue !== undefined) itemEl.dataset.endValue = defaults.endValue;
     if (fieldData.layout !== undefined) itemEl.dataset.layout = fieldData.layout;
+    if (fieldData.declarationRequired !== undefined) itemEl.dataset.declarationRequired = String(fieldData.declarationRequired);
+    if (fieldData.declarationRequired === undefined && defaults.declarationRequired !== undefined) itemEl.dataset.declarationRequired = String(defaults.declarationRequired);
     if (fieldData.maxSelections !== undefined) itemEl.dataset.maxSelections = fieldData.maxSelections;
     if (fieldData.maxSelections === undefined && componentDefaults[type] && componentDefaults[type].maxSelections !== undefined) {
         itemEl.dataset.maxSelections = componentDefaults[type].maxSelections;

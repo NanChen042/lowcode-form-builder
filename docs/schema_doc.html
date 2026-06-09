@@ -210,10 +210,6 @@
             color: #7ee787
         }
 
-        .syntax-comment {
-            color: #71717a
-        }
-
         .card {
             border-radius: .5rem;
             border: 1px solid #e2e8f0;
@@ -325,12 +321,8 @@
     <span class="syntax-key">"title"</span>: <span class="syntax-string">"用户入职登记表"</span>,
     <span class="syntax-key">"description"</span>: <span class="syntax-string">"请填写真实的个人信息"</span>
   },
-  <span class="syntax-key">"pages"</span>: [
-    <span class="syntax-comment">// 包含所有的页面和页面内的组件列表</span>
-  ],
-  <span class="syntax-key">"pageConnections"</span>: [
-    <span class="syntax-comment">// 预留的画布页面连线关系数据</span>
-  ]
+  <span class="syntax-key">"pages"</span>: [],
+  <span class="syntax-key">"pageConnections"</span>: []
 }
 
 </code></pre>
@@ -355,9 +347,7 @@
   <span class="syntax-key">"id"</span>: <span class="syntax-string">"page_1717800000000"</span>,
   <span class="syntax-key">"title"</span>: <span class="syntax-string">"第 1 页"</span>,
   <span class="syntax-key">"description"</span>: <span class="syntax-string">"页面副标题或说明"</span>,
-  <span class="syntax-key">"fields"</span>: [
-    <span class="syntax-comment">// 该页面内自上而下的所有表单组件</span>
-  ]
+  <span class="syntax-key">"fields"</span>: []
 }
 
 </code></pre>
@@ -380,8 +370,10 @@
   <span class="syntax-key">"label"</span>: <span class="syntax-string">"姓名"</span>,
   <span class="syntax-key">"key"</span>: <span class="syntax-string">"input_1"</span>,
   <span class="syntax-key">"required"</span>: <span class="syntax-boolean">true</span>,
+  <span class="syntax-key">"showLabel"</span>: <span class="syntax-boolean">true</span>,
   <span class="syntax-key">"help"</span>: <span class="syntax-string">"请与身份证保持一致"</span>,
-  <span class="syntax-key">"defaultValue"</span>: <span class="syntax-string">"张三"</span>}
+  <span class="syntax-key">"defaultValue"</span>: <span class="syntax-string">"张三"</span>
+}
 
 </code></pre>
             </div>
@@ -389,11 +381,12 @@
             <ul>
                 <li><strong><span class="badge">id</span></strong><code>String</code>: DOM 节点的唯一 ID，也是系统内的唯一标识。</li>
                 <li><strong><span class="badge">type</span></strong><code>String</code>: <strong>核心字段</strong>，决定了当前组件的类型。</li>
-                <li><strong><span class="badge">label</span></strong><code>String</code>: 组件在用户端显示的标题。</li>
+                <li><strong><span class="badge">label</span></strong><code>String</code>: 组件标题文本。即使标题被隐藏，该字段仍会保存，方便后台管理和后续恢复显示。</li>
                 <li><strong><span class="badge">key</span></strong><code>String</code>: <strong>后端入库的重要标识</strong>，建议后端基于此 Key 映射数据库字段。</li>
-                <li><strong><span class="badge">required</span></strong><code>Boolean</code>: 是否必填，控制前端校验拦截。</li>
-                <li><strong><span class="badge">help</span></strong><code>String</code>: <em>(可选)</em> 位于组件下方的辅助提示文本。</li>
-                <li><strong><span class="badge">defaultValue</span></strong><code>String|Array</code>: <em>(可选)</em> 组件的默认值。</li>
+                <li><strong><span class="badge">required</span></strong><code>Boolean</code>: 是否必填，控制前端校验拦截。对于 <code>signature</code> 组件，该字段只表示签名区域是否必填。</li>
+                <li><strong><span class="badge">showLabel</span></strong><code>Boolean</code>: 是否在用户端/预览端展示组件标题。默认 <code>true</code>；电子签名组件默认 <code>false</code>，通常由签名提示文案承担说明作用。</li>
+                <li><strong><span class="badge">help</span></strong><code>String</code>: <em>(可选)</em> 组件副标题，显示在标题旁边，可在画布中直接编辑。</li>
+                <li><strong><span class="badge">defaultValue</span></strong><code>String|Array</code>: <em>(可选)</em> 组件的默认值。多选组件会导出为 JSON 数组字符串，同时兼容数组或历史逗号分隔字符串导入。</li>
             </ul>
             <h2>4. 各组件特有属性</h2>
             <p>根据 <code>type</code> 的不同，组件还会携带特定的扩展属性。</p>
@@ -402,8 +395,14 @@
                 <pre><code>
 
 {
+  <span class="syntax-key">"id"</span>: <span class="syntax-string">"cmp_input_1"</span>,
   <span class="syntax-key">"type"</span>: <span class="syntax-string">"input"</span>,
-  <span class="syntax-comment">// 继承基础属性...</span><span class="syntax-key">"placeholder"</span>: <span class="syntax-string">"请输入内容"</span>}
+  <span class="syntax-key">"label"</span>: <span class="syntax-string">"姓名"</span>,
+  <span class="syntax-key">"key"</span>: <span class="syntax-string">"name"</span>,
+  <span class="syntax-key">"required"</span>: <span class="syntax-boolean">false</span>,
+  <span class="syntax-key">"showLabel"</span>: <span class="syntax-boolean">true</span>,
+  <span class="syntax-key">"placeholder"</span>: <span class="syntax-string">"请输入内容"</span>
+}
 
 </code></pre>
             </div>
@@ -429,20 +428,97 @@
 
 </code></pre>
             </div>
+            <p><code>select</code> 会额外保存 <code>placeholder</code>；<code>checkbox</code> 支持 <code>maxSelections</code> 限制最多选择数量；<code>radio</code> 与 <code>checkbox</code> 通过 <code>layout</code> 控制横向或纵向排列。</p>
             <h4>高级业务组件 (<code>country</code> / <code>nationality</code> / <code>date</code>)</h4>
             <div class="code-block-wrapper">
                 <pre><code>
 
+[
+  {
+    <span class="syntax-key">"type"</span>: <span class="syntax-string">"country"</span>,
+    <span class="syntax-key">"placeholder"</span>: <span class="syntax-string">"请选择国家"</span>,
+    <span class="syntax-key">"maxSelections"</span>: <span class="syntax-number">3</span>,
+    <span class="syntax-key">"options"</span>: [
+      {
+        <span class="syntax-key">"label"</span>: <span class="syntax-string">"中国"</span>,
+        <span class="syntax-key">"value"</span>: <span class="syntax-string">"CN"</span>
+      },
+      {
+        <span class="syntax-key">"label"</span>: <span class="syntax-string">"美国"</span>,
+        <span class="syntax-key">"value"</span>: <span class="syntax-string">"US"</span>
+      }
+    ]
+  },
+  {
+    <span class="syntax-key">"type"</span>: <span class="syntax-string">"nationality"</span>,
+    <span class="syntax-key">"placeholder"</span>: <span class="syntax-string">"请选择国籍"</span>,
+    <span class="syntax-key">"maxSelections"</span>: <span class="syntax-number">3</span>,
+    <span class="syntax-key">"options"</span>: [
+      {
+        <span class="syntax-key">"label"</span>: <span class="syntax-string">"中国籍"</span>,
+        <span class="syntax-key">"value"</span>: <span class="syntax-string">"CN"</span>
+      },
+      {
+        <span class="syntax-key">"label"</span>: <span class="syntax-string">"美国籍"</span>,
+        <span class="syntax-key">"value"</span>: <span class="syntax-string">"US"</span>
+      }
+    ]
+  },
+  {
+    <span class="syntax-key">"type"</span>: <span class="syntax-string">"date"</span>,
+    <span class="syntax-key">"label"</span>: <span class="syntax-string">"证件有效期"</span>,
+    <span class="syntax-key">"placeholder"</span>: <span class="syntax-string">"开始日期"</span>,
+    <span class="syntax-key">"dateType"</span>: <span class="syntax-string">"date"</span>,
+    <span class="syntax-key">"dateMode"</span>: <span class="syntax-string">"range"</span>,
+    <span class="syntax-key">"defaultValue"</span>: <span class="syntax-string">"2026-01-01"</span>,
+    <span class="syntax-key">"endValue"</span>: <span class="syntax-string">"2036-01-01"</span>,
+    <span class="syntax-key">"enableLongTerm"</span>: <span class="syntax-boolean">true</span>,
+    <span class="syntax-key">"defaultLongTerm"</span>: <span class="syntax-boolean">false</span>
+  }
+]
+
+</code></pre>
+            </div>
+            <p><code>country</code> 和 <code>nationality</code> 默认使用系统内置选项，保存时会将当前选项列表写入 <code>options</code>；<code>maxSelections</code> 用于限制最多可选数量。</p>
+            <ul>
+                <li><strong><span class="badge">placeholder</span></strong><code>String</code>: 占位提示。日期组件中会显示为开始日期或单日期提示；国家/国籍组件中会显示为未选择时的提示。</li>
+                <li><strong><span class="badge">dateType</span></strong><code>String</code>: 原生日期输入类型，支持 <code>date</code>、<code>datetime-local</code>、<code>month</code>、<code>time</code>。</li>
+                <li><strong><span class="badge">dateMode</span></strong><code>String</code>: 日期选择模式，<code>single</code> 表示单日期，<code>range</code> 表示起止日期。</li>
+                <li><strong><span class="badge">defaultValue</span></strong><code>String</code>: 单日期值；范围模式下表示开始日期。</li>
+                <li><strong><span class="badge">endValue</span></strong><code>String</code>: 范围模式下的结束日期，仅 <code>dateMode</code> 为 <code>range</code> 时导出。</li>
+                <li><strong><span class="badge">enableLongTerm</span></strong><code>Boolean</code>: 是否在日期输入右侧展示“长期”复选项。</li>
+                <li><strong><span class="badge">defaultLongTerm</span></strong><code>Boolean</code>: “长期”是否默认勾选；勾选后用户端会禁用日期输入。</li>
+            </ul>
+            <h4>电子签名组件 (<code>signature</code>)</h4>
+            <p>电子签名组件由“声明复选项”和“签名区域”组成。它的标题可单独隐藏，签名区域必填和声明复选必填也分别配置。</p>
+            <div class="code-block-wrapper">
+                <pre><code>
+
 {
-  <span class="syntax-key">"type"</span>: <span class="syntax-string">"country"</span>,
-  <span class="syntax-key">"maxSelections"</span>: <span class="syntax-number">3</span>,
+  <span class="syntax-key">"type"</span>: <span class="syntax-string">"signature"</span>,
+  <span class="syntax-key">"label"</span>: <span class="syntax-string">"授权声明"</span>,
+  <span class="syntax-key">"showLabel"</span>: <span class="syntax-boolean">false</span>,
+  <span class="syntax-key">"required"</span>: <span class="syntax-boolean">true</span>,
+  <span class="syntax-key">"placeholder"</span>: <span class="syntax-string">"请在下方指定区域签名："</span>,
+  <span class="syntax-key">"declarationRequired"</span>: <span class="syntax-boolean">true</span>,
+  <span class="syntax-key">"layout"</span>: <span class="syntax-string">"inline"</span>,
   <span class="syntax-key">"options"</span>: [
-    <span class="syntax-comment">/* 内置数据 */</span>
+    {
+      <span class="syntax-key">"label"</span>: <span class="syntax-string">"本人保证以上填写的信息真实、准确、有效。"</span>,
+      <span class="syntax-key">"value"</span>: <span class="syntax-string">"dec_1"</span>
+    }
   ]
 }
 
 </code></pre>
             </div>
+            <ul>
+                <li><strong><span class="badge">showLabel</span></strong><code>Boolean</code>: 控制外层组件标题是否展示。签名组件默认隐藏标题，避免和签名提示重复。</li>
+                <li><strong><span class="badge">required</span></strong><code>Boolean</code>: 控制签名区域是否必填，对声明复选框无影响。</li>
+                <li><strong><span class="badge">placeholder</span></strong><code>String</code>: 签名区域上方的提示文案，可在画布内直接编辑，也可在右侧“签名提示”配置中修改。</li>
+                <li><strong><span class="badge">declarationRequired</span></strong><code>Boolean</code>: 控制声明复选框是否必须勾选。声明文字列表本身不会展示必填红星。</li>
+                <li><strong><span class="badge">options</span></strong><code>Array&lt;Option&gt;</code>: 声明文本列表，<code>label</code> 用于展示，<code>value</code> 作为提交值标识。</li>
+            </ul>
             <h4>嵌套布局容器 (<code>grid</code>)</h4>
             <div class="code-block-wrapper">
                 <pre><code>
@@ -454,15 +530,11 @@
   <span class="syntax-key">"columns"</span>: [
     {
       <span class="syntax-key">"id"</span>: <span class="syntax-string">"col_a1"</span>,
-      <span class="syntax-key">"elements"</span>: [
-        <span class="syntax-comment">/* 左侧组件列表 */</span>
-      ]
+      <span class="syntax-key">"elements"</span>: []
     },
     {
       <span class="syntax-key">"id"</span>: <span class="syntax-string">"col_a2"</span>,
-      <span class="syntax-key">"elements"</span>: [
-        <span class="syntax-comment">/* 右侧组件列表 */</span>
-      ]
+      <span class="syntax-key">"elements"</span>: []
     }
   ]
 }
@@ -493,7 +565,7 @@
                         <tr>
                             <td><span class="badge font-mono">select</span></td>
                             <td>下拉选择</td>
-                            <td>必须包含 <code>options</code> 数组</td>
+                            <td><code>placeholder</code>，必须包含 <code>options</code> 数组</td>
                         </tr>
                         <tr>
                             <td><span class="badge font-mono">radio</span></td>
@@ -508,17 +580,22 @@
                         <tr>
                             <td><span class="badge font-mono">date</span></td>
                             <td>日期选择</td>
-                            <td><code>dateType</code> 和 <code>placeholder</code></td>
+                            <td><code>placeholder</code>, <code>dateType</code>, <code>dateMode</code>, <code>enableLongTerm</code>, <code>defaultLongTerm</code>，范围模式包含 <code>endValue</code></td>
                         </tr>
                         <tr>
                             <td><span class="badge font-mono">country</span></td>
                             <td>国家选择</td>
-                            <td>内置 <code>options</code>，支持 <code>maxSelections</code></td>
+                            <td><code>placeholder</code>，内置 <code>options</code>，支持 <code>maxSelections</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge font-mono">nationality</span></td>
+                            <td>国籍选择</td>
+                            <td><code>placeholder</code>，内置 <code>options</code>，支持 <code>maxSelections</code></td>
                         </tr>
                         <tr>
                             <td><span class="badge font-mono">signature</span></td>
                             <td>电子签名</td>
-                            <td><code>options</code> 数组用作声明文本</td>
+                            <td><code>placeholder</code> 为签名提示，<code>required</code> 控制签名区域，<code>declarationRequired</code> 控制声明复选必填，<code>options</code> 数组用作声明文本</td>
                         </tr>
                         <tr>
                             <td><span class="badge font-mono">alert</span></td>
@@ -553,6 +630,9 @@
           <span class="syntax-key">"id"</span>: <span class="syntax-string">"cmp_alert_1"</span>,
           <span class="syntax-key">"type"</span>: <span class="syntax-string">"alert"</span>,
           <span class="syntax-key">"label"</span>: <span class="syntax-string">"填写须知"</span>,
+          <span class="syntax-key">"key"</span>: <span class="syntax-string">"alert_1"</span>,
+          <span class="syntax-key">"required"</span>: <span class="syntax-boolean">false</span>,
+          <span class="syntax-key">"showLabel"</span>: <span class="syntax-boolean">true</span>,
           <span class="syntax-key">"options"</span>: [
             {
               <span class="syntax-key">"label"</span>: <span class="syntax-string">"请确保所填信息与实际情况保持一致。"</span>,
@@ -564,6 +644,9 @@
           <span class="syntax-key">"id"</span>: <span class="syntax-string">"cmp_grid_1"</span>,
           <span class="syntax-key">"type"</span>: <span class="syntax-string">"grid"</span>,
           <span class="syntax-key">"label"</span>: <span class="syntax-string">"双列基础信息"</span>,
+          <span class="syntax-key">"key"</span>: <span class="syntax-string">"grid_1"</span>,
+          <span class="syntax-key">"required"</span>: <span class="syntax-boolean">false</span>,
+          <span class="syntax-key">"showLabel"</span>: <span class="syntax-boolean">true</span>,
           <span class="syntax-key">"layout"</span>: <span class="syntax-string">"grid"</span>,
           <span class="syntax-key">"columns"</span>: [
             {
@@ -575,6 +658,7 @@
                   <span class="syntax-key">"label"</span>: <span class="syntax-string">"真实姓名"</span>,
                   <span class="syntax-key">"key"</span>: <span class="syntax-string">"real_name"</span>,
                   <span class="syntax-key">"required"</span>: <span class="syntax-boolean">true</span>,
+                  <span class="syntax-key">"showLabel"</span>: <span class="syntax-boolean">true</span>,
                   <span class="syntax-key">"placeholder"</span>: <span class="syntax-string">"请输入证件上的姓名"</span>
                 },
                 {
@@ -583,6 +667,7 @@
                   <span class="syntax-key">"label"</span>: <span class="syntax-string">"性别"</span>,
                   <span class="syntax-key">"key"</span>: <span class="syntax-string">"gender"</span>,
                   <span class="syntax-key">"required"</span>: <span class="syntax-boolean">true</span>,
+                  <span class="syntax-key">"showLabel"</span>: <span class="syntax-boolean">true</span>,
                   <span class="syntax-key">"layout"</span>: <span class="syntax-string">"inline"</span>,
                   <span class="syntax-key">"options"</span>: [
                     {
@@ -601,7 +686,12 @@
                   <span class="syntax-key">"label"</span>: <span class="syntax-string">"出生日期"</span>,
                   <span class="syntax-key">"key"</span>: <span class="syntax-string">"birthday"</span>,
                   <span class="syntax-key">"required"</span>: <span class="syntax-boolean">true</span>,
-                  <span class="syntax-key">"dateType"</span>: <span class="syntax-string">"date"</span>
+                  <span class="syntax-key">"showLabel"</span>: <span class="syntax-boolean">true</span>,
+                  <span class="syntax-key">"placeholder"</span>: <span class="syntax-string">"请选择日期"</span>,
+                  <span class="syntax-key">"dateType"</span>: <span class="syntax-string">"date"</span>,
+                  <span class="syntax-key">"dateMode"</span>: <span class="syntax-string">"single"</span>,
+                  <span class="syntax-key">"enableLongTerm"</span>: <span class="syntax-boolean">false</span>,
+                  <span class="syntax-key">"defaultLongTerm"</span>: <span class="syntax-boolean">false</span>
                 }
               ]
             },
@@ -614,7 +704,19 @@
                   <span class="syntax-key">"label"</span>: <span class="syntax-string">"国籍"</span>,
                   <span class="syntax-key">"key"</span>: <span class="syntax-string">"nationality"</span>,
                   <span class="syntax-key">"required"</span>: <span class="syntax-boolean">true</span>,
-                  <span class="syntax-key">"options"</span>: []
+                  <span class="syntax-key">"showLabel"</span>: <span class="syntax-boolean">true</span>,
+                  <span class="syntax-key">"placeholder"</span>: <span class="syntax-string">"请选择国籍"</span>,
+                  <span class="syntax-key">"maxSelections"</span>: <span class="syntax-number">3</span>,
+                  <span class="syntax-key">"options"</span>: [
+                    {
+                      <span class="syntax-key">"label"</span>: <span class="syntax-string">"中国籍"</span>,
+                      <span class="syntax-key">"value"</span>: <span class="syntax-string">"CN"</span>
+                    },
+                    {
+                      <span class="syntax-key">"label"</span>: <span class="syntax-string">"美国籍"</span>,
+                      <span class="syntax-key">"value"</span>: <span class="syntax-string">"US"</span>
+                    }
+                  ]
                 },
                 {
                   <span class="syntax-key">"id"</span>: <span class="syntax-string">"cmp_country_1"</span>,
@@ -622,7 +724,19 @@
                   <span class="syntax-key">"label"</span>: <span class="syntax-string">"目前居住国家"</span>,
                   <span class="syntax-key">"key"</span>: <span class="syntax-string">"living_country"</span>,
                   <span class="syntax-key">"required"</span>: <span class="syntax-boolean">true</span>,
-                  <span class="syntax-key">"options"</span>: []
+                  <span class="syntax-key">"showLabel"</span>: <span class="syntax-boolean">true</span>,
+                  <span class="syntax-key">"placeholder"</span>: <span class="syntax-string">"请选择国家"</span>,
+                  <span class="syntax-key">"maxSelections"</span>: <span class="syntax-number">3</span>,
+                  <span class="syntax-key">"options"</span>: [
+                    {
+                      <span class="syntax-key">"label"</span>: <span class="syntax-string">"中国"</span>,
+                      <span class="syntax-key">"value"</span>: <span class="syntax-string">"CN"</span>
+                    },
+                    {
+                      <span class="syntax-key">"label"</span>: <span class="syntax-string">"美国"</span>,
+                      <span class="syntax-key">"value"</span>: <span class="syntax-string">"US"</span>
+                    }
+                  ]
                 },
                 {
                   <span class="syntax-key">"id"</span>: <span class="syntax-string">"cmp_select_1"</span>,
@@ -630,6 +744,8 @@
                   <span class="syntax-key">"label"</span>: <span class="syntax-string">"最高学历"</span>,
                   <span class="syntax-key">"key"</span>: <span class="syntax-string">"education"</span>,
                   <span class="syntax-key">"required"</span>: <span class="syntax-boolean">true</span>,
+                  <span class="syntax-key">"showLabel"</span>: <span class="syntax-boolean">true</span>,
+                  <span class="syntax-key">"placeholder"</span>: <span class="syntax-string">"请选择学历"</span>,
                   <span class="syntax-key">"options"</span>: [
                     {
                       <span class="syntax-key">"label"</span>: <span class="syntax-string">"本科"</span>,
@@ -651,6 +767,7 @@
           <span class="syntax-key">"label"</span>: <span class="syntax-string">"掌握的技能 (最多选3项)"</span>,
           <span class="syntax-key">"key"</span>: <span class="syntax-string">"skills"</span>,
           <span class="syntax-key">"required"</span>: <span class="syntax-boolean">false</span>,
+          <span class="syntax-key">"showLabel"</span>: <span class="syntax-boolean">true</span>,
           <span class="syntax-key">"layout"</span>: <span class="syntax-string">"stack"</span>,
           <span class="syntax-key">"maxSelections"</span>: <span class="syntax-number">3</span>,
           <span class="syntax-key">"options"</span>: [
@@ -674,6 +791,7 @@
           <span class="syntax-key">"label"</span>: <span class="syntax-string">"自我介绍"</span>,
           <span class="syntax-key">"key"</span>: <span class="syntax-string">"intro"</span>,
           <span class="syntax-key">"required"</span>: <span class="syntax-boolean">false</span>,
+          <span class="syntax-key">"showLabel"</span>: <span class="syntax-boolean">true</span>,
           <span class="syntax-key">"placeholder"</span>: <span class="syntax-string">"简单介绍一下你的过往经历..."</span>
         },
         {
@@ -682,6 +800,9 @@
           <span class="syntax-key">"label"</span>: <span class="syntax-string">"电子签名与声明"</span>,
           <span class="syntax-key">"key"</span>: <span class="syntax-string">"sign_1"</span>,
           <span class="syntax-key">"required"</span>: <span class="syntax-boolean">true</span>,
+          <span class="syntax-key">"showLabel"</span>: <span class="syntax-boolean">false</span>,
+          <span class="syntax-key">"placeholder"</span>: <span class="syntax-string">"请在下方指定区域签名："</span>,
+          <span class="syntax-key">"declarationRequired"</span>: <span class="syntax-boolean">true</span>,
           <span class="syntax-key">"layout"</span>: <span class="syntax-string">"stack"</span>,
           <span class="syntax-key">"options"</span>: [
             {

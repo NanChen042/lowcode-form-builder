@@ -28,6 +28,7 @@ function highlightJSON(jsonStr) {
 export function createPreviewField(field) {
     const wrapper = document.createElement('div');
     wrapper.className = field.type === 'grid' ? 'preview-grid' : 'preview-field';
+    const showLabel = field.showLabel !== false;
 
     if (field.type === 'grid') {
         field.columns.forEach(column => {
@@ -76,28 +77,39 @@ export function createPreviewField(field) {
             items.appendChild(p);
         });
 
-        content.appendChild(header);
+        if (showLabel) {
+            content.appendChild(header);
+        }
         content.appendChild(items);
         section.appendChild(content);
         wrapper.appendChild(section);
         return wrapper;
     }
 
-    const label = document.createElement('label');
-    label.className = 'mb-2 block text-sm font-medium text-black/85';
-    label.textContent = field.label || '未命名字段';
-    if (field.required) {
-        const star = document.createElement('span');
-        star.className = 'text-[#ff4d4f]';
-        star.textContent = ' *';
-        label.appendChild(star);
+    if (showLabel) {
+        const label = document.createElement('label');
+        label.className = 'mb-2 block text-sm font-medium text-black/85';
+        if (field.required) {
+            const star = document.createElement('span');
+            star.className = 'text-[#ff4d4f]';
+            star.textContent = '* ';
+            label.appendChild(star);
+        }
+        label.appendChild(document.createTextNode(field.label || '未命名字段'));
+        if (field.help) {
+            const help = document.createElement('span');
+            help.className = 'field-help';
+            help.textContent = field.help;
+            label.appendChild(help);
+        }
+        wrapper.appendChild(label);
     }
-    wrapper.appendChild(label);
 
     if (field.type === 'signature') {
         const sigDiv = document.createElement('div');
-        sigDiv.className = 'mt-2 bg-white border border-[#e5e7eb] rounded-lg p-4 shadow-sm';
+        sigDiv.className = 'mt-2 bg-white';
         const options = field.options || [];
+        const declarationRequired = field.declarationRequired !== false;
 
         const checks = document.createElement('div');
         checks.className = 'flex flex-col gap-3 mb-5';
@@ -109,7 +121,7 @@ export function createPreviewField(field) {
             input.type = 'checkbox';
             input.className = 'mt-1 flex-shrink-0 rounded text-[#1677ff] preview-input-checkbox';
             input.value = opt.value || '';
-            input.required = true;
+            input.required = declarationRequired;
 
             const text = document.createElement('span');
             text.className = 'text-sm text-black/75 leading-5 group-hover:text-black/85 transition-colors';
@@ -120,29 +132,111 @@ export function createPreviewField(field) {
             checks.appendChild(checkLabel);
         });
 
+        const signLabel = document.createElement('div');
+        signLabel.className = 'signature-pad-label';
+        if (field.required) {
+            const required = document.createElement('span');
+            required.className = 'signature-pad-required';
+            required.style.display = 'inline';
+            required.textContent = '*';
+            signLabel.appendChild(required);
+        }
+        const labelText = document.createElement('span');
+        labelText.className = 'signature-pad-text';
+        labelText.textContent = field.placeholder !== undefined
+            ? field.placeholder
+            : '请在下方指定区域签名：';
+        signLabel.appendChild(labelText);
+
         const signArea = document.createElement('div');
-        signArea.className = 'w-full h-32 bg-[#f8fafc] border-2 border-dashed border-[#cbd5e1] rounded-lg flex flex-col items-center justify-center text-[#94a3b8] cursor-pointer hover:border-[#1677ff] hover:bg-[#f0f7ff] hover:text-[#1677ff] transition-all relative overflow-hidden group';
-        const penIcon = document.createElement('i');
-        penIcon.setAttribute('data-lucide', 'pen-tool');
-        penIcon.className = 'h-6 w-6 mb-2';
-        const signText = document.createElement('span');
-        signText.className = 'text-sm font-medium';
-        signText.textContent = '点击此处进行手写签名';
-        signArea.appendChild(penIcon);
-        signArea.appendChild(signText);
+        signArea.className = 'signature-pad-surface interactive';
+        const clearButton = document.createElement('button');
+        clearButton.type = 'button';
+        clearButton.className = 'signature-clear-btn';
+        clearButton.textContent = '清空';
+        clearButton.addEventListener('click', e => e.stopPropagation());
+        signArea.appendChild(clearButton);
 
         sigDiv.appendChild(checks);
+        sigDiv.appendChild(signLabel);
         sigDiv.appendChild(signArea);
         wrapper.appendChild(sigDiv);
     }
 
-    if (field.type === 'input' || field.type === 'date') {
+    if (field.type === 'input') {
         const input = document.createElement('input');
-        input.type = field.type === 'date' ? (field.dateType || 'date') : 'text';
+        input.type = 'text';
         input.placeholder = field.placeholder || '';
         input.value = field.defaultValue || '';
         input.className = 'preview-input';
         wrapper.appendChild(input);
+    }
+
+    if (field.type === 'date') {
+        const mode = field.dateMode || 'single';
+        const dateType = field.dateType || 'date';
+        const isLongTermEnabled = field.enableLongTerm === true;
+        const control = document.createElement('div');
+        control.className = 'date-control preview-date-control';
+
+        const createDateInput = (part, value, placeholder) => {
+            const shell = document.createElement('div');
+            shell.className = `date-input-shell${value ? ' has-value' : ''}`;
+
+            const input = document.createElement('input');
+            input.type = dateType;
+            input.value = value || '';
+            input.className = 'preview-input date-input';
+            input.dataset.datePart = part;
+            input.addEventListener('input', () => {
+                shell.classList.toggle('has-value', Boolean(input.value));
+            });
+
+            const placeholderNode = document.createElement('span');
+            placeholderNode.className = 'date-placeholder-text';
+            placeholderNode.textContent = placeholder;
+
+            shell.appendChild(input);
+            shell.appendChild(placeholderNode);
+            return { shell, input };
+        };
+
+        const start = createDateInput('start', field.defaultValue || '', field.placeholder || (mode === 'range' ? '开始日期' : '请选择日期'));
+        const end = createDateInput('end', field.endValue || '', '结束日期');
+        control.appendChild(start.shell);
+
+        if (mode === 'range') {
+            const separator = document.createElement('div');
+            separator.className = 'date-range-separator';
+            separator.textContent = '至';
+            control.appendChild(separator);
+            control.appendChild(end.shell);
+        }
+
+        if (isLongTermEnabled) {
+            const longTermLabel = document.createElement('label');
+            longTermLabel.className = 'date-long-term-option';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = field.defaultLongTerm === true;
+            const text = document.createElement('span');
+            text.textContent = '长期';
+
+            const syncDisabled = () => {
+                start.input.disabled = checkbox.checked;
+                end.input.disabled = checkbox.checked;
+                start.shell.classList.toggle('is-disabled', checkbox.checked);
+                end.shell.classList.toggle('is-disabled', checkbox.checked);
+            };
+            checkbox.addEventListener('change', syncDisabled);
+            syncDisabled();
+
+            longTermLabel.appendChild(checkbox);
+            longTermLabel.appendChild(text);
+            control.appendChild(longTermLabel);
+        }
+
+        wrapper.appendChild(control);
     }
 
     if (field.type === 'textarea') {
@@ -316,13 +410,6 @@ export function createPreviewField(field) {
             group.appendChild(optionLabel);
         });
         wrapper.appendChild(group);
-    }
-
-    if (field.help) {
-        const help = document.createElement('p');
-        help.className = 'field-help';
-        help.textContent = field.help;
-        wrapper.appendChild(help);
     }
 
     return wrapper;

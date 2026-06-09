@@ -24,13 +24,13 @@ export const kycIndividualTemplate = {
         {
             title: '第一部分：个人身份信息',
             fields: [
-                { type: 'input', label: '全名 (Full Name)', required: true, placeholder: '请填写与证件一致的姓名' },
+                { type: 'input', label: '全名', required: true, placeholder: '请填写与证件一致的姓名' },
                 { type: 'grid', columns: [
-                    { elements: [{ type: 'nationality', label: '国籍 (Nationality)', required: true }] },
-                    { elements: [{ type: 'date', label: '出生日期 (Date of Birth)', required: true, dateType: 'date' }] }
+                    { elements: [{ type: 'nationality', label: '国籍', required: true }] },
+                    { elements: [{ type: 'date', label: '出生日期', required: true, dateType: 'date' }] }
                 ]},
-                { type: 'input', label: '证件号码 (ID/Passport No.)', required: true, placeholder: '请输入身份证或护照号' },
-                { type: 'textarea', label: '居住地址 (Residential Address)', required: true, placeholder: '请输入详细的当前居住地址' }
+                { type: 'input', label: '证件号码', required: true, placeholder: '请输入身份证或护照号' },
+                { type: 'textarea', label: '居住地址', required: true, placeholder: '请输入详细的当前居住地址' }
             ]
         },
         {
@@ -38,24 +38,24 @@ export const kycIndividualTemplate = {
             fields: [
                 { 
                     type: 'select', 
-                    label: '就业状态 (Employment Status)', 
+                    label: '就业状态',
                     required: true,
                     options: [
-                        { label: '受雇 (Employed)', value: 'employed' },
-                        { label: '自雇 (Self-employed)', value: 'self_employed' },
-                        { label: '退休 (Retired)', value: 'retired' },
-                        { label: '无业 (Unemployed)', value: 'unemployed' }
+                        { label: '受雇', value: '受雇' },
+                        { label: '自雇', value: '自雇' },
+                        { label: '退休', value: '退休' },
+                        { label: '无业', value: '无业' }
                     ]
                 },
-                { type: 'input', label: '资金来源 (Source of Funds)', required: true, placeholder: '例如：工资、投资收益、储蓄' },
+                { type: 'input', label: '资金来源', required: true, placeholder: '例如：工资、投资收益、储蓄' },
                 { 
                     type: 'radio', 
-                    label: '预计年收入 (Estimated Annual Income)', 
+                    label: '预计年收入',
                     layout: 'stack',
                     options: [
-                        { label: '低于 $50,000', value: 'tier1' },
-                        { label: '$50,000 - $100,000', value: 'tier2' },
-                        { label: '高于 $100,000', value: 'tier3' }
+                        { label: '低于 50,000 美元', value: '低于 50,000 美元' },
+                        { label: '50,000 - 100,000 美元', value: '50,000 - 100,000 美元' },
+                        { label: '高于 100,000 美元', value: '高于 100,000 美元' }
                     ]
                 }
             ]
@@ -65,7 +65,7 @@ export const kycIndividualTemplate = {
             fields: [
                 { 
                     type: 'signature', 
-                    label: '客户声明 (Declaration)', 
+                    label: '客户声明',
                     required: true,
                     options: [
                         { label: '本人特此声明，本表格中提供的所有信息均真实、完整且准确。', value: 'dec_1' },
@@ -88,27 +88,27 @@ export const kycEntityTemplate = {
         {
             title: '第一部分：公司基本信息',
             fields: [
-                { type: 'input', label: '公司全称 (Legal Entity Name)', required: true, placeholder: '请输入营业执照上的法定名称' },
+                { type: 'input', label: '公司全称', required: true, placeholder: '请输入营业执照上的法定名称' },
                 { type: 'grid', columns: [
-                    { elements: [{ type: 'input', label: '注册号码 (Registration No.)', required: true }] },
-                    { elements: [{ type: 'country', label: '注册国家 (Country of Incorporation)', required: true }] }
+                    { elements: [{ type: 'input', label: '注册号码', required: true }] },
+                    { elements: [{ type: 'country', label: '注册国家', required: true }] }
                 ]},
-                { type: 'date', label: '成立日期 (Date of Incorporation)', dateType: 'date' },
-                { type: 'textarea', label: '注册地址 (Registered Address)', required: true }
+                { type: 'date', label: '成立日期', dateType: 'date' },
+                { type: 'textarea', label: '注册地址', required: true }
             ]
         },
         {
             title: '第二部分：业务与合规',
             fields: [
-                { type: 'textarea', label: '业务性质描述 (Nature of Business)', required: true, placeholder: '请简述贵公司的主要产品、服务及运营模式' },
-                { type: 'input', label: '主要财富来源 (Source of Wealth)', required: true, placeholder: '例如：商业运营、投资、外部融资' },
+                { type: 'textarea', label: '业务性质描述', required: true, placeholder: '请简述贵公司的主要产品、服务及运营模式' },
+                { type: 'input', label: '主要财富来源', required: true, placeholder: '例如：商业运营、投资、外部融资' },
                 { 
                     type: 'radio', 
-                    label: '是否为受监管金融机构？(Regulated FI)', 
+                    label: '是否为受监管金融机构？',
                     layout: 'inline',
                     options: [
-                        { label: '是 (Yes)', value: 'yes' },
-                        { label: '否 (No)', value: 'no' }
+                        { label: '是', value: '是' },
+                        { label: '否', value: '否' }
                     ]
                 }
             ]
@@ -116,11 +116,11 @@ export const kycEntityTemplate = {
         {
             title: '第三部分：授权代表声明',
             fields: [
-                { type: 'input', label: '授权代表姓名 (Authorized Representative)', required: true },
-                { type: 'input', label: '职务 (Title)', required: true },
+                { type: 'input', label: '授权代表姓名', required: true },
+                { type: 'input', label: '职务', required: true },
                 { 
                     type: 'signature', 
-                    label: '授权声明 (Declaration)', 
+                    label: '授权声明',
                     required: true,
                     options: [
                         { label: '本人经贵司充分授权，代表公司填写并提交此表。', value: 'dec_1' },

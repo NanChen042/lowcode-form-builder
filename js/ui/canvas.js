@@ -7,6 +7,58 @@ import { createElementFromSchema, serializeElement } from '../core/schema.js';
 
 const PAGE_WIDTH = 390;
 const PAGE_GAP = 160;
+const MIN_CANVAS_SCALE = 0.1;
+const MAX_CANVAS_SCALE = 1.6;
+const componentTypeLabels = {
+    input: '单行文本',
+    textarea: '多行文本',
+    select: '下拉选择',
+    country: '国家选择',
+    nationality: '国籍选择',
+    signature: '电子签名',
+    radio: '单选框组',
+    checkbox: '多选框组',
+    date: '日期选择',
+    grid: '双列布局',
+    alert: '提示区块',
+    field: '字段',
+    page: '页面'
+};
+let gestureZoomState = null;
+let touchPinchState = null;
+
+function clampCanvasScale(scale) {
+    return Math.min(MAX_CANVAS_SCALE, Math.max(MIN_CANVAS_SCALE, scale));
+}
+
+function zoomCanvasAtClientPoint(clientX, clientY, nextScale) {
+    const oldScale = state.canvasState.scale;
+    const scale = clampCanvasScale(nextScale);
+    if (scale === oldScale) return;
+
+    const rect = DOM.canvasScrollArea.getBoundingClientRect();
+    const pointerX = clientX - rect.left;
+    const pointerY = clientY - rect.top;
+    const worldX = (pointerX - state.canvasState.x) / oldScale;
+    const worldY = (pointerY - state.canvasState.y) / oldScale;
+
+    state.canvasState.scale = scale;
+    state.canvasState.x = pointerX - worldX * scale;
+    state.canvasState.y = pointerY - worldY * scale;
+    renderCanvasTransform();
+}
+
+function getTouchMetrics(touches) {
+    const [a, b] = touches;
+    const dx = b.clientX - a.clientX;
+    const dy = b.clientY - a.clientY;
+
+    return {
+        distance: Math.hypot(dx, dy),
+        clientX: (a.clientX + b.clientX) / 2,
+        clientY: (a.clientY + b.clientY) / 2
+    };
+}
 
 // 检查并更新表单页面内是否为空的状态显示（显示或隐藏占位提示）
 export function checkEmptyState() {
@@ -124,7 +176,7 @@ export function drawConnections() {
 window.renderConnections = drawConnections;
 
 // 移动画布视角，聚焦并平滑过渡到指定的页面面板位置
-export function focusOnPage(pageId, autoFit = false, immediate = false) {
+export function focusOnPage(pageId, autoFit = false, immediate = false, options = {}) {
     const page = state.pages.find(p => p.id === pageId);
     if (!page) return;
     
@@ -138,7 +190,7 @@ export function focusOnPage(pageId, autoFit = false, immediate = false) {
     if (autoFit) {
         const scaleX = (viewportWidth - 120) / PAGE_WIDTH;
         const scaleY = (viewportHeight - 120) / frameHeight;
-        targetScale = Math.min(1.6, Math.max(0.1, Math.min(scaleX, scaleY)));
+        targetScale = clampCanvasScale(Math.min(scaleX, scaleY));
         // 如果计算出来的自适应缩放比例非常接近 100%（比如 98%, 99%, 101%），则强制吸附到 100%，避免出现让用户感到困惑的零碎百分比
         if (Math.abs(targetScale - 1) < 0.05) {
             targetScale = 1;
@@ -160,7 +212,7 @@ export function focusOnPage(pageId, autoFit = false, immediate = false) {
         state.canvasState.y = targetY;
         state.canvasState.scale = targetScale;
         renderCanvasTransform();
-        
+
         // 确保坐标系应用完成后再显示画布，实现平滑渐现
         setTimeout(() => {
             const world = document.getElementById('canvas-world');
@@ -170,11 +222,23 @@ export function focusOnPage(pageId, autoFit = false, immediate = false) {
         return;
     }
     
-    const duration = 400;
-    const startX = state.canvasState.x;
-    const startY = state.canvasState.y;
-    const startScale = state.canvasState.scale;
+    const duration = options.fromEmpty ? 460 : 400;
+    let startX = state.canvasState.x;
+    let startY = state.canvasState.y;
+    let startScale = state.canvasState.scale;
     const startTime = performance.now();
+
+    if (options.fromEmpty) {
+        startX = targetX;
+        startY = targetY + 48;
+        startScale = clampCanvasScale(targetScale * 0.96);
+        state.canvasState.x = startX;
+        state.canvasState.y = startY;
+        state.canvasState.scale = startScale;
+        renderCanvasTransform();
+    }
+
+    DOM.canvasWorld.classList.remove('opacity-0');
     
     function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
     
@@ -271,25 +335,6 @@ export function addPage(afterPageId = null, options = {}) {
         }
     }
     
-    // 如果是首个页面，隐藏全局空状态并显示右下角工具条
-    if (isFirst) {
-        const globalEmpty = document.getElementById('canvas-global-empty');
-        const globalEmptyCard = document.getElementById('canvas-global-empty-card');
-        if (globalEmpty) {
-            globalEmpty.classList.remove('opacity-100');
-            globalEmpty.classList.add('opacity-0', 'pointer-events-none');
-        }
-        if (globalEmptyCard) {
-            globalEmptyCard.classList.remove('scale-100');
-            globalEmptyCard.classList.add('scale-95');
-        }
-        
-        const controlsToolbar = document.getElementById('canvas-controls-toolbar');
-        if (controlsToolbar) {
-            controlsToolbar.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
-        }
-    }
-    
     // 重新排列后续页面的位置
     if (!isFirst && insertIndex < state.pages.length - 1) {
         for (let i = insertIndex + 1; i < state.pages.length; i++) {
@@ -311,8 +356,27 @@ export function addPage(afterPageId = null, options = {}) {
         focusOnPage(newId);
         selectElement(frame);
     } else if (shouldFocus) {
-        focusOnPage(newId, true, true);
+        focusOnPage(newId, true, false, { fromEmpty: true });
         selectElement(frame);
+    }
+
+    // 如果是首个页面，先完成初始视角设置，再隐藏全局空状态，避免首帧跳动。
+    if (isFirst) {
+        const globalEmpty = document.getElementById('canvas-global-empty');
+        const globalEmptyCard = document.getElementById('canvas-global-empty-card');
+        if (globalEmpty) {
+            globalEmpty.classList.remove('opacity-100');
+            globalEmpty.classList.add('opacity-0', 'pointer-events-none');
+        }
+        if (globalEmptyCard) {
+            globalEmptyCard.classList.remove('scale-100');
+            globalEmptyCard.classList.add('scale-95');
+        }
+
+        const controlsToolbar = document.getElementById('canvas-controls-toolbar');
+        if (controlsToolbar) {
+            controlsToolbar.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+        }
     }
 
     notifySchemaChange();
@@ -364,7 +428,7 @@ export function deletePage(pageId) {
             propEmpty.classList.remove('hidden');
             propEditor.classList.add('hidden');
             pagePropEditor.classList.add('hidden');
-            if (propIdText) propIdText.textContent = 'None';
+            if (propIdText) propIdText.textContent = '未选中';
         }
         
         // 显示全局大画布空状态并隐藏右下角工具条
@@ -632,7 +696,7 @@ export function resetCanvasViewAfterLayout() {
 // 调整画布的缩放比例（放大或缩小），以当前画布中心为基准缩放
 export function adjustZoom(delta) {
     const oldScale = state.canvasState.scale;
-    const nextScale = Math.min(1.6, Math.max(0.1, oldScale + delta));
+    const nextScale = clampCanvasScale(oldScale + delta);
     if (nextScale === oldScale) return;
 
     const rect = DOM.canvasScrollArea.getBoundingClientRect();
@@ -680,7 +744,8 @@ export function selectElement(el) {
     const type = el.dataset.type || 'field';
     const hasPlaceholder = Boolean(el.querySelector('.component-placeholder')) || type === 'select' || type === 'signature';
     const hasOptions = optionTypes.includes(type);
-    const hasDefaultValue = valueTypes.includes(type) || (hasOptions && type !== 'alert' && type !== 'signature');
+    const hasDefaultValue = (valueTypes.includes(type) && !(type === 'date' && el.dataset.dateMode === 'range'))
+        || (hasOptions && type !== 'alert' && type !== 'signature');
     const canStackChoices = type === 'radio' || type === 'checkbox';
 
     DOM.propEmpty.classList.add('hidden');
@@ -704,19 +769,26 @@ export function selectElement(el) {
     document.getElementById('page-prop-editor').classList.add('hidden');
     DOM.propEditor.classList.remove('hidden');
     DOM.propIdText.textContent = el.id;
-    DOM.propTypeBadge.textContent = type;
+    DOM.propTypeBadge.textContent = componentTypeLabels[type] || '字段';
     DOM.inputLabel.value = el.dataset.label || '';
+    if (DOM.toggleShowLabel) {
+        DOM.toggleShowLabel.checked = el.dataset.showLabel !== 'false';
+    }
     // 字段标识已从基础信息中移除，因为顶部已有显示
     DOM.inputHelp.value = el.dataset.help || '';
     updateDefaultValueUI(el);
     DOM.inputPlaceholder.value = el.dataset.placeholder || '';
 
     DOM.propPlaceholderGroup.style.display = hasPlaceholder ? 'block' : 'none';
-    DOM.propDateTypeGroup.style.display = type === 'date' ? 'block' : 'none';
-    if (type === 'date') {
-        DOM.propDateTypeSelect.value = el.dataset.dateType || 'date';
+    if (DOM.propPlaceholderLabel) {
+        DOM.propPlaceholderLabel.textContent = type === 'signature' ? '签名提示' : (type === 'date' ? '日期提示' : '占位提示');
     }
-    DOM.propHelpGroup.style.display = (type === 'grid' || type === 'alert') ? 'none' : 'block';
+    DOM.propDateSettingsGroup.style.display = type === 'date' ? 'block' : 'none';
+    if (type === 'date') {
+        DOM.propDateModeSelect.value = el.dataset.dateMode || 'single';
+        DOM.propDateTypeSelect.value = el.dataset.dateType || 'date';
+        DOM.toggleDateLongTerm.checked = el.dataset.enableLongTerm === 'true';
+    }
     DOM.propDefaultGroup.style.display = hasDefaultValue ? 'block' : 'none';
     const isFixedOptions = type === 'country' || type === 'nationality';
     DOM.propOptionsGroup.classList.toggle('hidden', !hasOptions || isFixedOptions);
@@ -728,7 +800,17 @@ export function selectElement(el) {
     if (requiredGroup) {
         requiredGroup.style.display = (type === 'grid' || type === 'alert') ? 'none' : 'flex';
     }
+    if (DOM.propRequiredLabel) {
+        DOM.propRequiredLabel.textContent = type === 'signature' ? '签名区域必填' : '是否必填';
+    }
     DOM.toggleRequired.checked = el.dataset.required === 'true';
+
+    if (DOM.propSignatureDeclarationRequiredGroup) {
+        DOM.propSignatureDeclarationRequiredGroup.classList.toggle('hidden', type !== 'signature');
+    }
+    if (DOM.toggleSignatureDeclarationRequired) {
+        DOM.toggleSignatureDeclarationRequired.checked = el.dataset.declarationRequired !== 'false';
+    }
     
     const canHaveMaxSelections = type === 'country' || type === 'nationality' || type === 'checkbox';
     if (DOM.propMaxSelectionsGroup) {
@@ -756,7 +838,7 @@ export function clearSelection() {
     DOM.propEmpty.classList.remove('hidden');
     DOM.propEditor.classList.add('hidden');
     document.getElementById('page-prop-editor').classList.add('hidden');
-    DOM.propIdText.textContent = 'None';
+    DOM.propIdText.textContent = '未选中';
     
     if (window.setSidebarState) {
         window.setSidebarState('right', false);
@@ -961,7 +1043,7 @@ export function bindCanvasEvents() {
     });
 
     DOM.canvasWorld.addEventListener('input', e => {
-        const textNode = e.target.closest('.label-text, .option-text');
+        const textNode = e.target.closest('.label-text, .option-text, .signature-pad-text, .field-help');
         if (textNode) {
             const canvasElement = textNode.closest('.canvas-element');
             if (!canvasElement) return;
@@ -972,6 +1054,16 @@ export function bindCanvasEvents() {
                 canvasElement.dataset.label = newText;
                 if (state.selectedElement === canvasElement) {
                     DOM.inputLabel.value = newText;
+                }
+            } else if (textNode.classList.contains('signature-pad-text')) {
+                canvasElement.dataset.placeholder = newText;
+                if (state.selectedElement === canvasElement) {
+                    DOM.inputPlaceholder.value = newText;
+                }
+            } else if (textNode.classList.contains('field-help')) {
+                canvasElement.dataset.help = newText;
+                if (state.selectedElement === canvasElement) {
+                    DOM.inputHelp.value = newText;
                 }
             } else if (textNode.classList.contains('option-text')) {
                 const index = parseInt(textNode.dataset.index, 10);
@@ -992,7 +1084,17 @@ export function bindCanvasEvents() {
         if (!canvasElement) return;
 
         const type = canvasElement.dataset.type;
-        if (['input', 'textarea', 'date', 'select'].includes(type)) {
+        if (type === 'date') {
+            const datePart = e.target.dataset.datePart || 'start';
+            if (datePart === 'end') {
+                canvasElement.dataset.endValue = e.target.value;
+            } else {
+                canvasElement.dataset.defaultValue = e.target.value;
+            }
+            if (state.selectedElement === canvasElement) {
+                updateDefaultValueUI(canvasElement);
+            }
+        } else if (['input', 'textarea', 'select'].includes(type)) {
             canvasElement.dataset.defaultValue = e.target.value;
             if (state.selectedElement === canvasElement) {
                 DOM.inputDefault.value = e.target.value;
@@ -1005,7 +1107,9 @@ export function bindCanvasEvents() {
         if (!canvasElement) return;
 
         const type = canvasElement.dataset.type;
-        if (type === 'radio' || type === 'checkbox') {
+        if (type === 'date' && e.target.classList.contains('date-long-term-checkbox')) {
+            canvasElement.dataset.defaultLongTerm = String(e.target.checked);
+        } else if (type === 'radio' || type === 'checkbox') {
             if (type === 'radio') {
                 canvasElement.dataset.defaultValue = e.target.value;
             } else {
@@ -1091,17 +1195,18 @@ export function bindCanvasEvents() {
             const pageDescInput = e.target.closest('.page-desc-input');
             
             if (element && DOM.canvasWorld.contains(element) && e.button === 0) {
-                const isEditableText = e.target.closest('.label-text, .option-text, .signature-declaration-text');
+                const isEditableText = e.target.closest('.label-text, .option-text, .signature-declaration-text, .signature-pad-text, .field-help');
+                const isInteractiveDateControl = e.target.closest('.date-long-term-option');
 
                 // 设计态下表单控件只负责选中组件，真实填写放在预览里完成。
-                if (!isEditableText) {
+                if (!isEditableText && !isInteractiveDateControl) {
                     e.preventDefault();
                 }
                 selectElement(element);
                 
                 setTimeout(() => {
                     const labelText = e.target.closest('.label-text');
-                    const placeholderText = e.target.closest('.component-placeholder');
+                    const placeholderText = e.target.closest('.component-placeholder, .signature-pad-text');
                     const helpText = e.target.closest('.field-help');
                     const optionText = e.target.closest('.option-text, .signature-declaration-text');
 
@@ -1175,7 +1280,7 @@ export function bindCanvasEvents() {
         const designOnlyControl = e.target.closest(
             '.component-placeholder, .choice-group input, .choice-group label, .signature-options-container input'
         );
-        const editableText = e.target.closest('.label-text, .option-text, .signature-declaration-text');
+        const editableText = e.target.closest('.label-text, .option-text, .signature-declaration-text, .signature-pad-text, .field-help');
 
         if (designOnlyControl && !editableText) {
             e.preventDefault();
@@ -1224,16 +1329,8 @@ export function bindCanvasEvents() {
 
         if (e.ctrlKey || e.metaKey) {
             const oldScale = state.canvasState.scale;
-            const nextScale = Math.min(1.6, Math.max(0.1, oldScale + (e.deltaY > 0 ? -0.08 : 0.08)));
-            const rect = DOM.canvasScrollArea.getBoundingClientRect();
-            const pointerX = e.clientX - rect.left;
-            const pointerY = e.clientY - rect.top;
-            const worldX = (pointerX - state.canvasState.x) / oldScale;
-            const worldY = (pointerY - state.canvasState.y) / oldScale;
-
-            state.canvasState.scale = nextScale;
-            state.canvasState.x = pointerX - worldX * nextScale;
-            state.canvasState.y = pointerY - worldY * nextScale;
+            const nextScale = oldScale * Math.exp(-e.deltaY * 0.0016);
+            zoomCanvasAtClientPoint(e.clientX, e.clientY, nextScale);
         } else {
             let dy = e.deltaY;
             let dx = e.deltaX;
@@ -1253,6 +1350,57 @@ export function bindCanvasEvents() {
         }
         renderCanvasTransform();
     }, { passive: false });
+
+    DOM.canvasScrollArea.addEventListener('gesturestart', e => {
+        if (state.pages.length === 0) return;
+        e.preventDefault();
+        gestureZoomState = {
+            startScale: state.canvasState.scale
+        };
+    }, { passive: false });
+
+    DOM.canvasScrollArea.addEventListener('gesturechange', e => {
+        if (!gestureZoomState || state.pages.length === 0) return;
+        e.preventDefault();
+        zoomCanvasAtClientPoint(e.clientX, e.clientY, gestureZoomState.startScale * e.scale);
+    }, { passive: false });
+
+    DOM.canvasScrollArea.addEventListener('gestureend', e => {
+        if (!gestureZoomState) return;
+        e.preventDefault();
+        gestureZoomState = null;
+    }, { passive: false });
+
+    DOM.canvasScrollArea.addEventListener('touchstart', e => {
+        if (state.pages.length === 0 || e.touches.length !== 2) return;
+        const metrics = getTouchMetrics(e.touches);
+        touchPinchState = {
+            startDistance: metrics.distance,
+            startScale: state.canvasState.scale
+        };
+    }, { passive: false });
+
+    DOM.canvasScrollArea.addEventListener('touchmove', e => {
+        if (!touchPinchState || state.pages.length === 0 || e.touches.length !== 2) return;
+        e.preventDefault();
+        const metrics = getTouchMetrics(e.touches);
+        if (touchPinchState.startDistance <= 0) return;
+        zoomCanvasAtClientPoint(
+            metrics.clientX,
+            metrics.clientY,
+            touchPinchState.startScale * (metrics.distance / touchPinchState.startDistance)
+        );
+    }, { passive: false });
+
+    DOM.canvasScrollArea.addEventListener('touchend', e => {
+        if (e.touches.length < 2) {
+            touchPinchState = null;
+        }
+    });
+
+    DOM.canvasScrollArea.addEventListener('touchcancel', () => {
+        touchPinchState = null;
+    });
 
     document.addEventListener('selectstart', e => {
         if (document.body.classList.contains('is-dragging-component') || state.isPanning) {

@@ -46,8 +46,10 @@ export const componentDefaults = {
     },
     signature: {
         label: '声明与签名',
-        placeholder: '',
+        placeholder: '请在下方指定区域签名：',
         help: '',
+        showLabel: false,
+        declarationRequired: true,
         options: [
             { label: '本人保证以上填写的信息真实、准确、有效。', value: 'dec_1' }
         ]
@@ -75,8 +77,14 @@ export const componentDefaults = {
     },
     date: {
         label: '日期选择',
+        placeholder: '请选择日期',
         help: '',
-        defaultValue: ''
+        defaultValue: '',
+        endValue: '',
+        dateType: 'date',
+        dateMode: 'single',
+        enableLongTerm: false,
+        defaultLongTerm: false
     },
     grid: {
         label: '双列布局容器',
@@ -103,6 +111,7 @@ export function setLabelText(el, value) {
 
     // 保存现有的必填红星节点
     const reqStar = labelNode.querySelector('.req-star');
+    const helpNode = labelNode.querySelector('.field-help');
     
     // 查找或创建可编辑的文本节点
     let textSpan = labelNode.querySelector('.label-text');
@@ -150,16 +159,21 @@ export function setLabelText(el, value) {
     }
 
     labelNode.innerHTML = ''; // 清空当前内容
+
+    // 如果存在必填红星节点，则放在标题最左侧，便于纵向扫视必填字段。
+    if (reqStar) {
+        labelNode.appendChild(reqStar);
+    }
     labelNode.appendChild(textSpan);
-    
-    // 如果存在必填红星节点，则重新添加回去
-    labelNode.appendChild(document.createTextNode(' '));
-    if (reqStar) labelNode.appendChild(reqStar);
+    if (helpNode) {
+        labelNode.appendChild(helpNode);
+    }
 }
 
-// 渲染字段下方的帮助说明文本
+// 渲染标题旁的副标题文本
 export function renderHelpText(el) {
-    const existing = el.querySelector(':scope > .field-help');
+    const labelNode = el.querySelector(':scope > .component-label');
+    const existing = labelNode?.querySelector('.field-help') || el.querySelector(':scope > .field-help');
     const text = el.dataset.help || '';
     // 如果没有帮助文本，则移除已有的 DOM 节点
     if (!text) {
@@ -168,10 +182,44 @@ export function renderHelpText(el) {
     }
 
     // 更新或创建帮助文本节点
-    const helpNode = existing || document.createElement('p');
+    let helpNode = existing;
+    if (!helpNode || helpNode.tagName !== 'SPAN') {
+        const span = document.createElement('span');
+        if (helpNode) {
+            helpNode.replaceWith(span);
+        }
+        helpNode = span;
+    }
     helpNode.className = 'field-help';
+    helpNode.contentEditable = "plaintext-only";
+    helpNode.spellcheck = false;
     helpNode.textContent = text;
-    if (!existing) el.appendChild(helpNode);
+
+    if (!helpNode.dataset.editBound) {
+        helpNode.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                helpNode.blur();
+            }
+        });
+        helpNode.addEventListener('blur', () => {
+            if (!helpNode.textContent.trim()) {
+                el.dataset.help = '';
+                const propHelpInput = document.getElementById('prop-help-input');
+                if (propHelpInput && el.classList.contains('is-selected')) {
+                    propHelpInput.value = '';
+                }
+                helpNode.remove();
+            }
+        });
+        helpNode.dataset.editBound = 'true';
+    }
+
+    if (labelNode && helpNode.parentElement !== labelNode) {
+        labelNode.appendChild(helpNode);
+    } else if (!labelNode && !existing) {
+        el.appendChild(helpNode);
+    }
 }
 
 // 渲染带有选项的组件的内容（如：下拉、单选、多选、签名）
@@ -419,8 +467,8 @@ export function renderDefaultValue(el) {
     const type = el.dataset.type;
     const defaultValue = el.dataset.defaultValue || '';
 
-    // 对于单行文本和日期
-    if (type === 'input' || type === 'date') {
+    // 对于单行文本
+    if (type === 'input') {
         const node = el.querySelector('input.component-placeholder');
         if (node) node.value = defaultValue;
     }
@@ -432,9 +480,143 @@ export function renderDefaultValue(el) {
     }
 }
 
+export function renderDateControl(el) {
+    if (!el || el.dataset.type !== 'date') return;
+
+    const mode = el.dataset.dateMode || 'single';
+    const dateType = el.dataset.dateType || 'date';
+    const enableLongTerm = el.dataset.enableLongTerm === 'true';
+    const isLongTerm = el.dataset.defaultLongTerm === 'true';
+    const startInput = el.querySelector('.date-input[data-date-part="start"]');
+    const endInput = el.querySelector('.date-input[data-date-part="end"]');
+    const startShell = startInput?.closest('.date-input-shell');
+    const endShell = endInput?.closest('.date-input-shell');
+    const separator = el.querySelector('.date-range-separator');
+    const longTermOption = el.querySelector('.date-long-term-option');
+    const longTermCheckbox = el.querySelector('.date-long-term-checkbox');
+
+    if (!startInput || !endInput) return;
+
+    startInput.type = dateType;
+    endInput.type = dateType;
+    startInput.value = el.dataset.defaultValue || '';
+    endInput.value = el.dataset.endValue || '';
+    startInput.disabled = isLongTerm;
+    endInput.disabled = isLongTerm;
+
+    const startPlaceholder = startShell?.querySelector('.date-placeholder-text');
+    const endPlaceholder = endShell?.querySelector('.date-placeholder-text');
+    if (startPlaceholder) {
+        startPlaceholder.textContent = el.dataset.placeholder || (mode === 'range' ? '开始日期' : '请选择日期');
+    }
+    if (endPlaceholder) {
+        endPlaceholder.textContent = '结束日期';
+    }
+
+    startShell?.classList.toggle('has-value', Boolean(startInput.value));
+    startShell?.classList.toggle('is-disabled', isLongTerm);
+    endShell?.classList.toggle('hidden', mode !== 'range');
+    endShell?.classList.toggle('has-value', Boolean(endInput.value));
+    endShell?.classList.toggle('is-disabled', isLongTerm);
+    separator?.classList.toggle('hidden', mode !== 'range');
+    longTermOption?.classList.toggle('hidden', !enableLongTerm);
+    el.classList.toggle('date-has-long-term', enableLongTerm);
+    el.classList.toggle('date-is-long-term', isLongTerm);
+
+    if (longTermCheckbox) {
+        longTermCheckbox.checked = isLongTerm;
+    }
+
+    if (!startInput.dataset.dateBound) {
+        startInput.addEventListener('input', e => {
+            el.dataset.defaultValue = e.target.value;
+            renderDateControl(el);
+        });
+        startInput.dataset.dateBound = 'true';
+    }
+
+    if (!endInput.dataset.dateBound) {
+        endInput.addEventListener('input', e => {
+            el.dataset.endValue = e.target.value;
+            renderDateControl(el);
+        });
+        endInput.dataset.dateBound = 'true';
+    }
+
+    if (longTermCheckbox && !longTermCheckbox.dataset.dateBound) {
+        longTermCheckbox.addEventListener('change', e => {
+            el.dataset.defaultLongTerm = String(e.target.checked);
+            const propToggle = document.getElementById('prop-date-long-term-toggle');
+            if (propToggle && el.classList.contains('is-selected')) {
+                propToggle.checked = el.dataset.enableLongTerm === 'true';
+            }
+            renderDateControl(el);
+        });
+        longTermCheckbox.dataset.dateBound = 'true';
+    }
+}
+
+export function renderSignaturePrompt(el) {
+    if (!el || el.dataset.type !== 'signature') return;
+    const promptNode = el.querySelector('.signature-pad-text');
+    if (!promptNode) return;
+
+    promptNode.contentEditable = "plaintext-only";
+    promptNode.spellcheck = false;
+    promptNode.classList.add('outline-none', 'transition-all', 'duration-200', 'cursor-text');
+
+    if (!promptNode.dataset.editBound) {
+        const focusClasses = [
+            'shadow-[0_2px_0_0_#1677ff]',
+            'text-[#1677ff]'
+        ];
+
+        promptNode.addEventListener('focus', () => promptNode.classList.add(...focusClasses));
+        promptNode.addEventListener('blur', () => {
+            promptNode.classList.remove(...focusClasses);
+            if (!promptNode.textContent.trim()) {
+                const fallback = componentDefaults.signature.placeholder;
+                promptNode.textContent = fallback;
+                el.dataset.placeholder = fallback;
+                const propInput = document.getElementById('prop-placeholder-input');
+                if (propInput && el.classList.contains('is-selected')) {
+                    propInput.value = fallback;
+                }
+            }
+        });
+
+        promptNode.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                promptNode.blur();
+            }
+        });
+
+        promptNode.dataset.editBound = 'true';
+    }
+
+    const hasPlaceholder = el.dataset.placeholder !== undefined;
+    promptNode.textContent = hasPlaceholder
+        ? el.dataset.placeholder
+        : componentDefaults.signature.placeholder;
+}
+
+export function renderLabelVisibility(el) {
+    if (!el) return;
+    const shouldShowLabel = el.dataset.showLabel !== 'false';
+    const labelNode = el.querySelector('.component-label');
+    if (!labelNode) return;
+
+    const labelShell = el.dataset.type === 'alert'
+        ? labelNode.closest('.alert-title-row') || labelNode.parentElement
+        : labelNode;
+    if (labelShell) labelShell.classList.toggle('hidden', !shouldShowLabel);
+}
+
 // 统一更新画布元素的界面呈现（标签、占位符、必填等），保持和数据一致
 export function updateElementFromData(el) {
     setLabelText(el, el.dataset.label || '');
+    renderLabelVisibility(el);
 
     const placeholderNode = el.querySelector('.component-placeholder');
     if (placeholderNode && el.dataset.type !== 'select') {
@@ -445,13 +627,9 @@ export function updateElementFromData(el) {
     const reqStar = el.querySelector('.req-star');
     if (reqStar) reqStar.classList.toggle('hidden', el.dataset.required !== 'true');
 
-    // 处理日期组件的具体类型（如日期、年月等）
-    if (el.dataset.type === 'date') {
-        const dateInput = el.querySelector('.component-placeholder');
-        if (dateInput) dateInput.type = el.dataset.dateType || 'date';
-    }
-
     renderDefaultValue(el);
+    renderDateControl(el);
+    renderSignaturePrompt(el);
     renderOptions(el);
     renderHelpText(el);
     safeCreateIcons();
@@ -468,6 +646,31 @@ export function setupElementData(el, type) {
     el.dataset.defaultValue = defaults.defaultValue || '';
     el.dataset.required = 'false';
     el.dataset.layout = defaults.layout || 'inline';
+    el.dataset.showLabel = defaults.showLabel === false ? 'false' : 'true';
+
+    if ('declarationRequired' in defaults) {
+        el.dataset.declarationRequired = String(defaults.declarationRequired);
+    }
+
+    if ('endValue' in defaults) {
+        el.dataset.endValue = defaults.endValue;
+    }
+
+    if ('dateType' in defaults) {
+        el.dataset.dateType = defaults.dateType;
+    }
+
+    if ('dateMode' in defaults) {
+        el.dataset.dateMode = defaults.dateMode;
+    }
+
+    if ('enableLongTerm' in defaults) {
+        el.dataset.enableLongTerm = String(defaults.enableLongTerm);
+    }
+
+    if ('defaultLongTerm' in defaults) {
+        el.dataset.defaultLongTerm = String(defaults.defaultLongTerm);
+    }
 
     if ('maxSelections' in defaults) {
         el.dataset.maxSelections = defaults.maxSelections;

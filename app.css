@@ -151,6 +151,7 @@ body.is-panning * {
     --canvas-y: 160px;
     --canvas-scale: 1;
     cursor: grab;
+    touch-action: none;
     overflow: hidden !important;
 }
 
@@ -315,13 +316,11 @@ button {
     position: relative;
     margin-bottom: 12px;
     cursor: pointer;
-    border-radius: 12px;
-    border: 1px solid transparent;
+    border-radius: 6px;
+    border: 1px solid #edf1f5;
     background: #fff;
-    padding: 16px;
-    box-shadow:
-        0 2px 4px rgba(15, 23, 42, 0.03),
-        0 0 0 1px rgba(15, 23, 42, 0.05);
+    padding: 14px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
     transition:
         box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
         border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
@@ -329,15 +328,13 @@ button {
 }
 
 .canvas-element:hover {
-    box-shadow:
-        0 8px 16px -4px rgba(15, 23, 42, 0.06),
-        0 0 0 1px rgba(59, 130, 246, 0.4);
+    border-color: #dbeafe;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
 .canvas-element.is-selected {
-    box-shadow:
-        0 8px 24px -4px rgba(59, 130, 246, 0.15),
-        0 0 0 2px #3b82f6;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6;
     z-index: 10;
 }
 
@@ -379,7 +376,9 @@ button {
 
 .canvas-element .label-text,
 .canvas-element .option-text,
-.canvas-element .signature-declaration-text {
+.canvas-element .signature-declaration-text,
+.canvas-element .signature-pad-text,
+.canvas-element .field-help {
     pointer-events: auto !important;
     cursor: text !important;
     transition: color 0.2s;
@@ -387,21 +386,90 @@ button {
 
 body.is-dragging-component .canvas-element .label-text,
 body.is-dragging-component .canvas-element .option-text,
-body.is-dragging-component .canvas-element .signature-declaration-text {
+body.is-dragging-component .canvas-element .signature-declaration-text,
+body.is-dragging-component .canvas-element .signature-pad-text,
+body.is-dragging-component .canvas-element .field-help {
     pointer-events: none !important;
     cursor: grabbing !important;
 }
 
 .canvas-element .label-text:hover,
 .canvas-element .option-text:hover,
-.canvas-element .signature-declaration-text:hover {
+.canvas-element .signature-declaration-text:hover,
+.canvas-element .signature-pad-text:hover,
+.canvas-element .field-help:hover {
     color: #1677ff;
 }
 
 body.is-dragging-component .canvas-element .label-text:hover,
 body.is-dragging-component .canvas-element .option-text:hover,
-body.is-dragging-component .canvas-element .signature-declaration-text:hover {
+body.is-dragging-component .canvas-element .signature-declaration-text:hover,
+body.is-dragging-component .canvas-element .signature-pad-text:hover,
+body.is-dragging-component .canvas-element .field-help:hover {
     color: inherit;
+}
+
+.signature-pad-surface {
+    position: relative;
+    min-height: 178px;
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid #e7edf3;
+    border-radius: 6px;
+    background: #fbfcfe;
+}
+
+.signature-pad-label {
+    margin: 0 0 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+    color: #334155;
+}
+
+.signature-pad-required {
+    display: none;
+    color: #ff4d4f;
+}
+
+.canvas-element[data-required="true"] .signature-pad-required {
+    display: inline;
+}
+
+.signature-clear-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    height: 32px;
+    border: 1px solid #e1e7ee;
+    border-radius: 6px;
+    background: #ffffff;
+    padding: 0 13px;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 30px;
+}
+
+.signature-pad-surface.interactive {
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.signature-pad-surface.interactive:hover {
+    border-color: #cfe0f2;
+    background: #ffffff;
+}
+
+.signature-clear-btn:hover {
+    border-color: #93c5fd;
+    color: #1677ff;
 }
 
 .canvas-text-focus {
@@ -428,6 +496,7 @@ body.is-dragging-component .canvas-element .signature-declaration-text:hover {
     display: block;
     margin-bottom: 7px;
     color: rgba(0, 0, 0, 0.88);
+    font-size: 14px;
     font-weight: 500;
     line-height: 22px;
 }
@@ -437,6 +506,8 @@ body.is-dragging-component .canvas-element .signature-declaration-text:hover {
 }
 
 .req-star {
+    display: inline-block;
+    margin-right: 4px;
     color: #ff4d4f;
 }
 
@@ -445,7 +516,7 @@ body.is-dragging-component .canvas-element .signature-declaration-text:hover {
 .preview-input {
     min-height: 36px;
     width: 100%;
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid #d9d9d9;
     background: #fff;
     padding: 6px 12px;
@@ -479,6 +550,84 @@ body.is-dragging-component .canvas-element .signature-declaration-text:hover {
     color: rgba(0, 0, 0, 0.65);
 }
 
+.date-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.date-input-shell {
+    position: relative;
+    min-width: 0;
+    flex: 1;
+}
+
+.date-input-shell .date-input {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+}
+
+.date-input-shell:not(.has-value):not(:focus-within) .date-input {
+    color: transparent;
+}
+
+.date-input-shell:not(.has-value):not(:focus-within) .date-input::-webkit-datetime-edit {
+    color: transparent;
+}
+
+.date-placeholder-text {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    z-index: 0;
+    max-width: calc(100% - 36px);
+    transform: translateY(-50%);
+    overflow: hidden;
+    color: rgba(0, 0, 0, 0.32);
+    font-size: 13px;
+    line-height: 20px;
+    pointer-events: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.date-input-shell.has-value .date-placeholder-text,
+.date-input-shell:focus-within .date-placeholder-text {
+    display: none;
+}
+
+.date-input-shell.is-disabled .date-input {
+    border-color: #e5e7eb;
+    background: #f8fafc;
+}
+
+.date-range-separator {
+    flex: none;
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 12px;
+}
+
+.date-long-term-option {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    color: rgba(0, 0, 0, 0.65);
+    font-size: 13px;
+    line-height: 20px;
+    white-space: nowrap;
+}
+
+.date-long-term-option input {
+    margin: 0;
+}
+
+.canvas-element.date-is-long-term .date-input {
+    color: rgba(0, 0, 0, 0.32);
+}
+
 textarea.ant-input,
 textarea.component-placeholder,
 textarea.preview-input {
@@ -505,10 +654,13 @@ textarea.preview-input {
 }
 
 .field-help {
-    margin: 8px 0 0;
+    display: inline-flex;
+    margin-left: 8px;
     color: rgba(0, 0, 0, 0.45);
     font-size: 12px;
     line-height: 20px;
+    font-weight: 400;
+    outline: none;
 }
 
 .element-actions {
@@ -563,7 +715,7 @@ textarea.preview-input {
 .nested-dropzone {
     position: relative;
     min-height: 96px;
-    border-radius: 12px;
+    border-radius: 6px;
     border: 1.5px dashed #cbd5e1;
     background: #f8fafc;
     padding: 12px;
@@ -614,7 +766,7 @@ textarea.preview-input {
 .section-title {
     margin-bottom: 12px;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
     color: rgba(0, 0, 0, 0.88);

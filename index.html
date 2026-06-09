@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Low-Code Form Builder</title>
+    <title>自定义表单构建器</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <script src="./js/lib/lucide.min.js"></script>
@@ -411,7 +411,7 @@
                             <h2 class="m-0 text-sm font-semibold leading-6">属性配置</h2>
                             <p class="m-0 text-xs leading-5 text-black/45">当前选中组件</p>
                         </div>
-                        <span id="prop-id" class="code-badge">None</span>
+                        <span id="prop-id" class="code-badge">未选中</span>
                     </div>
 
                     <div id="prop-empty" class="prop-empty">
@@ -424,23 +424,58 @@
                         onsubmit="return false;">
                         <section class="prop-section">
                             <div class="section-title">
-                                <span>基础信息</span>
-                                <span id="prop-type-badge" class="code-badge">field</span>
+                                <div class="min-w-0">
+                                    <span class="block">基础信息</span>
+                                    <span class="mt-0.5 block truncate text-[11px] font-normal leading-4 text-slate-400">设置字段标题、展示与校验</span>
+                                </div>
+                                <span id="prop-type-badge" class="code-badge">字段</span>
                             </div>
                             <label class="form-control">
                                 <span>标题</span>
                                 <input class="ant-input" type="text" id="prop-label-input" />
                             </label>
+                            <label class="form-control">
+                                <span class="!flex items-center gap-1.5 w-fit">
+                                    副标题
+                                    <div class="relative flex items-center group cursor-help">
+                                        <i data-lucide="help-circle"
+                                            class="h-3.5 w-3.5 text-slate-400 transition-colors group-hover:text-blue-500"></i>
+                                        <div
+                                            class="absolute bottom-full left-[-40px] mb-2 w-48 rounded bg-slate-800 p-2 text-[11px] leading-relaxed text-white shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 font-normal cursor-default text-left">
+                                            显示在组件标题旁边的补充说明，用于指导用户如何填写。
+                                            <div
+                                                class="absolute left-[47px] top-full -translate-x-1/2 border-[5px] border-transparent border-t-slate-800">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </span>
+                                <input class="ant-input" type="text" id="prop-help-input"
+                                    placeholder="显示在标题旁边的补充说明" />
+                            </label>
+                            <div class="mt-3 flex items-center justify-between">
+                                <span class="text-xs leading-5 text-black/65">显示标题</span>
+                                <label class="ant-switch">
+                                    <input type="checkbox" id="prop-show-label-toggle" checked />
+                                    <span></span>
+                                </label>
+                            </div>
                         </section>
 
                         <section class="prop-section" id="prop-placeholder-group">
                             <label class="form-control">
-                                <span>占位提示</span>
+                                <span id="prop-placeholder-label">占位提示</span>
                                 <input class="ant-input" type="text" id="prop-placeholder-input" />
                             </label>
                         </section>
 
-                        <section class="prop-section hidden" id="prop-date-type-group">
+                        <section class="prop-section hidden" id="prop-date-settings-group">
+                            <label class="form-control">
+                                <span>选择方式</span>
+                                <select class="ant-input" id="prop-date-mode-select">
+                                    <option value="single">单日期</option>
+                                    <option value="range">起止日期</option>
+                                </select>
+                            </label>
                             <label class="form-control">
                                 <span>日期格式</span>
                                 <select class="ant-input" id="prop-date-type-select">
@@ -450,27 +485,13 @@
                                     <option value="time">时间</option>
                                 </select>
                             </label>
-                        </section>
-
-                        <section class="prop-section" id="prop-help-group">
-                            <label class="form-control">
-                                <span class="!flex items-center gap-1.5 w-fit">
-                                    提示文本
-                                    <div class="relative flex items-center group cursor-help">
-                                        <i data-lucide="help-circle"
-                                            class="h-3.5 w-3.5 text-slate-400 transition-colors group-hover:text-blue-500"></i>
-                                        <div
-                                            class="absolute bottom-full left-[-40px] mb-2 w-48 rounded bg-slate-800 p-2 text-[11px] leading-relaxed text-white shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 font-normal cursor-default text-left">
-                                            显示在组件下方的说明性文字，用于指导用户如何填写。
-                                            <div
-                                                class="absolute left-[47px] top-full -translate-x-1/2 border-[5px] border-transparent border-t-slate-800">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </span>
-                                <input class="ant-input" type="text" id="prop-help-input"
-                                    placeholder="显示在字段下方的说明或填写提示" />
-                            </label>
+                            <div class="mt-3 flex items-center justify-between">
+                                <span class="text-xs leading-5 text-black/65">启用长期选项</span>
+                                <label class="ant-switch">
+                                    <input type="checkbox" id="prop-date-long-term-toggle" />
+                                    <span></span>
+                                </label>
+                            </div>
                         </section>
 
                         <section class="prop-section" id="prop-default-group">
@@ -506,7 +527,7 @@
                                             class="h-3.5 w-3.5 text-slate-400 transition-colors group-hover:text-blue-500"></i>
                                         <div
                                             class="absolute bottom-full left-[-40px] mb-2 w-48 rounded bg-slate-800 p-2 text-[11px] leading-relaxed text-white shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 font-normal cursor-default text-left">
-                                            设置列表的具体选项，Label用于展示给用户，右侧灰底值是系统底层提交的标识(Value)。
+                                            设置列表的具体选项，选项名称用于展示给用户，右侧灰底值是系统底层提交的标识。
                                             <div
                                                 class="absolute left-[47px] top-full -translate-x-1/2 border-[5px] border-transparent border-t-slate-800">
                                             </div>
@@ -533,9 +554,18 @@
                         </section>
 
                         <section class="prop-section flex items-center justify-between">
-                            <span class="text-xs leading-5 text-black/65">是否必填</span>
+                            <span id="prop-required-label" class="text-xs leading-5 text-black/65">是否必填</span>
                             <label class="ant-switch">
                                 <input type="checkbox" id="prop-required-toggle" />
+                                <span></span>
+                            </label>
+                        </section>
+
+                        <section class="prop-section hidden flex items-center justify-between"
+                            id="prop-signature-declaration-required-group">
+                            <span class="text-xs leading-5 text-black/65">声明复选必填</span>
+                            <label class="ant-switch">
+                                <input type="checkbox" id="prop-signature-declaration-required-toggle" />
                                 <span></span>
                             </label>
                         </section>
@@ -568,7 +598,7 @@
                         <section class="prop-section">
                             <div class="section-title">
                                 <span>画布设置</span>
-                                <span class="code-badge bg-blue-50 text-blue-600">page</span>
+                                <span class="code-badge bg-blue-50 text-blue-600">页面</span>
                             </div>
                             <label class="form-control">
                                 <span>页面标题</span>
@@ -602,7 +632,7 @@
                     <button class="ant-btn ant-btn-default h-8 px-3 text-xs flex items-center gap-1.5"
                         onclick="toggleSchemaSidebar()">
                         <i data-lucide="code" class="h-3.5 w-3.5"></i>
-                        <span>Schema JSON</span>
+                        <span>结构 JSON</span>
                     </button>
                     <button class="icon-btn" type="button" onclick="closePreviewModal()" aria-label="关闭">
                         <i data-lucide="x" class="h-4 w-4"></i>
@@ -670,7 +700,7 @@
                         <div
                             class="flex h-12 shrink-0 items-center justify-between border-b border-white/10 px-5 font-semibold text-[#abb2bf]">
                             <div class="flex items-center gap-2">
-                                <span>Schema JSON</span>
+                                <span>结构 JSON</span>
                                 <button id="copy-schema-btn"
                                     class="flex h-6 w-6 items-center justify-center rounded text-[#abb2bf] transition hover:bg-white/10 hover:text-white"
                                     title="复制 JSON">
@@ -679,10 +709,10 @@
                             </div>
                             <div class="flex items-center gap-3">
                                 <span id="schema-field-count"
-                                    class="code-badge bg-white/10 text-white border-none font-normal">0 fields</span>
+                                    class="code-badge bg-white/10 text-white border-none font-normal">0 个字段</span>
                                 <button
                                     class="flex h-6 w-6 items-center justify-center rounded text-[#abb2bf] transition hover:bg-white/10 hover:text-red-400"
-                                    onclick="toggleSchemaSidebar()" title="关闭 Schema">
+                                    onclick="toggleSchemaSidebar()" title="关闭结构面板">
                                     <i data-lucide="x" class="h-4 w-4"></i>
                                 </button>
                             </div>
@@ -893,13 +923,15 @@
                 </button>
             </div>
             <div class="component-label">声明与签名 <span class="req-star hidden">*</span></div>
-            <div class="signature-canvas-mock bg-white border border-[#e5e7eb] rounded-lg p-4"
+            <div class="signature-canvas-mock bg-white"
                 style="pointer-events: none">
                 <div class="signature-options-container mb-4 flex flex-col gap-3"></div>
-                <div
-                    class="w-full h-28 bg-[#f8fafc] border-2 border-dashed border-[#cbd5e1] rounded-lg flex flex-col items-center justify-center text-[#94a3b8]">
-                    <i data-lucide="pen-tool" class="h-6 w-6 mb-2"></i>
-                    <span class="text-sm font-medium">点击此处进行手写签名</span>
+                <div class="signature-pad-label">
+                    <span class="signature-pad-required">*</span>
+                    <span class="signature-pad-text">请在下方指定区域签名：</span>
+                </div>
+                <div class="signature-pad-surface">
+                    <button type="button" class="signature-clear-btn">清空</button>
                 </div>
             </div>
         </div>
@@ -952,7 +984,21 @@
                 </button>
             </div>
             <div class="component-label">日期选择 <span class="req-star hidden">*</span></div>
-            <input type="date" class="component-placeholder" />
+            <div class="date-control">
+                <div class="date-input-shell">
+                    <input type="date" class="component-placeholder date-input" data-date-part="start" />
+                    <span class="date-placeholder-text">请选择日期</span>
+                </div>
+                <div class="date-range-separator hidden">至</div>
+                <div class="date-input-shell date-end-shell hidden">
+                    <input type="date" class="component-placeholder date-input" data-date-part="end" />
+                    <span class="date-placeholder-text">结束日期</span>
+                </div>
+                <label class="date-long-term-option hidden">
+                    <input type="checkbox" class="date-long-term-checkbox" />
+                    <span>长期</span>
+                </label>
+            </div>
         </div>
     </template>
 
@@ -973,7 +1019,7 @@
                 class="overflow-hidden rounded-xl bg-blue-50/40 shadow-sm ring-1 ring-blue-100/80 pointer-events-none">
                 <div class="h-1 w-full bg-blue-500"></div>
                 <div class="p-4 sm:p-5">
-                    <div class="mb-3 flex items-center gap-2">
+                    <div class="alert-title-row mb-3 flex items-center gap-2">
                         <svg class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                             stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -1034,7 +1080,7 @@
             <div class="flex-1 overflow-hidden flex flex-col w-full h-full rounded-2xl">
                 <div class="page-header-area px-5 pt-6 pb-4 shrink-0 bg-white rounded-t-2xl">
                     <input
-                        class="page-title-input w-full bg-transparent text-[22px] font-semibold tracking-tight leading-7 text-slate-800 outline-none transition-all focus:text-blue-500 focus:shadow-[0_2px_0_0_#3b82f6] pb-1"
+                        class="page-title-input w-full bg-transparent text-[20px] font-semibold tracking-tight leading-7 text-slate-800 outline-none transition-all focus:text-blue-500 focus:shadow-[0_2px_0_0_#3b82f6] pb-1"
                         value="页面标题" aria-label="页面标题" />
                     <textarea
                         class="page-desc-input mt-1.5 w-full overflow-hidden resize-none bg-transparent text-[15px] leading-6 text-slate-500 outline-none transition-all focus:text-blue-500 focus:shadow-[0_2px_0_0_#3b82f6] pb-1"

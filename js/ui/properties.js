@@ -1,7 +1,7 @@
 import { state } from '../core/state.js';
 import { optionTypes } from '../components/registry.js';
 import { notifySchemaChange, parseMultiValue, stringifyMultiValue, readOptions, writeOptions, safeCreateIcons } from '../utils/helpers.js';
-import { renderDefaultValue, renderOptions } from '../components/builder.js';
+import { renderDateControl, renderDefaultValue, renderOptions, renderSignaturePrompt, renderLabelVisibility } from '../components/builder.js';
 import { setLabelText, renderHelpText } from '../components/builder.js';
 import * as DOM from './dom.js';
 
@@ -104,6 +104,7 @@ export function updateDefaultValueUI(el) {
     } else {
         // 对于普通文本或日期类型的组件，显示普通的文本输入框用于设置默认值
         DOM.inputDefault.style.display = '';
+        DOM.inputDefault.type = type === 'date' ? (el.dataset.dateType || 'date') : 'text';
         if (DOM.selectDefault) DOM.selectDefault.style.display = 'none';
         if (DOM.checkboxDefaultGroup) DOM.checkboxDefaultGroup.style.display = 'none';
         DOM.inputDefault.value = el.dataset.defaultValue || '';
@@ -149,14 +150,14 @@ export function renderOptionsEditor() {
         labelInput.value = option.label || '';
         inputContainer.appendChild(labelInput);
         
-        // Value 标识 (仅普通选项展示)
+        // 选项提交标识（仅普通选项展示）
         let valueInput = null;
         if (!isDisplayOnly) {
             valueInput = document.createElement('input');
             valueInput.type = 'text';
             valueInput.value = option.value || '';
             valueInput.readOnly = true;
-            valueInput.title = '选项底层提交值 (Value)';
+            valueInput.title = '选项底层提交值';
             // 极简微标签
             valueInput.className = 'ant-input !h-[32px] !min-h-[32px] text-[10px] font-mono text-slate-400 bg-slate-50/50 border-slate-200/60 w-[60px] shrink-0 !px-[6px] !py-[4px] !rounded-[6px] text-center focus:!border-slate-200 focus:!shadow-none';
             inputContainer.appendChild(valueInput);
@@ -252,7 +253,7 @@ export function bindPropEvents() {
     };
 
     bindVirtualFocus(DOM.inputLabel, '.label-text');
-    bindVirtualFocus(DOM.inputPlaceholder, '.component-placeholder');
+    bindVirtualFocus(DOM.inputPlaceholder, '.component-placeholder, .signature-pad-text');
     bindVirtualFocus(DOM.inputHelp, '.field-help');
     bindVirtualFocus(DOM.inputDefault, '.component-placeholder');
     
@@ -286,7 +287,17 @@ export function bindPropEvents() {
         if (!state.selectedElement) return;
         state.selectedElement.dataset.label = e.target.value;
         setLabelText(state.selectedElement, e.target.value);
+        renderLabelVisibility(state.selectedElement);
     });
+
+    if (DOM.toggleShowLabel) {
+        DOM.toggleShowLabel.addEventListener('change', e => {
+            if (!state.selectedElement) return;
+            state.selectedElement.dataset.showLabel = String(e.target.checked);
+            renderLabelVisibility(state.selectedElement);
+            notifySchemaChange();
+        });
+    }
 
     // 字段标识（Key）现在是只读的，所以不需要监听 input 事件
 
@@ -298,6 +309,12 @@ export function bindPropEvents() {
         if (node) node.setAttribute('placeholder', e.target.value);
         if (['select', 'country', 'nationality'].includes(state.selectedElement.dataset.type)) {
             renderOptions(state.selectedElement);
+        }
+        if (state.selectedElement.dataset.type === 'signature') {
+            renderSignaturePrompt(state.selectedElement);
+        }
+        if (state.selectedElement.dataset.type === 'date') {
+            renderDateControl(state.selectedElement);
         }
     });
 
@@ -313,6 +330,7 @@ export function bindPropEvents() {
         if (!state.selectedElement) return;
         state.selectedElement.dataset.defaultValue = e.target.value;
         renderDefaultValue(state.selectedElement);
+        renderDateControl(state.selectedElement);
         renderOptions(state.selectedElement);
     });
 
@@ -338,6 +356,14 @@ export function bindPropEvents() {
         const reqStar = state.selectedElement.querySelector('.req-star');
         if (reqStar) reqStar.classList.toggle('hidden', !e.target.checked);
     });
+
+    if (DOM.toggleSignatureDeclarationRequired) {
+        DOM.toggleSignatureDeclarationRequired.addEventListener('change', e => {
+            if (!state.selectedElement || state.selectedElement.dataset.type !== 'signature') return;
+            state.selectedElement.dataset.declarationRequired = String(e.target.checked);
+            notifySchemaChange();
+        });
+    }
 
     // 绑定排布方向（内联或堆叠）的选择事件
     DOM.propLayoutSelect.addEventListener('change', e => {
@@ -373,11 +399,34 @@ export function bindPropEvents() {
     DOM.propDateTypeSelect.addEventListener('change', e => {
         if (!state.selectedElement || state.selectedElement.dataset.type !== 'date') return;
         state.selectedElement.dataset.dateType = e.target.value;
-        const input = state.selectedElement.querySelector('.component-placeholder');
-        if (input) {
-            input.type = e.target.value;
-        }
+        renderDateControl(state.selectedElement);
+        updateDefaultValueUI(state.selectedElement);
     });
+
+    if (DOM.propDateModeSelect) {
+        DOM.propDateModeSelect.addEventListener('change', e => {
+            if (!state.selectedElement || state.selectedElement.dataset.type !== 'date') return;
+            state.selectedElement.dataset.dateMode = e.target.value;
+            if (e.target.value === 'single') {
+                state.selectedElement.dataset.endValue = '';
+            }
+            renderDateControl(state.selectedElement);
+            updateDefaultValueUI(state.selectedElement);
+            const hasDefaultValue = e.target.value !== 'range';
+            DOM.propDefaultGroup.style.display = hasDefaultValue ? 'block' : 'none';
+        });
+    }
+
+    if (DOM.toggleDateLongTerm) {
+        DOM.toggleDateLongTerm.addEventListener('change', e => {
+            if (!state.selectedElement || state.selectedElement.dataset.type !== 'date') return;
+            state.selectedElement.dataset.enableLongTerm = String(e.target.checked);
+            if (!e.target.checked) {
+                state.selectedElement.dataset.defaultLongTerm = 'false';
+            }
+            renderDateControl(state.selectedElement);
+        });
+    }
 
     // 绑定添加新选项按钮的点击事件
     DOM.addOptionBtn.addEventListener('click', () => {

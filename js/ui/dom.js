@@ -6,19 +6,25 @@ export const propEmpty = document.getElementById('prop-empty');
 export const propIdText = document.getElementById('prop-id');
 export const inputLabel = document.getElementById('prop-label-input');
 export const inputKey = document.getElementById('prop-key-input');
+export const toggleShowLabel = document.getElementById('prop-show-label-toggle');
+export const propPlaceholderLabel = document.getElementById('prop-placeholder-label');
 export const inputPlaceholder = document.getElementById('prop-placeholder-input');
 export const inputHelp = document.getElementById('prop-help-input');
 export const inputDefault = document.getElementById('prop-default-input');
 export const selectDefault = document.getElementById('prop-default-select');
 export const checkboxDefaultGroup = document.getElementById('prop-default-checkbox-group');
+export const propRequiredLabel = document.getElementById('prop-required-label');
 export const toggleRequired = document.getElementById('prop-required-toggle');
+export const propSignatureDeclarationRequiredGroup = document.getElementById('prop-signature-declaration-required-group');
+export const toggleSignatureDeclarationRequired = document.getElementById('prop-signature-declaration-required-toggle');
 export const propTypeBadge = document.getElementById('prop-type-badge');
 
 // 属性面板中的各个设置组容器
 export const propPlaceholderGroup = document.getElementById('prop-placeholder-group');
-export const propDateTypeGroup = document.getElementById('prop-date-type-group');
+export const propDateSettingsGroup = document.getElementById('prop-date-settings-group');
 export const propDateTypeSelect = document.getElementById('prop-date-type-select');
-export const propHelpGroup = document.getElementById('prop-help-group');
+export const propDateModeSelect = document.getElementById('prop-date-mode-select');
+export const toggleDateLongTerm = document.getElementById('prop-date-long-term-toggle');
 export const propDefaultGroup = document.getElementById('prop-default-group');
 
 // 选项管理区域及按钮

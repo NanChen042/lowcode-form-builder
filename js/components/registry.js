@@ -5,17 +5,17 @@ export const valueTypes = ['input', 'textarea', 'date'];
 
 // 默认的国家选择下拉列表数据，包含一些常用国家的标签和对应的值
 export const defaultCountryOptions = [
-    { label: '中国 (China)', value: 'CN' },
-    { label: '美国 (United States)', value: 'US' },
-    { label: '英国 (United Kingdom)', value: 'GB' },
-    { label: '日本 (Japan)', value: 'JP' },
-    { label: '韩国 (South Korea)', value: 'KR' },
-    { label: '法国 (France)', value: 'FR' },
-    { label: '德国 (Germany)', value: 'DE' },
-    { label: '澳大利亚 (Australia)', value: 'AU' },
-    { label: '加拿大 (Canada)', value: 'CA' },
-    { label: '新加坡 (Singapore)', value: 'SG' },
-    { label: '其他 (Other)', value: 'OTHER' }
+    { label: '中国', value: 'CN' },
+    { label: '美国', value: 'US' },
+    { label: '英国', value: 'GB' },
+    { label: '日本', value: 'JP' },
+    { label: '韩国', value: 'KR' },
+    { label: '法国', value: 'FR' },
+    { label: '德国', value: 'DE' },
+    { label: '澳大利亚', value: 'AU' },
+    { label: '加拿大', value: 'CA' },
+    { label: '新加坡', value: 'SG' },
+    { label: '其他', value: 'OTHER' }
 ];
 
 // 默认的国籍选择下拉列表数据，类似于国家选项，但用于国籍字段
