@@ -24,8 +24,8 @@ export const componentDefaults = {
         help: '',
         defaultValue: '',
         options: [
-            { label: '选项一', value: 'option_1' },
-            { label: '选项二', value: 'option_2' }
+            { label: '选项一', value: '选项一' },
+            { label: '选项二', value: '选项二' }
         ]
     },
     country: {
@@ -55,22 +55,22 @@ export const componentDefaults = {
     radio: {
         label: '单选框组',
         help: '',
-        defaultValue: 'option_1',
+        defaultValue: '选项一',
         layout: 'inline',
         options: [
-            { label: '选项一', value: 'option_1' },
-            { label: '选项二', value: 'option_2' }
+            { label: '选项一', value: '选项一' },
+            { label: '选项二', value: '选项二' }
         ]
     },
     checkbox: {
         label: '多选框组',
         help: '',
-        defaultValue: 'option_1',
+        defaultValue: '选项一',
         layout: 'inline',
         maxSelections: 3,
         options: [
-            { label: '选项一', value: 'option_1' },
-            { label: '选项二', value: 'option_2' }
+            { label: '选项一', value: '选项一' },
+            { label: '选项二', value: '选项二' }
         ]
     },
     date: {

@@ -3,7 +3,7 @@ import { safeCreateIcons } from './utils/helpers.js';
 import { bindPropEvents } from './ui/properties.js';
 import { addPage, bindCanvasEvents, initPages, checkEmptyState, resetCanvasView, requestDeletePage } from './ui/canvas.js';
 import { bindPreviewEvents } from './ui/preview.js';
-import { addComponentToCanvas } from './components/builder.js';
+import { addComponentToCanvas, setupElementData } from './components/builder.js';
 import { state } from './core/state.js';
 import { loadSchema, saveToServer, markDirty, isDirty, establishBaseline } from './core/schema.js';
 import { blankTemplate, kycIndividualTemplate, kycEntityTemplate } from './templates/recommend.js';
@@ -86,6 +86,48 @@ const templateCardThemes = {
     }
 };
 
+function measureComponentPlaceholderHeight(type) {
+    const template = document.getElementById(`tpl-${type}`);
+    if (!template) return null;
+
+    const tempDiv = document.createElement('div');
+    tempDiv.appendChild(template.content.cloneNode(true));
+    const rootDiv = tempDiv.querySelector('.canvas-element');
+    if (!rootDiv) return null;
+
+    const measureEl = document.createElement('div');
+    measureEl.className = rootDiv.className;
+    measureEl.innerHTML = rootDiv.innerHTML;
+    measureEl.id = 'cmp_measure';
+    setupElementData(measureEl, type);
+
+    const targetDropzone = document.querySelector('.canvas-dropzone');
+    const targetWidth = targetDropzone ? targetDropzone.clientWidth : 342;
+    const sandbox = document.createElement('div');
+    sandbox.style.position = 'fixed';
+    sandbox.style.left = '-10000px';
+    sandbox.style.top = '0';
+    sandbox.style.width = `${targetWidth}px`;
+    sandbox.style.visibility = 'hidden';
+    sandbox.style.pointerEvents = 'none';
+    sandbox.appendChild(measureEl);
+    document.body.appendChild(sandbox);
+
+    const height = Math.ceil(measureEl.getBoundingClientRect().height);
+    sandbox.remove();
+
+    return height || null;
+}
+
+function syncDragPlaceholderHeight(type) {
+    const height = measureComponentPlaceholderHeight(type);
+    if (height) {
+        document.body.style.setProperty('--drag-placeholder-height', `${height}px`);
+    } else {
+        document.body.style.removeProperty('--drag-placeholder-height');
+    }
+}
+
 function replaceClasses(node, pool, nextClasses = []) {
     if (!node) return;
     node.classList.remove(...pool);
@@ -161,7 +203,10 @@ async function bootstrap() {
         fallbackOnBody: true,
         fallbackTolerance: 4,
         draggable: '.component-item',
-        onStart: function() {
+        onStart: function(evt) {
+            const type = evt.item?.getAttribute('data-type');
+            if (type) syncDragPlaceholderHeight(type);
+
             // 开始拖拽时，为 body 和画布添加状态类，隐藏空状态提示
             document.body.classList.add('is-dragging-component');
             state.pages.forEach(p => {
@@ -176,6 +221,7 @@ async function bootstrap() {
         onEnd: function() {
             // 结束拖拽时，恢复状态，并重新检查空状态提示
             document.body.classList.remove('is-dragging-component');
+            document.body.style.removeProperty('--drag-placeholder-height');
             state.pages.forEach(p => {
                 const dz = document.getElementById(p.id);
                 if (dz) dz.classList.remove('is-dragging');
@@ -394,7 +440,7 @@ async function bootstrap() {
     
 
 
-    // ================= 右键菜单逻辑 =================
+    // 右键菜单逻辑
     const contextMenu = document.getElementById('canvas-context-menu');
     const canvasArea = document.getElementById('canvas-scroll-area');
     const deletePageBtn = document.getElementById('menu-btn-delete-page');

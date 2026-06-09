@@ -341,15 +341,40 @@ button {
     z-index: 10;
 }
 
+.canvas-element span:not(.element-actions span),
+.canvas-element p:not(.field-help) {
+    pointer-events: none;
+}
+
+.canvas-element,
 .canvas-element input,
 .canvas-element textarea,
 .canvas-element select,
 .canvas-element label:not(.element-actions label),
-.canvas-element span:not(.element-actions span),
-.canvas-element p,
 .canvas-element .choice-group,
-.canvas-element .choice-group * {
-    pointer-events: none;
+.canvas-element .choice-group *,
+.canvas-element .signature-options-container,
+.canvas-element .signature-options-container * {
+    cursor: pointer;
+}
+
+.canvas-element input,
+.canvas-element textarea,
+.canvas-element select,
+.canvas-element label:not(.element-actions label),
+.canvas-element .field-help,
+.canvas-element .choice-group,
+.canvas-element .choice-group *,
+.canvas-element .signature-options-container,
+.canvas-element .signature-options-container * {
+    pointer-events: auto;
+}
+
+.canvas-element .component-placeholder,
+.canvas-element .choice-group input,
+.canvas-element .signature-options-container input {
+    caret-color: transparent;
+    user-select: none;
 }
 
 .canvas-element .label-text,
@@ -784,26 +809,9 @@ textarea.preview-input {
 
 .canvas-dropzone .component-item.sortable-ghost {
     width: 100% !important;
-    height: 88px !important;
+    height: var(--drag-placeholder-height, 88px) !important;
     flex-direction: row !important;
     gap: 8px !important;
-}
-
-.canvas-dropzone .component-item[data-type="signature"].sortable-ghost {
-    height: 201px !important;
-}
-
-.canvas-dropzone .component-item[data-type="textarea"].sortable-ghost {
-    height: 127px !important;
-}
-
-.canvas-dropzone .component-item[data-type="grid"].sortable-ghost {
-    height: 122px !important;
-}
-
-.canvas-dropzone .component-item[data-type="radio"].sortable-ghost,
-.canvas-dropzone .component-item[data-type="checkbox"].sortable-ghost {
-    height: 98px !important;
 }
 
 .canvas-dropzone .component-item.sortable-ghost > * {

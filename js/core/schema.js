@@ -111,12 +111,30 @@ export let isSystemUpdating = false;
 export let isDirty = false;
 export let lastSavedSchemaString = '';
 
+function showSaveStatus(statusEl) {
+    statusEl.classList.remove('hidden');
+    statusEl.classList.add('flex');
+    requestAnimationFrame(() => {
+        statusEl.classList.remove('opacity-0');
+    });
+}
+
+function hideSaveStatus(statusEl) {
+    statusEl.classList.add('opacity-0');
+    setTimeout(() => {
+        if (statusEl.classList.contains('opacity-0')) {
+            statusEl.classList.add('hidden');
+            statusEl.classList.remove('flex');
+        }
+    }, 300);
+}
+
 export function establishBaseline() {
     lastSavedSchemaString = JSON.stringify(buildSchema());
     isDirty = false;
     const statusEl = document.getElementById('save-status');
     if (statusEl) {
-        statusEl.classList.add('opacity-0');
+        hideSaveStatus(statusEl);
     }
 }
 
@@ -147,13 +165,14 @@ export function markDirty() {
                 statusEl.innerHTML = `<i data-lucide="circle-alert" class="h-3.5 w-3.5"></i>未保存`;
                 statusEl.classList.remove('opacity-0', 'text-slate-500');
                 statusEl.classList.add('text-orange-500'); 
+                showSaveStatus(statusEl);
                 if (window.lucide) window.lucide.createIcons({ root: statusEl });
             }
         } else if (!hasChanged && isDirty) {
             // 如果用户撤销了修改（改回了原本的样子），自动清除未保存状态
             isDirty = false;
             if (statusEl) {
-                statusEl.classList.add('opacity-0');
+                hideSaveStatus(statusEl);
             }
         }
     }, 500);
@@ -165,7 +184,7 @@ export async function saveToServer() {
     
     // 切换到保存中状态
     statusEl.innerHTML = `<i data-lucide="loader-2" class="h-3.5 w-3.5 animate-spin"></i>保存中...`;
-    statusEl.classList.remove('opacity-0');
+    showSaveStatus(statusEl);
     if (window.lucide) window.lucide.createIcons({ root: statusEl });
     
     try {
@@ -195,7 +214,7 @@ export async function saveToServer() {
     } finally {
         // 3秒后隐藏提示
         setTimeout(() => {
-            statusEl.classList.add('opacity-0');
+            hideSaveStatus(statusEl);
         }, 3000);
     }
 }

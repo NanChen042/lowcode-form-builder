@@ -723,7 +723,7 @@ export function selectElement(el) {
     DOM.propLayoutGroup.style.display = canStackChoices ? 'block' : 'none';
     DOM.propLayoutSelect.value = el.dataset.layout || 'inline';
     
-    // Hide required toggle for structural components like grid and alert
+    // 隐藏网格（grid）和警告框（alert）等结构性组件的必填项开关
     const requiredGroup = DOM.toggleRequired.closest('.prop-section');
     if (requiredGroup) {
         requiredGroup.style.display = (type === 'grid' || type === 'alert') ? 'none' : 'flex';
@@ -806,9 +806,9 @@ window.duplicateElement = function(event, el) {
     notifySchemaChange();
 }
 
-// Ensure initDropzone uses the builder functions but builder uses initDropzone
-// We will need to dynamic import or ensure no circular dep issues.
-// But we can import setupElementData from builder.js since it's used.
+// 确保 initDropzone 使用了 builder 的函数，但 builder 又使用了 initDropzone
+// 需要使用动态导入，或者确保不会引发循环依赖问题。
+// 不过可以从 builder.js 导入 setupElementData，因为这个被用到了。
 import { setupElementData } from '../components/builder.js';
 import { getUniqueId } from '../core/state.js';
 
@@ -1018,7 +1018,7 @@ export function bindCanvasEvents() {
         }
     });
 
-    // Panning & Dragging Events
+    // 视图平移与组件拖拽事件
     window.addEventListener('keydown', e => {
         if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
             if (!state.isSpacePressed) {
@@ -1064,7 +1064,7 @@ export function bindCanvasEvents() {
             state.panStartCanvasY = state.canvasState.y;
             document.body.classList.add('is-panning');
             
-            // Only clear selection if it's a genuine background click without Space key
+            // 仅在无空格键按下的真实背景点击时，才清除选中状态
             if (e.button === 0 && !isSpaceDrag && !isMiddleDrag) {
                 clearSelection();
             }
@@ -1083,7 +1083,7 @@ export function bindCanvasEvents() {
             state.panStartX = e.clientX;
             state.panStartY = e.clientY;
             document.body.classList.add('is-panning');
-            selectElement(frame); // Select the frame instead of clearing selection
+            selectElement(frame); // 选中外层框架（frame），而不是清除选中状态
         } else {
             if (e.target.closest('.element-actions')) return;
             const element = e.target.closest('.canvas-element');
@@ -1091,8 +1091,10 @@ export function bindCanvasEvents() {
             const pageDescInput = e.target.closest('.page-desc-input');
             
             if (element && DOM.canvasWorld.contains(element) && e.button === 0) {
-                // 阻止浏览器在点击组件空白处时自动将焦点转移到内部的 contenteditable 元素
-                if (!e.target.closest('.label-text, .option-text, .signature-declaration-text')) {
+                const isEditableText = e.target.closest('.label-text, .option-text, .signature-declaration-text');
+
+                // 设计态下表单控件只负责选中组件，真实填写放在预览里完成。
+                if (!isEditableText) {
                     e.preventDefault();
                 }
                 selectElement(element);
@@ -1166,6 +1168,17 @@ export function bindCanvasEvents() {
                     }, 10);
                 }
             }
+        }
+    }, { capture: true });
+
+    DOM.canvasWorld.addEventListener('click', e => {
+        const designOnlyControl = e.target.closest(
+            '.component-placeholder, .choice-group input, .choice-group label, .signature-options-container input'
+        );
+        const editableText = e.target.closest('.label-text, .option-text, .signature-declaration-text');
+
+        if (designOnlyControl && !editableText) {
+            e.preventDefault();
         }
     }, { capture: true });
 

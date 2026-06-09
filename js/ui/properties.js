@@ -200,7 +200,17 @@ export function renderOptionsEditor() {
         // 监听选项标签变化并更新组件数据
         labelInput.addEventListener('input', e => {
             const latestOptions = readOptions(state.selectedElement);
-            latestOptions[index] = { ...latestOptions[index], label: e.target.value };
+            const newLabel = e.target.value;
+            const type = state.selectedElement.dataset.type;
+            
+            // 如果是常规的自定义选项（单选、多选、下拉），让 value 始终与 label 保持一致
+            if (['radio', 'checkbox', 'select'].includes(type)) {
+                latestOptions[index] = { ...latestOptions[index], label: newLabel, value: newLabel };
+                if (valueInput) valueInput.value = newLabel;
+            } else {
+                latestOptions[index] = { ...latestOptions[index], label: newLabel };
+            }
+            
             writeOptions(state.selectedElement, latestOptions);
             renderOptions(state.selectedElement);
             updateDefaultValueUI(state.selectedElement);
@@ -397,7 +407,9 @@ export function bindPropEvents() {
             nextIndex++;
         }
 
-        options.push({ label: `${labelPrefix}${nextIndex}`, value: `${prefix}${nextIndex}` });
+        const newLabel = `${labelPrefix}${nextIndex}`;
+        const newValue = ['radio', 'checkbox', 'select'].includes(state.selectedElement.dataset.type) ? newLabel : `${prefix}${nextIndex}`;
+        options.push({ label: newLabel, value: newValue });
         writeOptions(state.selectedElement, options);
         renderOptions(state.selectedElement);
         renderOptionsEditor();
