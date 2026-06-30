@@ -2,6 +2,10 @@
 
 本文档记录了使用原生 JavaScript 实现低代码表单设计器的核心源码与模块实现。项目通过拖拽组件、配置属性，最终生成表单的 JSON 数据结构，完全使用原生 DOM API 构建。
 
+效果演示：
+![alt text](assets/README/image.png)
+![alt text](assets/README/image-3.png)
+![alt text](assets/README/image-2.png)
 ## 一、 目录结构说明
 
 项目按功能模块进行了目录拆分，主要结构如下：

@@ -2,10 +2,7 @@
 
 这是一个基于原生 JavaScript（Vanilla JS）和 Tailwind CSS 构建的高性能、无依赖（除拖拽库和图标库外）的轻量级低代码表单搭建平台。旨在提供接近工业级的表单搭建体验，支持复杂的布局和高度定制化的组件结构。
 
-效果演示：
-![alt text](assets/README/image.png)
-![alt text](assets/README/image-3.png)
-![alt text](assets/README/image-2.png)
+
 
 ## ✨ 核心特性
 
